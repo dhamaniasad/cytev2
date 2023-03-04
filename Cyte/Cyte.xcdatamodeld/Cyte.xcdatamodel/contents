@@ -1,9 +1,27 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
-    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
-        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22D68" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Concept" representedClassName="Concept" syncable="YES" codeGenerationType="class">
+        <attribute name="name" attributeType="String"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="name"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
     </entity>
-    <elements>
-        <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>
-    </elements>
+    <entity name="Edge" representedClassName="Edge" syncable="YES" codeGenerationType="class">
+        <relationship name="from" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
+        <relationship name="to" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
+    </entity>
+    <entity name="Episode" representedClassName="Episode" syncable="YES" codeGenerationType="class">
+        <attribute name="bundle" attributeType="String"/>
+        <attribute name="end" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="start" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="title" attributeType="String"/>
+    </entity>
+    <entity name="Interval" representedClassName="Interval" syncable="YES" codeGenerationType="class">
+        <attribute name="from" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="to" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="concept" maxCount="1" deletionRule="No Action" destinationEntity="Concept"/>
+        <relationship name="episode" maxCount="1" deletionRule="Cascade" destinationEntity="Episode"/>
+    </entity>
 </model>
