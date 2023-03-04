@@ -11,7 +11,6 @@ import SwiftUI
 struct CyteApp: App {
     let persistenceController = PersistenceController.shared
 
-    @Environment(\.scenePhase) var scenePhase
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
     @StateObject var screenRecorder = ScreenRecorder()
     let appDelegate = AppDelegate()
@@ -43,15 +42,6 @@ struct CyteApp: App {
                 }
                 .onDisappear {
                     self.teardown()
-                }
-                .onChange(of: scenePhase) { newPhase in
-                    if newPhase == .active {
-                        print("Active")
-                    } else if newPhase == .inactive {
-                        print("Inactive")
-                    } else if newPhase == .background {
-                        print("Background")
-                    }
                 }
         }
         MenuBarExtra(
