@@ -33,7 +33,7 @@ class Memory {
                 PersistenceController.shared.container.viewContext.delete(unclosed)
             }
         } catch {
-            //failed, fallback to create
+            
         }
     }
     //

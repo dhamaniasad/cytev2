@@ -48,7 +48,7 @@ struct ContentView: View {
             do {
                 episodes = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
             } catch {
-                //failed, fallback to create
+                
             }
         } else {
             let concept_strs = self.filter.split(separator: " ")
@@ -68,7 +68,7 @@ struct ContentView: View {
                     print(interval.episode!.start!)
                 }
             } catch {
-                //failed, fallback to create
+                
             }
         }
     }
@@ -156,7 +156,6 @@ struct ContentView: View {
                 }
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     self.refreshData()
-                    print("refresh")
                 }
             }
         }

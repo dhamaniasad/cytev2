@@ -10,6 +10,7 @@
 		3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFD29B310E40018BD60 /* ScreenRecorder.swift */; };
 		3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFE29B310E40018BD60 /* CaptureEngine.swift */; };
 		3F0B8C0229B310E40018BD60 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFF29B310E40018BD60 /* README.md */; };
+		3F0B8C0429B316920018BD60 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F0B8C0329B316920018BD60 /* README.md */; };
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */; };
@@ -26,6 +27,7 @@
 		3F0B8BFD29B310E40018BD60 /* ScreenRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenRecorder.swift; sourceTree = "<group>"; };
 		3F0B8BFE29B310E40018BD60 /* CaptureEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureEngine.swift; sourceTree = "<group>"; };
 		3F0B8BFF29B310E40018BD60 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		3F0B8C0329B316920018BD60 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 		3FCAA1FE29AC7C0100898995 /* Cyte */ = {
 			isa = PBXGroup;
 			children = (
+				3F0B8C0329B316920018BD60 /* README.md */,
 				3F0B8BFC29B310CB0018BD60 /* Perceive */,
 				3FAD36AF29B1C21E00CCCE82 /* Views */,
 				3FAD36AA29B1BC8400CCCE82 /* Reason */,
@@ -210,6 +213,7 @@
 			files = (
 				3F0B8C0229B310E40018BD60 /* README.md in Resources */,
 				3FCAA20D29AC7C0400898995 /* Preview Assets.xcassets in Resources */,
+				3F0B8C0429B316920018BD60 /* README.md in Resources */,
 				3FCAA20929AC7C0400898995 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
