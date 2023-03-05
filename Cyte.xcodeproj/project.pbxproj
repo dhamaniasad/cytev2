@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFD29B310E40018BD60 /* ScreenRecorder.swift */; };
 		3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFE29B310E40018BD60 /* CaptureEngine.swift */; };
-		3F0B8C0229B310E40018BD60 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFF29B310E40018BD60 /* README.md */; };
-		3F0B8C0429B316920018BD60 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 3F0B8C0329B316920018BD60 /* README.md */; };
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */; };
@@ -211,9 +209,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3F0B8C0229B310E40018BD60 /* README.md in Resources */,
 				3FCAA20D29AC7C0400898995 /* Preview Assets.xcassets in Resources */,
-				3F0B8C0429B316920018BD60 /* README.md in Resources */,
 				3FCAA20929AC7C0400898995 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

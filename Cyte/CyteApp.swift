@@ -37,6 +37,7 @@ struct CyteApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .contentShape(Rectangle())
                 .onAppear {
                     self.setup()
                 }

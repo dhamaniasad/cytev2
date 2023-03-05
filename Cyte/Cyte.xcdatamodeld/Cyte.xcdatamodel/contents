@@ -8,9 +8,9 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Edge" representedClassName="Edge" syncable="YES" codeGenerationType="class">
-        <relationship name="from" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
-        <relationship name="to" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
+    <entity name="Document" representedClassName="Document" syncable="YES" codeGenerationType="class">
+        <attribute name="path" attributeType="URI"/>
+        <relationship name="episode" maxCount="1" deletionRule="Nullify" destinationEntity="Episode"/>
     </entity>
     <entity name="Episode" representedClassName="Episode" syncable="YES" codeGenerationType="class">
         <attribute name="bundle" attributeType="String"/>
@@ -23,5 +23,9 @@
         <attribute name="to" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <relationship name="concept" maxCount="1" deletionRule="No Action" destinationEntity="Concept"/>
         <relationship name="episode" maxCount="1" deletionRule="Cascade" destinationEntity="Episode"/>
+    </entity>
+    <entity name="Relation" representedClassName="Relation" syncable="YES" codeGenerationType="class">
+        <relationship name="from" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
+        <relationship name="to" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
     </entity>
 </model>

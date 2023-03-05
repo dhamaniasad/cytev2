@@ -23,6 +23,10 @@ class Memory {
     private var currentContext : String = "Startup"
     private var currentStart: Date = Date()
     private var episode: Episode?
+    private var subscriptions = Set<AnyCancellable>()
+    private var concepts: Set<String> = Set()
+    private var conceptTimes: Dictionary<String, DateInterval> = Dictionary()
+    private var shouldTrackFileChanges: Bool = true
     
     init() {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
@@ -36,6 +40,38 @@ class Memory {
             
         }
     }
+    
+    static func getRecentFiles(earliest: Date) -> [(URL, Date)]? {
+        let fileManager = FileManager.default
+        let homeUrl = fileManager.homeDirectoryForCurrentUser
+        
+        var recentFiles: [(URL, Date)] = []
+        let properties = [URLResourceKey.contentModificationDateKey]
+        let options: FileManager.DirectoryEnumerationOptions = [.skipsHiddenFiles, .skipsPackageDescendants]
+        
+        guard let directoryEnumerator = fileManager.enumerator(at: homeUrl, includingPropertiesForKeys: properties, options: options, errorHandler: nil) else {
+            return nil
+        }
+        
+        for case let fileURL as URL in directoryEnumerator {
+            do {
+                let resourceValues = try fileURL.resourceValues(forKeys: Set(properties))
+                if let modificationDate = resourceValues.contentModificationDate {
+                    if !fileURL.hasDirectoryPath &&
+                        (modificationDate > earliest) &&
+                        !(fileURL.pathComponents.contains("Documents") && fileURL.pathComponents.contains("Cyte")) {
+                        recentFiles.append((fileURL, modificationDate))
+                    }
+                }
+            } catch {
+                print("Error reading attributes for file at \(fileURL.path): \(error.localizedDescription)")
+            }
+        }
+        
+        recentFiles.sort(by: { $0.1 > $1.1 })
+        return recentFiles//Array(recentFiles.prefix(maxCount)) // change this number to show more or less files
+    }
+    
     //
     // Check the currently active app, if different since last check
     // then close the current episode and start a new one
@@ -48,7 +84,7 @@ class Memory {
                 closeEpisode()
             }
             currentContext = context
-            if currentContext != "shoplex.Cyte" {
+            if currentContext != Bundle.main.bundleIdentifier {
                 openEpisode()
             } else {
                 print("Skip Cyte")
@@ -56,8 +92,6 @@ class Memory {
         }
         return currentContext
     }
-    
-    private var subscriptions = Set<AnyCancellable>()
     
     //
     // Sets up a stream to disk
@@ -74,7 +108,7 @@ class Memory {
         currentStart = Date()
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
         //generate a file url to store the video. some_image.jpg becomes some_image.mov
-        let outputMovieURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("\(front.localizedName!) \(currentStart.formatted(date: .abbreviated, time: .standard)).mov".replacingOccurrences(of: ":", with: "."))
+        let outputMovieURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(front.localizedName!) \(currentStart.formatted(date: .abbreviated, time: .standard)).mov".replacingOccurrences(of: ":", with: "."))
         //create an assetwriter instance
         do {
             try assetWriter = AVAssetWriter(outputURL: outputMovieURL!, fileType: .mov)
@@ -113,6 +147,7 @@ class Memory {
         if assetWriter == nil {
             return
         }
+        
         for sub in subscriptions {
             sub.cancel()
         }
@@ -122,8 +157,8 @@ class Memory {
         assetWriterInput!.markAsFinished()
         self.update(force_close: true)
         
-        // Delete episodes < 10s
-        if frameCount < 5 || currentContext.starts(with:"shoplex.Cyte") {
+        // Delete episodes < 20s (allows enough time for document search, once that is configurable this can change)
+        if frameCount < 10 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
             assetWriter!.cancelWriting()
             PersistenceController.shared.container.viewContext.delete(episode!)
             Logger().info("Supressed small episode for \(self.currentContext)")
@@ -139,6 +174,23 @@ class Memory {
             } catch {
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            }
+            
+            if shouldTrackFileChanges {
+                // Make this follow a user preference, since it chews cpu
+                let files = Memory.getRecentFiles(earliest: currentStart)
+                for fileAndModified: (URL, Date) in files! {
+                    let doc = Document(context: PersistenceController.shared.container.viewContext)
+                    doc.path = fileAndModified.0
+                    doc.episode = episode
+                    print("Adding doc at \(doc.path)")
+                    do {
+                        try PersistenceController.shared.container.viewContext.save()
+                    } catch {
+                        let nsError = error as NSError
+                        fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                    }
+                }
             }
         }
 
@@ -185,9 +237,6 @@ class Memory {
         }
         return concept
     }
-    
-    private var concepts: Set<String> = Set()
-    private var conceptTimes: Dictionary<String, DateInterval> = Dictionary()
     
     func update(force_close: Bool = false) {
         // debounce concepts with a 5s tail to allow frame-frame overlap, reducing rate of outflow

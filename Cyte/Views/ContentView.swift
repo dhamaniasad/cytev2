@@ -15,25 +15,37 @@ import AVKit
 import Charts
 import Foundation
 
-struct ToyShape: Identifiable {
-    var color: String
-    var type: String
-    var count: Double
-    var id = UUID()
+
+func getIcon(bundleID: String) -> NSImage? {
+    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
+    else { return nil }
+    
+    guard FileManager.default.fileExists(atPath: path)
+    else { return nil }
+    
+    return NSWorkspace.shared.icon(forFile: path)
+}
+
+func getApplicationNameFromBundleID(bundleID: String) -> String? {
+    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
+    else { return nil }
+    guard let appBundle = Bundle(path: path),
+          let executableName = appBundle.executableURL?.lastPathComponent else {
+        return nil
+    }
+    return executableName
 }
 
 struct ContentView: View {
     @Namespace var mainNamespace
     @Environment(\.managedObjectContext) private var viewContext
-    
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Episode.bundle, ascending: false)],
-        animation: .default)
-    private var episodesByBundle: FetchedResults<Episode>
+
     @State private var episodes: [Episode] = []
+    @State private var documentsForBundle: [Document] = []
     
     // The search terms currently active
     @State private var filter = ""
+    @State private var highlightedBundle = ""
     
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -41,10 +53,13 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 60)
     ]
     
-    func refreshData() {
+    @MainActor func refreshData() {
         if self.filter.count == 0 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
             episodeFetch.sortDescriptors = [NSSortDescriptor(key:"start", ascending: false)]
+            if highlightedBundle.count != 0 {
+                episodeFetch.predicate = NSPredicate(format: "bundle == %@", highlightedBundle)
+            }
             do {
                 episodes = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
             } catch {
@@ -59,6 +74,9 @@ struct ContentView: View {
             let intervalFetch : NSFetchRequest<Interval> = Interval.fetchRequest()
             intervalFetch.predicate = NSPredicate(format: "concept IN %@", concepts)
             intervalFetch.sortDescriptors = [NSSortDescriptor(key:"episode.start", ascending: false)]
+            if highlightedBundle.count != 0 {
+                intervalFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
+            }
             episodes.removeAll()
             do {
                 let intervals = try PersistenceController.shared.container.viewContext.fetch(intervalFetch)
@@ -71,11 +89,26 @@ struct ContentView: View {
                 
             }
         }
+        // now that we have episodes, if a bundle is highlighted get the documents too
+        documentsForBundle.removeAll()
+        if highlightedBundle.count != 0 {
+            let docFetch : NSFetchRequest<Document> = Document.fetchRequest()
+            docFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
+            do {
+                let docs = try PersistenceController.shared.container.viewContext.fetch(docFetch)
+                for doc in docs {
+                    documentsForBundle.append(doc)
+                }
+            } catch {
+                
+            }
+        }
     }
 
     var body: some View {
         NavigationStack {
             VStack {
+                Text(highlightedBundle)
                 ZStack {
                     let binding = Binding<String>(get: {
                         self.filter
@@ -95,35 +128,54 @@ struct ContentView: View {
                     
                 }
                 .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
-                ZStack {
+                VStack {
                     Chart {
-                        ForEach(episodesByBundle) { shape in
+                        ForEach(episodes) { shape in
                             BarMark(
                                 x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start!)),
                                 y: .value("Total Count", shape.end!.timeIntervalSince(shape.start!))
                             )
+                            .opacity(highlightedBundle == shape.bundle! ? 0.7 : 1.0)
                             .foregroundStyle(by: .value("App", shape.bundle!))
+
                         }
                     }
                     .frame(height: 100)
-                    .chartOverlay { proxy in
-                        GeometryReader { geometry in
-                            Rectangle().fill(.clear).contentShape(Rectangle())
-                                .onTapGesture { location in
-                                    // Convert the gesture location to the coordiante space of the plot area.
-                                    let origin = geometry[proxy.plotAreaFrame].origin
-                                    let location = CGPoint(
-                                        x: location.x - origin.x,
-                                        y: location.y - origin.y
-                                    )
-                                    // Get the x (date) and y (price) value from the location.
-//                                    let (date, price) = proxy.value(at: location, as: (String, Int).self)!
-//                                    print("Location: \(date), \(price)")
-//                                    self.refreshData()
+                    .chartLegend {
+                    }
+                    HStack {
+                        ForEach(Set(episodes.map { $0.bundle ?? "shoplex.Cyte" }).sorted(by: <), id: \.self) { bundle in
+                            HStack {
+                                Image(nsImage: getIcon(bundleID: bundle)!)
+                                Text(getApplicationNameFromBundleID(bundleID: bundle)!)
+                                    .foregroundColor(.black)
+                            }
+                            .contentShape(Rectangle())
+                            .onTapGesture { gesture in
+                                if highlightedBundle.count == 0 {
+                                    highlightedBundle = bundle
+                                } else {
+                                    highlightedBundle = ""
                                 }
+                                self.refreshData()
+                            }
+                        }
+                    }
+                    HStack {
+                        ForEach(documentsForBundle) { doc in
+                            HStack {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: doc.path!.absoluteString))
+                                Text(doc.path!.lastPathComponent)
+                                    .foregroundColor(.black)
+                            }
+                            .onTapGesture { gesture in
+                                // @todo should really open with currently highlighted bundle
+                                NSWorkspace.shared.open(doc.path!)
+                            }
                         }
                     }
                 }
+                .contentShape(Rectangle())
                 .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
                 
                 ScrollView {

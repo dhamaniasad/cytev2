@@ -18,3 +18,4 @@ Will update this soon.
 - Encryption e.g. Filevault?
 - NL Embedding search 
 - Search improvement: term expansion, stemming, verbs... 
+- Audio support

@@ -11,7 +11,6 @@ import Combine
 import OSLog
 import SwiftUI
 
-
 @MainActor
 class ScreenRecorder: ObservableObject {
     
@@ -105,6 +104,10 @@ class ScreenRecorder: ObservableObject {
         if !isSetup {
             // Starting polling for available screen content.
             await monitorAvailableContent()
+            let memoryPath = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!)
+            do {
+                try FileManager.default.createDirectory(atPath: memoryPath!.absoluteString, withIntermediateDirectories: true, attributes: nil)
+            } catch { }
             isSetup = true
         }
         
