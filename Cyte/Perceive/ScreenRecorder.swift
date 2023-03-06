@@ -10,6 +10,7 @@ import ScreenCaptureKit
 import Combine
 import OSLog
 import SwiftUI
+import CoreGraphics
 
 @MainActor
 class ScreenRecorder: ObservableObject {
@@ -89,6 +90,15 @@ class ScreenRecorder: ObservableObject {
             Task {
                 let context = Memory.shared.updateActiveContext()
                 if context != "shoplex.Cyte" {
+                    if let screenNumber = NSScreen.main!.deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID {
+                            print("Screen # on context switch \(screenNumber)")
+                            for screen in self.availableDisplays {
+                                if screen.displayID == screenNumber {
+                                    print("Matched display, updating...")
+                                    self.selectedDisplay = screen
+                                }
+                            }
+                        }
                     await self.refreshAvailableContent()
                 }
             }
