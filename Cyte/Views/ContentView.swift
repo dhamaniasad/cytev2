@@ -211,11 +211,11 @@ struct ContentView: View {
                                     }
                                 NavigationLink {
                                     ZStack {
-//                                        Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
-//                                            return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title!)
-//                                        }, displayInterval: (
-//                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start!)!,
-//                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start!)!
+                                        Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
+                                            return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title!)
+                                        }, displayInterval: (
+                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start!)!,
+                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start!)!
 //                                        ))
                                     }
                                 } label: {
