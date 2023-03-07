@@ -19,6 +19,10 @@ class Analysis {
         // do analysis
         let requestHandler = VNImageRequestHandler(cvPixelBuffer: frame.data!, orientation: .up)
         let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
+        if !utsname.isAppleSilicon {
+            // fallback for intel
+            request.recognitionLevel = .fast
+        }
         do {
             // Perform the text-recognition request.
             try requestHandler.perform([request])

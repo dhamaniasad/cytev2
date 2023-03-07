@@ -62,6 +62,7 @@ class ScreenRecorder: ObservableObject {
         }
     }
     @Published var isAppAudioExcluded = false { didSet { updateEngine() } }
+    @Published var secondsBetweenFrames : Int64 = utsname.isAppleSilicon ? 2 : 4 { didSet { updateEngine() } }
 
     // A value that specifies how often to retrieve calculated audio levels.
     private let audioLevelRefreshRate: TimeInterval = 0.1
@@ -93,13 +94,15 @@ class ScreenRecorder: ObservableObject {
         await self.refreshAvailableContent()
         Timer.publish(every: 3, on: .main, in: .common).autoconnect().sink { [weak self] _ in
             guard let self = self else { return }
+            // @todo understand why this runs on main thread and fix.
+            // Memory is marked as MainActor and I suspect that enforces some global context
             Task {
                 let context = Memory.shared.updateActiveContext()
                 if context != "shoplex.Cyte" {
                     if let screenNumber = NSScreen.main!.deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID {
-                            print("Screen # on context switch \(screenNumber)")
+                            print("Screen # on context refresh \(screenNumber)")
                             for screen in self.availableDisplays {
-                                if screen.displayID == screenNumber {
+                                if screen.displayID == screenNumber && self.selectedDisplay != screen {
                                     print("Matched display, updating...")
                                     self.selectedDisplay = screen
                                 }
@@ -122,8 +125,10 @@ class ScreenRecorder: ObservableObject {
             await monitorAvailableContent()
             let memoryPath = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!)
             do {
-                try FileManager.default.createDirectory(atPath: memoryPath!.absoluteString, withIntermediateDirectories: true, attributes: nil)
-            } catch { }
+                try FileManager.default.createDirectory(at: memoryPath!, withIntermediateDirectories: true, attributes: nil)
+            } catch {
+                print("Failed")
+            }
             isSetup = true
         }
         
@@ -136,8 +141,7 @@ class ScreenRecorder: ObservableObject {
             isRunning = true
             // Start the stream and await new video frames.
             for try await frame in captureEngine.startCapture(configuration: config, filter: filter) {
-                Memory.shared.addFrame(frame: frame)
-                Analysis.shared.runOnFrame(frame: frame)
+                Memory.shared.addFrame(frame: frame, secondLength: secondsBetweenFrames)
                 
                 if contentSize != frame.size {
                     // Update the content size if it changed.
@@ -155,6 +159,11 @@ class ScreenRecorder: ObservableObject {
     func stop() async {
         guard isRunning else { return }
         await captureEngine.stopCapture()
+        for subscription in subscriptions {
+            subscription.cancel()
+        }
+        subscriptions.removeAll()
+        isSetup = false
         
         Memory.shared.closeEpisode()
         
@@ -186,7 +195,7 @@ class ScreenRecorder: ObservableObject {
             // Create a content filter with excluded apps.
             filter = SCContentFilter(display: display,
                                      excludingApplications: excludedApps,
-                                     exceptingWindows: [])
+                                     exceptingWindows: [])//@todo detect and add any "private" windows to this list e.g. incognito
         case .window:
             guard let window = selectedWindow else { fatalError("No window selected.") }
             
@@ -217,7 +226,7 @@ class ScreenRecorder: ObservableObject {
         }
         
         // Set the capture interval at 0.5 fps.
-        streamConfig.minimumFrameInterval = CMTime(value: 2, timescale: 1)
+        streamConfig.minimumFrameInterval = CMTime(value: secondsBetweenFrames, timescale: 1)
 
         return streamConfig
     }
@@ -276,5 +285,20 @@ extension SCWindow {
 extension SCDisplay {
     var displayName: String {
         "Display: \(width) x \(height)"
+    }
+}
+
+extension utsname {
+    static var sMachine: String {
+        var utsname = utsname()
+        uname(&utsname)
+        return withUnsafePointer(to: &utsname.machine) {
+            $0.withMemoryRebound(to: CChar.self, capacity: Int(_SYS_NAMELEN)) {
+                String(cString: $0)
+            }
+        }
+    }
+    static var isAppleSilicon: Bool {
+        sMachine == "arm64"
     }
 }
