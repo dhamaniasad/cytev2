@@ -59,7 +59,7 @@ class HotkeyListener {
     let modifierFlags: UInt32 =
       getCarbonFlagsFromCocoaFlags(cocoaFlags: NSEvent.ModifierFlags.command)
 
-    let keyCode = kVK_ANSI_Slash
+    let keyCode = kVK_ANSI_Period
     var gMyHotKeyID = EventHotKeyID()
 
     gMyHotKeyID.id = UInt32(keyCode)
@@ -70,7 +70,7 @@ class HotkeyListener {
 
     var eventType = EventTypeSpec()
     eventType.eventClass = OSType(kEventClassKeyboard)
-    eventType.eventKind = OSType(kEventHotKeyReleased)
+    eventType.eventKind = OSType(kEventHotKeyPressed)
 
     // Install handler.
     InstallEventHandler(GetApplicationEventTarget(), {
@@ -85,8 +85,9 @@ class HotkeyListener {
       //                   nil,
       //                   &hkCom)
 
-      NSLog("Command + / Released!")
-        NSWorkspace.shared.hideOtherApplications()
+      NSLog("Command + . Pressed!")
+//        NSWorkspace.shared.hideOtherApplications()
+        NSApplication.shared.activate(ignoringOtherApps: true)
 
       return noErr
       /// Check that hkCom in indeed your hotkey ID and handle it.
