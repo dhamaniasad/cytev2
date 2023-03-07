@@ -46,11 +46,29 @@ struct CyteApp: App {
                 }
         }
         MenuBarExtra(
-                    "App Menu Bar Extra", systemImage: "star",
+                    "App Menu Bar Extra", systemImage: "timelapse",
                     isInserted: $showMenuBarExtra)
                 {
-                    Button("Quit") { NSApplication.shared.terminate(nil) }
-                        .keyboardShortcut("Q")
+                    VStack {
+                        HStack {
+                            Button(screenRecorder.isRunning ? "Pause" : "Record") {
+                                
+                                Task {
+                                    if screenRecorder.isRunning {
+                                        await screenRecorder.stop()
+                                    }
+                                    else if await screenRecorder.canRecord {
+                                        await screenRecorder.start()
+                                    }
+                                }
+                            }
+                            .keyboardShortcut("R")
+                        }
+                        Divider()
+                        Button("Quit") { NSApplication.shared.terminate(nil) }
+                            .keyboardShortcut("Q")
+                    }
+                    .frame(width: 200)
                 }
     }
 }
