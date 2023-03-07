@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21513" systemVersion="22D68" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="BundleExclusion" representedClassName="BundleExclusion" syncable="YES" codeGenerationType="class">
+        <attribute name="bundle" attributeType="String"/>
+        <attribute name="excluded" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <uniquenessConstraints>
+            <uniquenessConstraint>
+                <constraint value="bundle"/>
+            </uniquenessConstraint>
+        </uniquenessConstraints>
+    </entity>
     <entity name="Concept" representedClassName="Concept" syncable="YES" codeGenerationType="class">
         <attribute name="name" attributeType="String"/>
         <uniquenessConstraints>
@@ -15,6 +24,7 @@
     <entity name="Episode" representedClassName="Episode" syncable="YES" codeGenerationType="class">
         <attribute name="bundle" attributeType="String"/>
         <attribute name="end" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="save" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="start" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String"/>
     </entity>

@@ -59,7 +59,7 @@ class Memory {
                 if let modificationDate = resourceValues.contentModificationDate {
                     if !fileURL.hasDirectoryPath &&
                         (modificationDate > earliest) &&
-                        !(fileURL.pathComponents.contains("Documents") && fileURL.pathComponents.contains("Cyte")) {
+                        !(fileURL.pathComponents.contains("Movies") && fileURL.pathComponents.contains(Bundle.main.bundleIdentifier!)) {
                         recentFiles.append((fileURL, modificationDate))
                     }
                 }
@@ -84,10 +84,11 @@ class Memory {
                 closeEpisode()
             }
             currentContext = context
-            if currentContext != Bundle.main.bundleIdentifier {
+            let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
+            if currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
                 openEpisode()
             } else {
-                print("Skip Cyte")
+                print("Bypass exclusion context \(currentContext)")
             }
         }
         return currentContext
@@ -183,7 +184,6 @@ class Memory {
                     let doc = Document(context: PersistenceController.shared.container.viewContext)
                     doc.path = fileAndModified.0
                     doc.episode = episode
-                    print("Adding doc at \(doc.path)")
                     do {
                         try PersistenceController.shared.container.viewContext.save()
                     } catch {
@@ -204,15 +204,16 @@ class Memory {
     //
     // Push frame to encoder, run OCR
     //
-    func addFrame(frame: CapturedFrame) {
+    func addFrame(frame: CapturedFrame, secondLength: Int64) {
         if assetWriter != nil {
             //            fatalError("Can't add a frame to an unopened episode")
             if assetWriterInput!.isReadyForMoreMediaData {
-                let frameTime = CMTimeMake(value: Int64(frameCount), timescale: 1)
+                let frameTime = CMTimeMake(value: Int64(frameCount) * secondLength, timescale: 1)
                 //append the contents of the pixelBuffer at the correct time
                 assetWriterAdaptor!.append(frame.data!, withPresentationTime: frameTime)
                 frameCount += 1
             }
+            Analysis.shared.runOnFrame(frame: frame)
         }
     }
     
@@ -280,16 +281,35 @@ class Memory {
         }
     }
 
-//    private func forget(when: CMTimeRange) {
-//        offsets.map { items[$0] }.forEach(PersistenceController.shared.container.viewContext.delete)
-//
-//        do {
-//            try PersistenceController.shared.container.viewContext.save()
-//        } catch {
-//            // Replace this implementation with code to handle the error appropriately.
-//            // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-//            let nsError = error as NSError
-//            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-//        }
-//    }
+    func delete(episode: Episode) {
+        PersistenceController.shared.container.viewContext.delete(episode)
+        do {
+            try PersistenceController.shared.container.viewContext.save()
+            try FileManager.default.removeItem(at:
+                                            (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!
+            )
+        } catch {
+        }
+    }
+    
+    func getOrCreateBundleExclusion(name: String) -> BundleExclusion {
+        let bundleFetch : NSFetchRequest<BundleExclusion> = BundleExclusion.fetchRequest()
+        bundleFetch.predicate = NSPredicate(format: "bundle == %@", name)
+        do {
+            let fetched = try PersistenceController.shared.container.viewContext.fetch(bundleFetch)
+            if fetched.count > 0 {
+                return fetched.first!
+            }
+        } catch {
+            //failed, fallback to create
+        }
+        let bundle = BundleExclusion(context: PersistenceController.shared.container.viewContext)
+        bundle.bundle = name
+        bundle.excluded = false
+        do {
+            try PersistenceController.shared.container.viewContext.save()
+        } catch {
+        }
+        return bundle
+    }
 }

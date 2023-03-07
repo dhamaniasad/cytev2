@@ -11,9 +11,12 @@
 		3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F0B8BFE29B310E40018BD60 /* CaptureEngine.swift */; };
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
+		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
+		3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8F932929B5CF9C00C938DE /* Charts.framework */; };
 		3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */; };
 		3FAD36A929B1BB9800CCCE82 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A829B1BB9800CCCE82 /* Memory.swift */; };
 		3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */; };
+		3FB7F3D829B5BDB0007CBAF9 /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB7F3D729B5BDB0007CBAF9 /* Timeline.swift */; };
 		3FCAA20029AC7C0100898995 /* CyteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA1FF29AC7C0100898995 /* CyteApp.swift */; };
 		3FCAA20229AC7C0100898995 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA20129AC7C0100898995 /* Persistence.swift */; };
 		3FCAA20729AC7C0100898995 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA20629AC7C0100898995 /* ContentView.swift */; };
@@ -28,12 +31,15 @@
 		3F0B8C0329B316920018BD60 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
+		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		3F8F932929B5CF9C00C938DE /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/Charts.framework; sourceTree = DEVELOPER_DIR; };
 		3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
 		3FAD36A829B1BB9800CCCE82 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agent.swift; sourceTree = "<group>"; };
 		3FAD36AD29B1BE8700CCCE82 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3FAD36AE29B1C18600CCCE82 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3FAD36B129B1C29300CCCE82 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		3FB7F3D729B5BDB0007CBAF9 /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
 		3FCAA1FC29AC7C0100898995 /* Cyte.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cyte.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FCAA1FF29AC7C0100898995 /* CyteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyteApp.swift; sourceTree = "<group>"; };
 		3FCAA20129AC7C0100898995 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
@@ -48,6 +54,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -62,6 +69,14 @@
 				3F0B8BFD29B310E40018BD60 /* ScreenRecorder.swift */,
 			);
 			path = Perceive;
+			sourceTree = "<group>";
+		};
+		3F8F932829B5CF9C00C938DE /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				3F8F932929B5CF9C00C938DE /* Charts.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		3FAD36A329B1BACB00CCCE82 /* Classify */ = {
@@ -104,6 +119,8 @@
 			isa = PBXGroup;
 			children = (
 				3FCAA20629AC7C0100898995 /* ContentView.swift */,
+				3FB7F3D729B5BDB0007CBAF9 /* Timeline.swift */,
+				3F7DA05729B6F8AE00EF2F5E /* Settings.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -113,6 +130,7 @@
 			children = (
 				3FCAA1FE29AC7C0100898995 /* Cyte */,
 				3FCAA1FD29AC7C0100898995 /* Products */,
+				3F8F932829B5CF9C00C938DE /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -167,6 +185,8 @@
 			dependencies = (
 			);
 			name = Cyte;
+			packageProductDependencies = (
+			);
 			productName = Cyte;
 			productReference = 3FCAA1FC29AC7C0100898995 /* Cyte.app */;
 			productType = "com.apple.product-type.application";
@@ -195,6 +215,8 @@
 				Base,
 			);
 			mainGroup = 3FCAA1F329AC7C0100898995;
+			packageReferences = (
+			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -221,11 +243,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FB7F3D829B5BDB0007CBAF9 /* Timeline.swift in Sources */,
 				3FCAA20029AC7C0100898995 /* CyteApp.swift in Sources */,
 				3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */,
 				3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */,
 				3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */,
 				3FCAA20729AC7C0100898995 /* ContentView.swift in Sources */,
+				3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */,
 				3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */,
 				3F58AE2629B18344007E7703 /* Events.swift in Sources */,
 				3FAD36A929B1BB9800CCCE82 /* Memory.swift in Sources */,

@@ -108,7 +108,6 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             VStack {
-                Text(highlightedBundle)
                 ZStack {
                     let binding = Binding<String>(get: {
                         self.filter
@@ -116,15 +115,23 @@ struct ContentView: View {
                         self.filter = $0
                         self.refreshData()
                     })
-                    TextField(
-                        "Search your history",
-                        text: binding
-                    )
-                    .frame(height: 48)
-                    .cornerRadius(5)
-                    .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
-                    .font(Font.title)
-                    .prefersDefaultFocus(in: mainNamespace)
+                    HStack {
+                        TextField(
+                            "Search your history",
+                            text: binding
+                        )
+                        .frame(height: 48)
+                        .cornerRadius(5)
+                        .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
+                        .font(Font.title)
+                        .prefersDefaultFocus(in: mainNamespace)
+                        
+                        NavigationLink {
+                            Settings()
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                    }
                     
                 }
                 .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
@@ -137,7 +144,6 @@ struct ContentView: View {
                             )
                             .opacity(highlightedBundle == shape.bundle! ? 0.7 : 1.0)
                             .foregroundStyle(by: .value("App", shape.bundle!))
-
                         }
                     }
                     .frame(height: 100)
@@ -164,7 +170,7 @@ struct ContentView: View {
                     HStack {
                         ForEach(documentsForBundle) { doc in
                             HStack {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: doc.path!.absoluteString))
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
                                 Text(doc.path!.lastPathComponent)
                                     .foregroundColor(.black)
                             }
@@ -182,25 +188,53 @@ struct ContentView: View {
                     LazyVGrid(columns: feedColumnLayout, spacing: 20) {
                         ForEach(episodes) { episode in
                             VStack {
-                                VideoPlayer(player: AVPlayer(url:  (FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("\(episode.title ?? "").mov"))!))
+                                VideoPlayer(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!))
+                                    .contextMenu {
+                                        
+                                        Button {
+                                            episode.save = !episode.save
+                                            do {
+                                                try PersistenceController.shared.container.viewContext.save()
+                                                self.refreshData()
+                                            } catch {
+                                            }
+                                        } label: {
+                                            Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
+                                        }
+                                        Button {
+                                            Memory.shared.delete(episode: episode)
+                                            self.refreshData()
+                                        } label: {
+                                            Label("Delete", systemImage: "xmark.bin")
+                                        }
+                                    
+                                    }
                                 NavigationLink {
                                     ZStack {
-                                        VideoPlayer(player: AVPlayer(url:  (FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("\(episode.title ?? "").mov"))!))
-                                        
-                                        // Create the custom overlay view
-                                        VStack {
-                                            Text("Custom Overlay")
-                                                .foregroundColor(.white)
-                                                .padding()
-                                                .background(Color.blue)
-                                                .cornerRadius(8)
-                                        }
-                                        .frame(width: 200, height: 100)
-                                        .padding(.bottom, 20)
+//                                        Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
+//                                            return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title!)
+//                                        }, displayInterval: (
+//                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start!)!,
+//                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start!)!
+//                                        ))
                                     }
                                 } label: {
-                                    Text(episode.title ?? "")
+                                    HStack {
+                                        VStack {
+                                            Text(episode.title ?? "")
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                            Text(episode.start!.formatted(date: .abbreviated, time: .standard) )
+                                                .font(SwiftUI.Font.caption)
+                                                .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        HStack {
+                                            Image(systemName: episode.save ? "star.fill" : "star")
+                                            Image(nsImage: getIcon(bundleID: episode.bundle!)!)
+                                        }
+                                    }
                                 }
+                                .buttonStyle(.plain)
                             }.frame(height: 300)
                         }
                     }
