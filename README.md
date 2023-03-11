@@ -1,6 +1,6 @@
 # Cyte
 
-A background screen recorder for easy history search. There is an optional companion app[https://github.com/shaunnarayan/cytev2-explore], which enables GPT features when running in background.
+A background screen recorder for easy history search. There is an [optional companion app](https://github.com/shaunnarayan/cytev2-explore), which enables GPT features when running in background.
 
 ## Uses
 
@@ -9,16 +9,18 @@ A background screen recorder for easy history search. There is an optional compa
 Autosave isn’t always an option, in those cases you can easily recover your train of thought, a screenshot to use as a stencil, or extracted copy from memories recorded.
 
 ### Search across applications
+
 A lot of research involves collating information from multiple sources; internal tools like confluence, websites like wikipedia, pdf and doc files etc; When searching for something we don’t always remember the source (or it's at the tip of your tongue)
 
 ## Features
 
-- Completely private, data is stored on disk only, no outside connections are made
-- Pause/Restart recording easily
-- Set applications that are not to be recorded (while taking keystrokes)
-- Chat your data; ask questions about work you've done
+> - Completely private, data is stored on disk only, no outside connections are made
+> - Pause/Restart recording easily
+> - Set applications that are not to be recorded (while taking keystrokes)
+> - Chat your data; ask questions about work you've done
 
 ## Issues
+
 - Bookmarking, episode closing and some other model state changes not causing the feed to update
 - Scrolling videos fast in timeline can cause timeline to reset to reference date
 - file change tracking hangs the UI
