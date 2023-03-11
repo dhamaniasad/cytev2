@@ -48,6 +48,8 @@ struct Timeline: View {
     @State private var lastX: CGFloat = 0.0
     @State private var subscriptions = Set<AnyCancellable>()
     
+    private let timelineSize: CGFloat = 8
+    
     func generateThumbnails(numThumbs: Int = 6) async {
         let start = CMTime(seconds: displayInterval.0.timeIntervalSinceReferenceDate, preferredTimescale: 1)
         let end = CMTime(seconds: displayInterval.1.timeIntervalSinceReferenceDate, preferredTimescale: 1)
@@ -100,8 +102,8 @@ struct Timeline: View {
         
         intervals.append(contentsOf: newIntervals)
         intervals.sort(by: { $0.start < $1.start })
-        intervals.insert(AppInterval(start: Date(timeIntervalSinceReferenceDate: 0), end: intervals.first!.start, bundleId: "com.google.Chrome", title: "", color: Color.gray), at: 0)
-        intervals.append(AppInterval(start: intervals.last!.end, end: Date(), bundleId: "com.google.Chrome", title: "", color: Color.gray))
+        intervals.insert(AppInterval(start: Date(timeIntervalSinceReferenceDate: 0), end: intervals.first!.start, bundleId: Bundle.main.bundleIdentifier!, title: "", color: Color.gray), at: 0)
+        intervals.append(AppInterval(start: intervals.last!.end, end: Date(), bundleId: Bundle.main.bundleIdentifier!, title: "", color: Color.gray))
     }
     
     func updateDisplayInterval(proxy: ChartProxy, geometry: GeometryProxy, gesture: DragGesture.Value) {
@@ -160,6 +162,7 @@ struct Timeline: View {
         let interval_center = (of.start.timeIntervalSinceReferenceDate + of.end.timeIntervalSinceReferenceDate) / 2
         let window_length = displayInterval.1.timeIntervalSinceReferenceDate - displayInterval.0.timeIntervalSinceReferenceDate
         let portion = (interval_center - displayInterval.0.timeIntervalSinceReferenceDate) / window_length
+        print("\(of.title) \(portion)")
         return portion
     }
     
@@ -217,13 +220,13 @@ struct Timeline: View {
                                 xStart: .value("Start Time", interval.start < displayInterval.0 ? displayInterval.0 : interval.start),
                                 xEnd: .value("End Time", interval.end > displayInterval.1 ? displayInterval.1 : interval.end),
                                 y: .value("?", 0),
-                                height: 15
+                                height: MarkDimension(floatLiteral: timelineSize * 2)
                             )
                             .foregroundStyle(interval.color)
                             .cornerRadius(9.0)
                         }
                     }
-                    .frame(height: 30)
+                    .frame(height: timelineSize * 4)
                     .chartOverlay { proxy in
                         GeometryReader { geometry in
                             Rectangle().fill(.clear).contentShape(Rectangle())
@@ -247,7 +250,7 @@ struct Timeline: View {
                         fillEmptyIntervals()
                         updateData()
                     }
-                    HStack {
+                    ZStack {
                         ForEach(intervals.filter { interval in
                             (
                                 (interval.start > displayInterval.0) && (interval.start < displayInterval.1)
@@ -259,25 +262,34 @@ struct Timeline: View {
                                 (interval.start < displayInterval.0) && (interval.end > displayInterval.1)
                             )
                         }) { interval in
-                            HStack {
-                                Image(nsImage: getIcon(bundleID: interval.bundleId.count == 0 ? "com.google.Chrome" : interval.bundleId)!)
-                                Text(interval.bundleId)
+                            
+                            GeometryReader { metrics in
+                                HStack {
+                                    if interval.bundleId.count > 0 {
+                                        Image(nsImage: getIcon(bundleID: interval.bundleId)!)
+                                            .resizable()
+                                            .frame(width: timelineSize * 2, height: timelineSize * 2)
+                                    }
+                                }
+                                .offset(CGSize(width: (windowOffsetToCenter(of:interval) * metrics.size.width) - timelineSize, height: timelineSize))
                             }
-                            .offset(CGSize(width: windowOffsetToCenter(of:interval) * 100, height: 0))
+                        }
+                    }
+                    .frame(height: timelineSize * 4)
+                }
+                HStack(spacing: 0) {
+                    ForEach(thumbnailImages, id: \.self) { image in
+                        if image != nil {
+                            Image(image!, scale: 1.0, label: Text(""))
+                                .resizable()
+                                .frame(width: 112, height: 56)
+                        } else {
+                            Rectangle()
+                                .fill(.white)
+                                .frame(width: 112, height: 56)
                         }
                     }
                 }
-//                HStack(spacing: 0) {
-//                    ForEach(thumbnailImages, id: \.self) { image in
-//                        if image != nil {
-//                            Image(image!, scale: 1.0, label: Text(""))
-//                                .frame(width: 112)
-//                        } else {
-//                            Image(systemName: "star")
-//                                .frame(width: 112)
-//                        }
-//                    }
-//                }
             }
             .background(
                 RoundedRectangle(cornerRadius: 8)
@@ -285,6 +297,7 @@ struct Timeline: View {
             )
             VStack {
                     VideoPlayer(player: player)
+                        .disabled(true)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                             let window_center = Date(timeIntervalSinceReferenceDate: displayInterval.0.timeIntervalSinceReferenceDate + (displayInterval.1.timeIntervalSinceReferenceDate - displayInterval.0.timeIntervalSinceReferenceDate) / 2)
                             let active_interval: AppInterval = intervals.first { interval in

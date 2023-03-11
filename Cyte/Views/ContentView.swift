@@ -98,6 +98,14 @@ struct ContentView: View {
         }
     }
     
+    func intervalForEpisode(episode: Episode) -> (Date, Date) {
+        // @fixme Adding a small offset to ensure interval matching passes
+        return (
+            Date(timeIntervalSinceReferenceDate: (episode.start ?? Date()).timeIntervalSinceReferenceDate + 0.01-(Double(Timeline.windowLengthInSeconds)/2.0)),
+            Date(timeIntervalSinceReferenceDate: (episode.start ?? Date()).timeIntervalSinceReferenceDate + 0.01+(Double(Timeline.windowLengthInSeconds)/2.0))
+        )
+    }
+    
     var chat: some View {
         withAnimation {
             HStack(alignment: .bottom ) {
@@ -139,7 +147,7 @@ struct ContentView: View {
                 .chartLegend {
                 }
                 HStack {
-                    ForEach(Set(episodes.map { $0.bundle ?? "shoplex.Cyte" }).sorted(by: <), id: \.self) { bundle in
+                    ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
                         HStack {
                             Image(nsImage: getIcon(bundleID: bundle)!)
                             Text(getApplicationNameFromBundleID(bundleID: bundle)!)
@@ -206,10 +214,8 @@ struct ContentView: View {
                                 ZStack {
                                     Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
                                         return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "")
-                                    }, displayInterval: (
-                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start ?? Date())!,
-                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start ?? Date())!
-                                    ))
+                                    }, displayInterval: intervalForEpisode(episode: episode)
+                                    )
                                 }
                             } label: {
                                 HStack {

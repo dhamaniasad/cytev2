@@ -30,6 +30,7 @@
 		3F0B8BFE29B310E40018BD60 /* CaptureEngine.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureEngine.swift; sourceTree = "<group>"; };
 		3F0B8BFF29B310E40018BD60 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3F0B8C0329B316920018BD60 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		3F14BDC629BCE04100F12FE7 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -77,6 +78,7 @@
 		3F8F932829B5CF9C00C938DE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3F14BDC629BCE04100F12FE7 /* UIKit.framework */,
 				3F8F932929B5CF9C00C938DE /* Charts.framework */,
 			);
 			name = Frameworks;

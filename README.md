@@ -22,16 +22,11 @@ A lot of research involves collating information from multiple sources; internal
 ## Issues
 
 - Bookmarking, episode closing and some other model state changes not causing the feed to update
-- Scrolling videos fast in timeline can cause timeline to reset to reference date
-- file change tracking hangs the UI
-- Need to move some memory functions off the main thread
-- Timeline not showing selected video on open (off by 1 on interval matching? Floating point error?)
-- nil thumbnails cause rendering issues
+- file change tracking hangs the UI (Need to move some memory functions off the main thread)
     
 ## Feature requests
 
-- Interleaved timeline view
-- Highlight text results
+- Highlight interval results
 - Keyword autoblacklist
 - Filter incognito and chrome tabs from capture
 - Investivate SQLite vs CoreData efficiency at scale
