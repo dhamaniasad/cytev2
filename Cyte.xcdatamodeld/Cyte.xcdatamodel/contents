@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="21512" systemVersion="22A380" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="Anchor" representedClassName="Anchor" syncable="YES" codeGenerationType="class">
+        <attribute name="timestamp" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="extent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Extent" inverseName="anchor" inverseEntity="Extent"/>
+    </entity>
+    <entity name="Concept" representedClassName="Concept" syncable="YES" codeGenerationType="class">
+        <attribute name="name" attributeType="String"/>
+        <relationship name="extent" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Extent" inverseName="concept" inverseEntity="Extent"/>
+    </entity>
+    <entity name="Extent" representedClassName="Extent" syncable="YES" codeGenerationType="class">
+        <attribute name="offset" attributeType="Double" defaultValueString="0" usesScalarValueType="YES"/>
+        <relationship name="anchor" maxCount="1" deletionRule="Cascade" destinationEntity="Anchor" inverseName="extent" inverseEntity="Anchor"/>
+        <relationship name="concept" maxCount="1" deletionRule="Cascade" destinationEntity="Concept" inverseName="extent" inverseEntity="Concept"/>
+    </entity>
+</model>

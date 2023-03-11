@@ -13,6 +13,7 @@
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
 		3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8F932929B5CF9C00C938DE /* Charts.framework */; };
+		3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 3F9E3DF829B9D87C00FE31CB /* Starscream */; };
 		3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */; };
 		3FAD36A929B1BB9800CCCE82 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A829B1BB9800CCCE82 /* Memory.swift */; };
 		3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */; };
@@ -33,6 +34,7 @@
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3F8F932929B5CF9C00C938DE /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/Charts.framework; sourceTree = DEVELOPER_DIR; };
+		3F9E3DFA29BA157600FE31CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
 		3FAD36A829B1BB9800CCCE82 /* Memory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Memory.swift; sourceTree = "<group>"; };
 		3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agent.swift; sourceTree = "<group>"; };
@@ -55,6 +57,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
+				3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -145,6 +148,7 @@
 		3FCAA1FE29AC7C0100898995 /* Cyte */ = {
 			isa = PBXGroup;
 			children = (
+				3F9E3DFA29BA157600FE31CB /* Info.plist */,
 				3F0B8C0329B316920018BD60 /* README.md */,
 				3F0B8BFC29B310CB0018BD60 /* Perceive */,
 				3FAD36AF29B1C21E00CCCE82 /* Views */,
@@ -186,6 +190,7 @@
 			);
 			name = Cyte;
 			packageProductDependencies = (
+				3F9E3DF829B9D87C00FE31CB /* Starscream */,
 			);
 			productName = Cyte;
 			productReference = 3FCAA1FC29AC7C0100898995 /* Cyte.app */;
@@ -216,6 +221,7 @@
 			);
 			mainGroup = 3FCAA1F329AC7C0100898995;
 			packageReferences = (
+				3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */,
 			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
 			projectDirPath = "";
@@ -391,6 +397,7 @@
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Cyte/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -433,6 +440,7 @@
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Cyte/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents[sdk=iphoneos*]" = YES;
@@ -480,6 +488,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3F9E3DF829B9D87C00FE31CB /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */ = {

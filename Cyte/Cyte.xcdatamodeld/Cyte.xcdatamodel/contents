@@ -21,6 +21,10 @@
         <attribute name="path" attributeType="URI"/>
         <relationship name="episode" maxCount="1" deletionRule="Nullify" destinationEntity="Episode"/>
     </entity>
+    <entity name="DomainExclusion" representedClassName="DomainExclusion" syncable="YES" codeGenerationType="class">
+        <attribute name="domain" attributeType="URI"/>
+        <attribute name="excluded" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+    </entity>
     <entity name="Episode" representedClassName="Episode" syncable="YES" codeGenerationType="class">
         <attribute name="bundle" attributeType="String"/>
         <attribute name="end" attributeType="Date" usesScalarValueType="NO"/>

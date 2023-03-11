@@ -59,7 +59,11 @@ class Memory {
                 if let modificationDate = resourceValues.contentModificationDate {
                     if !fileURL.hasDirectoryPath &&
                         (modificationDate > earliest) &&
-                        !(fileURL.pathComponents.contains("Movies") && fileURL.pathComponents.contains(Bundle.main.bundleIdentifier!)) {
+                        !(
+                            fileURL.pathComponents.contains("Movies") &&
+                            fileURL.pathComponents.contains(Bundle.main.bundleIdentifier!) &&
+                            fileURL.pathExtension != ".html"
+                        ) {
                         recentFiles.append((fileURL, modificationDate))
                     }
                 }
@@ -190,6 +194,7 @@ class Memory {
                         let nsError = error as NSError
                         fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
                     }
+                    Agent.shared.index(path: doc.path!)
                 }
             }
         }

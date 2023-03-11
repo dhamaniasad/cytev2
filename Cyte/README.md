@@ -5,11 +5,13 @@ A background screen recorder for easy history search.
 Will update this soon.
 
 ## Issues
+- Bookmarking, episode closing and some other model state changes not causing the feed to update
+- Instances of halting in ContentView due to episodes without start/end (maybe red herring)
+- Scrolling videos fast in timeline can cause timeline to reset to reference date
 - file change tracking hangs the UI
 - Need to move some memory functions off the main thread
 - Timeline not showing selected video on open (off by 1 on interval matching? Floating point error?)
 - nil thumbnails cause rendering issues
-- Scrolling videos fast in timeline can cause timeline to reset to reference date
     
 ## Feature requests
 
