@@ -47,7 +47,7 @@ struct ContentView: View {
                 episodeFetch.predicate = NSPredicate(format: "bundle == %@", highlightedBundle)
             }
             do {
-                episodes = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
+                episodes = try viewContext.fetch(episodeFetch)
             } catch {
                 
             }
@@ -65,7 +65,7 @@ struct ContentView: View {
             }
             episodes.removeAll()
             do {
-                let intervals = try PersistenceController.shared.container.viewContext.fetch(intervalFetch)
+                let intervals = try viewContext.fetch(intervalFetch)
                 for interval in intervals {
                     // @todo this creates duplicates
                     let ep_included: Episode? = episodes.first(where: { ep in
@@ -88,7 +88,7 @@ struct ContentView: View {
             let docFetch : NSFetchRequest<Document> = Document.fetchRequest()
             docFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
             do {
-                let docs = try PersistenceController.shared.container.viewContext.fetch(docFetch)
+                let docs = try viewContext.fetch(docFetch)
                 for doc in docs {
                     documentsForBundle.append(doc)
                 }
@@ -187,7 +187,7 @@ struct ContentView: View {
                                     Button {
                                         episode.save = !episode.save
                                         do {
-                                            try PersistenceController.shared.container.viewContext.save()
+                                            try viewContext.save()
                                         } catch {
                                         }
                                         self.refreshData()
@@ -205,10 +205,10 @@ struct ContentView: View {
                             NavigationLink {
                                 ZStack {
                                     Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
-                                        return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title!)
+                                        return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "")
                                     }, displayInterval: (
-                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start!)!,
-                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start!)!
+                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start ?? Date())!,
+                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start ?? Date())!
                                     ))
                                 }
                             } label: {
@@ -216,14 +216,14 @@ struct ContentView: View {
                                     VStack {
                                         Text(episode.title ?? "")
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                        Text(episode.start!.formatted(date: .abbreviated, time: .standard) )
+                                        Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
                                             .font(SwiftUI.Font.caption)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     HStack {
                                         Image(systemName: episode.save ? "star.fill" : "star")
-                                        Image(nsImage: getIcon(bundleID: episode.bundle!)!)
+                                        Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
                                     }
                                 }
                             }
