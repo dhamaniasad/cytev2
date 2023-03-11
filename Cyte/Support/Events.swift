@@ -9,6 +9,26 @@ import Foundation
 import Carbon
 import AppKit
 
+func getIcon(bundleID: String) -> NSImage? {
+    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
+    else { return nil }
+    
+    guard FileManager.default.fileExists(atPath: path)
+    else { return nil }
+    
+    return NSWorkspace.shared.icon(forFile: path)
+}
+
+func getApplicationNameFromBundleID(bundleID: String) -> String? {
+    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
+    else { return nil }
+    guard let appBundle = Bundle(path: path),
+          let executableName = appBundle.executableURL?.lastPathComponent else {
+        return nil
+    }
+    return executableName
+}
+
 extension String {
   /// This converts string to UInt as a fourCharCode
   public var fourCharCodeValue: Int {

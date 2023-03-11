@@ -15,30 +15,10 @@ import AVKit
 import Charts
 import Foundation
 
-
-func getIcon(bundleID: String) -> NSImage? {
-    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
-    else { return nil }
-    
-    guard FileManager.default.fileExists(atPath: path)
-    else { return nil }
-    
-    return NSWorkspace.shared.icon(forFile: path)
-}
-
-func getApplicationNameFromBundleID(bundleID: String) -> String? {
-    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
-    else { return nil }
-    guard let appBundle = Bundle(path: path),
-          let executableName = appBundle.executableURL?.lastPathComponent else {
-        return nil
-    }
-    return executableName
-}
-
 struct ContentView: View {
     @Namespace var mainNamespace
     @Environment(\.managedObjectContext) private var viewContext
+    @StateObject private var agent = Agent.shared
 
     @State private var episodes: [Episode] = []
     @State private var documentsForBundle: [Document] = []
@@ -46,13 +26,19 @@ struct ContentView: View {
     // The search terms currently active
     @State private var filter = ""
     @State private var highlightedBundle = ""
+    @State private var showUsage = false
     
+    @State private var chatModes = ["agent", "qa", "chat"]
+    @State private var promptMode = "chat"
+    
+    // @todo make this responsive
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60)
     ]
     
+    // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can.
     @MainActor func refreshData() {
         if self.filter.count == 0 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
@@ -81,15 +67,22 @@ struct ContentView: View {
             do {
                 let intervals = try PersistenceController.shared.container.viewContext.fetch(intervalFetch)
                 for interval in intervals {
-                    episodes.append(interval.episode!)
-                    print(interval.concept!.name!)
-                    print(interval.episode!.start!)
+                    // @todo this creates duplicates
+                    let ep_included: Episode? = episodes.first(where: { ep in
+                        return ep.title == interval.episode!.title
+                    })
+                    if ep_included == nil {
+                        episodes.append(interval.episode!)
+                        //                    print(interval.concept!.name!)
+                        //                    print(interval.episode!.start!)
+                    }
                 }
             } catch {
                 
             }
         }
         // now that we have episodes, if a bundle is highlighted get the documents too
+        // @todo break this out into its own component and use FetchRequest
         documentsForBundle.removeAll()
         if highlightedBundle.count != 0 {
             let docFetch : NSFetchRequest<Document> = Document.fetchRequest()
@@ -104,10 +97,154 @@ struct ContentView: View {
             }
         }
     }
+    
+    var chat: some View {
+        withAnimation {
+            HStack(alignment: .bottom ) {
+                ScrollView {
+                    ForEach(Array(agent.chatLog.enumerated()), id: \.offset) { index, chat in
+                        VStack {
+                            Text(try! AttributedString(markdown:chat.1))
+                                .padding(chat.0 == "info" ? 5 : 20)
+                                .textSelection(.enabled)
+                                .font(chat.0 == "info" ? Font.caption : Font.body)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .foregroundColor(chat.0 == "user" ? .blue : (chat.0 == "info" ? Color.gray : .green)))
+                                .lineLimit(100)
+                        }
+                        .frame(maxWidth: .infinity, alignment: chat.0 == "user" ? Alignment.trailing : Alignment.leading)
+                    }
+                }
+            }
+            .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+    }
+    
+    var usage: some View {
+        withAnimation {
+            VStack {
+                Chart {
+                    ForEach(episodes) { shape in
+                        BarMark(
+                            x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start!)),
+                            y: .value("Total Count", shape.end!.timeIntervalSince(shape.start!))
+                        )
+                        .opacity(highlightedBundle == shape.bundle! ? 0.7 : 1.0)
+                        .foregroundStyle(by: .value("App", shape.bundle!))
+                    }
+                }
+                .frame(height: 100)
+                .chartLegend {
+                }
+                HStack {
+                    ForEach(Set(episodes.map { $0.bundle ?? "shoplex.Cyte" }).sorted(by: <), id: \.self) { bundle in
+                        HStack {
+                            Image(nsImage: getIcon(bundleID: bundle)!)
+                            Text(getApplicationNameFromBundleID(bundleID: bundle)!)
+                                .foregroundColor(.black)
+                        }
+                        .contentShape(Rectangle())
+                        .onTapGesture { gesture in
+                            if highlightedBundle.count == 0 {
+                                highlightedBundle = bundle
+                            } else {
+                                highlightedBundle = ""
+                            }
+                            self.refreshData()
+                        }
+                    }
+                }
+                HStack {
+                    ForEach(documentsForBundle) { doc in
+                        HStack {
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
+                            Text(doc.path!.lastPathComponent)
+                                .foregroundColor(.black)
+                        }
+                        .onTapGesture { gesture in
+                            // @todo should really open with currently highlighted bundle
+                            NSWorkspace.shared.open(doc.path!)
+                        }
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+            .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
+        }
+    }
+    
+    var feed: some View {
+        withAnimation {
+            ScrollView {
+                LazyVGrid(columns: feedColumnLayout, spacing: 20) {
+                    ForEach(episodes) { episode in
+                        VStack {
+                            VideoPlayer(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!))
+                                .contextMenu {
+                                    
+                                    Button {
+                                        episode.save = !episode.save
+                                        do {
+                                            try PersistenceController.shared.container.viewContext.save()
+                                        } catch {
+                                        }
+                                        self.refreshData()
+                                    } label: {
+                                        Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
+                                    }
+                                    Button {
+                                        Memory.shared.delete(episode: episode)
+                                        self.refreshData()
+                                    } label: {
+                                        Label("Delete", systemImage: "xmark.bin")
+                                    }
+                                    
+                                }
+                            NavigationLink {
+                                ZStack {
+                                    Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
+                                        return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title!)
+                                    }, displayInterval: (
+                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start!)!,
+                                        Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start!)!
+                                    ))
+                                }
+                            } label: {
+                                HStack {
+                                    VStack {
+                                        Text(episode.title ?? "")
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        Text(episode.start!.formatted(date: .abbreviated, time: .standard) )
+                                            .font(SwiftUI.Font.caption)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    HStack {
+                                        Image(systemName: episode.save ? "star.fill" : "star")
+                                        Image(nsImage: getIcon(bundleID: episode.bundle!)!)
+                                    }
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }.frame(height: 300)
+                    }
+                }
+                .padding(.all)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                self.refreshData()
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
             VStack {
+                if agent.chatLog.count > 0 {
+                    chat
+                }
                 ZStack {
                     let binding = Binding<String>(get: {
                         self.filter
@@ -117,7 +254,7 @@ struct ContentView: View {
                     })
                     HStack {
                         TextField(
-                            "Search your history",
+                            "Search \(agent.isConnected ? "or chat " : "")your history",
                             text: binding
                         )
                         .frame(height: 48)
@@ -125,123 +262,57 @@ struct ContentView: View {
                         .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
                         .font(Font.title)
                         .prefersDefaultFocus(in: mainNamespace)
+                        .onSubmit {
+                            if agent.isConnected {
+                                if agent.chatLog.count == 0 {
+                                    agent.reset(promptStyle: promptMode)
+                                }
+                                agent.query(request: self.filter)
+                                self.filter = ""
+                            }
+                        }
                         
-                        NavigationLink {
-                            Settings()
-                        } label: {
-                            Image(systemName: "gearshape")
+                        if agent.chatLog.count > 0 {
+                            Picker("", selection: $promptMode) {
+                                ForEach(chatModes, id: \.self) {
+                                    Text($0)
+                                }
+                            }
+                            .onChange(of: promptMode) { mode in agent.reset(promptStyle: promptMode) }
+                            .pickerStyle(.menu)
+                            .frame(width: 100)
+                            Button(action: {
+                                self.refreshData()
+                                agent.reset(promptStyle: promptMode)
+                            }) {
+                                Image(systemName: "xmark.circle")
+                            }
+                        } else {
+                            Button(action: {
+                                showUsage = !showUsage
+                            }) {
+                                Image(systemName: "chart.bar")
+                            }
+                            NavigationLink {
+                                Settings()
+                            } label: {
+                                Image(systemName: "gearshape")
+                            }
                         }
                     }
                     
                 }
                 .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
-                VStack {
-                    Chart {
-                        ForEach(episodes) { shape in
-                            BarMark(
-                                x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start!)),
-                                y: .value("Total Count", shape.end!.timeIntervalSince(shape.start!))
-                            )
-                            .opacity(highlightedBundle == shape.bundle! ? 0.7 : 1.0)
-                            .foregroundStyle(by: .value("App", shape.bundle!))
-                        }
-                    }
-                    .frame(height: 100)
-                    .chartLegend {
-                    }
-                    HStack {
-                        ForEach(Set(episodes.map { $0.bundle ?? "shoplex.Cyte" }).sorted(by: <), id: \.self) { bundle in
-                            HStack {
-                                Image(nsImage: getIcon(bundleID: bundle)!)
-                                Text(getApplicationNameFromBundleID(bundleID: bundle)!)
-                                    .foregroundColor(.black)
-                            }
-                            .contentShape(Rectangle())
-                            .onTapGesture { gesture in
-                                if highlightedBundle.count == 0 {
-                                    highlightedBundle = bundle
-                                } else {
-                                    highlightedBundle = ""
-                                }
-                                self.refreshData()
-                            }
-                        }
-                    }
-                    HStack {
-                        ForEach(documentsForBundle) { doc in
-                            HStack {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
-                                Text(doc.path!.lastPathComponent)
-                                    .foregroundColor(.black)
-                            }
-                            .onTapGesture { gesture in
-                                // @todo should really open with currently highlighted bundle
-                                NSWorkspace.shared.open(doc.path!)
-                            }
-                        }
-                    }
-                }
-                .contentShape(Rectangle())
-                .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
                 
-                ScrollView {
-                    LazyVGrid(columns: feedColumnLayout, spacing: 20) {
-                        ForEach(episodes) { episode in
-                            VStack {
-                                VideoPlayer(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!))
-                                    .contextMenu {
-                                        
-                                        Button {
-                                            episode.save = !episode.save
-                                            do {
-                                                try PersistenceController.shared.container.viewContext.save()
-                                                self.refreshData()
-                                            } catch {
-                                            }
-                                        } label: {
-                                            Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
-                                        }
-                                        Button {
-                                            Memory.shared.delete(episode: episode)
-                                            self.refreshData()
-                                        } label: {
-                                            Label("Delete", systemImage: "xmark.bin")
-                                        }
-                                    
-                                    }
-                                NavigationLink {
-                                    ZStack {
-                                        Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
-                                            return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title!)
-                                        }, displayInterval: (
-                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: -(Timeline.windowLengthInSeconds/2), to: episode.start!)!,
-                                            Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: (Timeline.windowLengthInSeconds/2), to: episode.start!)!
-//                                        ))
-                                    }
-                                } label: {
-                                    HStack {
-                                        VStack {
-                                            Text(episode.title ?? "")
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                            Text(episode.start!.formatted(date: .abbreviated, time: .standard) )
-                                                .font(SwiftUI.Font.caption)
-                                                .frame(maxWidth: .infinity, alignment: .leading)
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        HStack {
-                                            Image(systemName: episode.save ? "star.fill" : "star")
-                                            Image(nsImage: getIcon(bundleID: episode.bundle!)!)
-                                        }
-                                    }
-                                }
-                                .buttonStyle(.plain)
-                            }.frame(height: 300)
-                        }
+                if agent.chatLog.count == 0 {
+                    if self.showUsage {
+                        usage
                     }
-                    .padding(.all)
-                }
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    self.refreshData()
+                    Divider()
+                    
+                    feed
+                } else {
+                    
                 }
             }
         }

@@ -98,7 +98,7 @@ class ScreenRecorder: ObservableObject {
             // Memory is marked as MainActor and I suspect that enforces some global context
             Task {
                 let context = Memory.shared.updateActiveContext()
-                if context != "shoplex.Cyte" {
+                if context != Bundle.main.bundleIdentifier {
                     if let screenNumber = NSScreen.main!.deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID {
                             print("Screen # on context refresh \(screenNumber)")
                             for screen in self.availableDisplays {
