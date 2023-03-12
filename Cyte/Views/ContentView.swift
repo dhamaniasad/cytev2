@@ -14,6 +14,7 @@ import ScreenCaptureKit
 import AVKit
 import Charts
 import Foundation
+import Highlightr
 
 struct ContentView: View {
     @Namespace var mainNamespace
@@ -30,6 +31,9 @@ struct ContentView: View {
     
     @State private var chatModes = ["agent", "qa", "chat"]
     @State private var promptMode = "chat"
+    
+    private let highlightr = Highlightr()
+    private var colorPalette: [Color] = [Color.green, Color.blue, Color.brown, Color.cyan, Color.indigo, Color.pink, Color.orange]
     
     // @todo make this responsive
     let feedColumnLayout = [
@@ -64,21 +68,23 @@ struct ContentView: View {
                 intervalFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
             }
             episodes.removeAll()
-            do {
-                let intervals = try viewContext.fetch(intervalFetch)
-                for interval in intervals {
-                    // @todo this creates duplicates
-                    let ep_included: Episode? = episodes.first(where: { ep in
-                        return ep.title == interval.episode!.title
-                    })
-                    if ep_included == nil {
-                        episodes.append(interval.episode!)
-                        //                    print(interval.concept!.name!)
-                        //                    print(interval.episode!.start!)
+            if concepts.count < 5 {
+                do {
+                    let intervals = try viewContext.fetch(intervalFetch)
+                    for interval in intervals {
+                        // @todo this creates duplicates
+                        let ep_included: Episode? = episodes.first(where: { ep in
+                            return ep.title == interval.episode!.title
+                        })
+                        if ep_included == nil {
+                            episodes.append(interval.episode!)
+                            //                    print(interval.concept!.name!)
+                            //                    print(interval.episode!.start!)
+                        }
                     }
+                } catch {
+                    
                 }
-            } catch {
-                
             }
         }
         // now that we have episodes, if a bundle is highlighted get the documents too
@@ -112,6 +118,7 @@ struct ContentView: View {
                 ScrollView {
                     ForEach(Array(agent.chatLog.enumerated()), id: \.offset) { index, chat in
                         VStack {
+//                            Text(AttributedString(highlightr!.highlight(chat.1)!))
                             Text(try! AttributedString(markdown:chat.1))
                                 .padding(chat.0 == "info" ? 5 : 20)
                                 .textSelection(.enabled)
@@ -212,8 +219,8 @@ struct ContentView: View {
                                 }
                             NavigationLink {
                                 ZStack {
-                                    Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.map { episode in
-                                        return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "")
+                                    Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.enumerated().map { (index, episode) in
+                                        return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: colorPalette[index % colorPalette.count])
                                     }, displayInterval: intervalForEpisode(episode: episode)
                                     )
                                 }
@@ -240,7 +247,9 @@ struct ContentView: View {
                 .padding(.all)
             }
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                self.refreshData()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    self.refreshData()
+                }
             }
         }
     }

@@ -162,7 +162,6 @@ struct Timeline: View {
         let interval_center = (of.start.timeIntervalSinceReferenceDate + of.end.timeIntervalSinceReferenceDate) / 2
         let window_length = displayInterval.1.timeIntervalSinceReferenceDate - displayInterval.0.timeIntervalSinceReferenceDate
         let portion = (interval_center - displayInterval.0.timeIntervalSinceReferenceDate) / window_length
-        print("\(of.title) \(portion)")
         return portion
     }
     
