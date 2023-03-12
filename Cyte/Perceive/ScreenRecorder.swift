@@ -62,7 +62,7 @@ class ScreenRecorder: ObservableObject {
         }
     }
     @Published var isAppAudioExcluded = false { didSet { updateEngine() } }
-    @Published var secondsBetweenFrames : Int64 = utsname.isAppleSilicon ? 2 : 4 { didSet { updateEngine() } }
+    @Published var secondsBetweenFrames : Int64 = utsname.isAppleSilicon ? 2 : 8 { didSet { updateEngine() } }
 
     // A value that specifies how often to retrieve calculated audio levels.
     private let audioLevelRefreshRate: TimeInterval = 0.1
