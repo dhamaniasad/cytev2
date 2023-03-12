@@ -80,7 +80,7 @@ class Agent : WebSocketDelegate, ObservableObject {
                 })
                 chatLog[chatId!].1.append(data["message"]!)
             } else if data["type"] == "info" {
-                chatLog.append((data["type"]!, "\(data["message"]!)"))
+//                chatLog.append((data["type"]!, "\(data["message"]!)"))
             } else if data["type"] == "end" {
                 // filter out any info messages
                 chatLog = chatLog.filter { chat in

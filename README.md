@@ -23,6 +23,8 @@ A lot of research involves collating information from multiple sources; internal
 
 - Bookmarking, episode closing and some other model state changes not causing the feed to update
 - file change tracking hangs the UI (Need to move some memory functions off the main thread)
+- Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/questions/70961951/how-to-get-permission-to-access-all-files-on-macos
+- Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
     
 ## Feature requests
 

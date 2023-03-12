@@ -14,7 +14,6 @@ import ScreenCaptureKit
 import AVKit
 import Charts
 import Foundation
-import Highlightr
 
 struct ContentView: View {
     @Namespace var mainNamespace
@@ -32,8 +31,7 @@ struct ContentView: View {
     @State private var chatModes = ["agent", "qa", "chat"]
     @State private var promptMode = "chat"
     
-    private let highlightr = Highlightr()
-    private var colorPalette: [Color] = [Color.green, Color.blue, Color.brown, Color.cyan, Color.indigo, Color.pink, Color.orange]
+    @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]    
     
     // @todo make this responsive
     let feedColumnLayout = [
@@ -102,6 +100,18 @@ struct ContentView: View {
                 
             }
         }
+        refreshIcons()
+    }
+    
+    func refreshIcons() {
+        for episode in episodes {
+            if !bundleColors.contains(where: { (bundleId, color) in
+                return bundleId == episode.bundle
+            }) {
+                let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!)
+                bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color!)
+            }
+        }
     }
     
     func intervalForEpisode(episode: Episode) -> (Date, Date) {
@@ -110,31 +120,6 @@ struct ContentView: View {
             Date(timeIntervalSinceReferenceDate: (episode.start ?? Date()).timeIntervalSinceReferenceDate + 0.01-(Double(Timeline.windowLengthInSeconds)/2.0)),
             Date(timeIntervalSinceReferenceDate: (episode.start ?? Date()).timeIntervalSinceReferenceDate + 0.01+(Double(Timeline.windowLengthInSeconds)/2.0))
         )
-    }
-    
-    var chat: some View {
-        withAnimation {
-            HStack(alignment: .bottom ) {
-                ScrollView {
-                    ForEach(Array(agent.chatLog.enumerated()), id: \.offset) { index, chat in
-                        VStack {
-//                            Text(AttributedString(highlightr!.highlight(chat.1)!))
-                            Text(try! AttributedString(markdown:chat.1))
-                                .padding(chat.0 == "info" ? 5 : 20)
-                                .textSelection(.enabled)
-                                .font(chat.0 == "info" ? Font.caption : Font.body)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .foregroundColor(chat.0 == "user" ? .blue : (chat.0 == "info" ? Color.gray : .green)))
-                                .lineLimit(100)
-                        }
-                        .frame(maxWidth: .infinity, alignment: chat.0 == "user" ? Alignment.trailing : Alignment.leading)
-                    }
-                }
-            }
-            .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
     }
     
     var usage: some View {
@@ -220,7 +205,7 @@ struct ContentView: View {
                             NavigationLink {
                                 ZStack {
                                     Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.enumerated().map { (index, episode) in
-                                        return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: colorPalette[index % colorPalette.count])
+                                        return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
                                     }, displayInterval: intervalForEpisode(episode: episode)
                                     )
                                 }
@@ -258,7 +243,7 @@ struct ContentView: View {
         NavigationStack {
             VStack {
                 if agent.chatLog.count > 0 {
-                    chat
+                    ChatView()
                 }
                 ZStack {
                     let binding = Binding<String>(get: {
