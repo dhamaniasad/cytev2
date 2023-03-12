@@ -28,6 +28,8 @@ struct AppInterval :Identifiable {
     var title: String
     var color: Color = Color.gray
     var id: Int { "\(start.formatted()) - \(end.formatted())".hashValue }
+    var offset: Double = 0.0
+    var length: Double = 0.0
 }
 
 struct Timeline: View {

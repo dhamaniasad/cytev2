@@ -9,17 +9,6 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Chat" representedClassName="Chat" syncable="YES" codeGenerationType="class">
-        <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="mode" attributeType="String"/>
-        <attribute name="summary" attributeType="String"/>
-        <relationship name="messages" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="ChatLog" inverseName="chat" inverseEntity="ChatLog"/>
-    </entity>
-    <entity name="ChatLog" representedClassName="ChatLog" syncable="YES" codeGenerationType="class">
-        <attribute name="message" attributeType="String"/>
-        <attribute name="sender" attributeType="String"/>
-        <relationship name="chat" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Chat" inverseName="messages" inverseEntity="Chat"/>
-    </entity>
     <entity name="Concept" representedClassName="Concept" syncable="YES" codeGenerationType="class">
         <attribute name="name" attributeType="String"/>
         <uniquenessConstraints>

@@ -202,30 +202,40 @@ struct ContentView: View {
                                     }
                                     
                                 }
-                            NavigationLink {
-                                ZStack {
-                                    Timeline(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.enumerated().map { (index, episode) in
-                                        return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
-                                    }, displayInterval: intervalForEpisode(episode: episode)
-                                    )
+                            HStack {
+                                VStack {
+                                    Text(getApplicationNameFromBundleID(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!) ?? "")
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
+                                        .font(SwiftUI.Font.caption)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
-                            } label: {
+                                .frame(maxWidth: .infinity, alignment: .leading)
                                 HStack {
-                                    VStack {
-                                        Text(episode.title ?? "")
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                        Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
-                                            .font(SwiftUI.Font.caption)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                    NavigationLink {
+                                        ZStack {
+                                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.enumerated().map { (index, episode) in
+                                                return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
+                                            }
+                                            )
+                                        }
+                                    } label: {
+                                        Image(systemName: "rectangle.expand.vertical")
                                     }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    HStack {
-                                        Image(systemName: episode.save ? "star.fill" : "star")
-                                        Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
-                                    }
+                                    .buttonStyle(.plain)
+
+                                    Image(systemName: episode.save ? "star.fill" : "star")
+                                        .onTapGesture {
+                                            episode.save = !episode.save
+                                            do {
+                                                try viewContext.save()
+                                            } catch {
+                                            }
+                                            self.refreshData()
+                                        }
+                                    Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
                                 }
                             }
-                            .buttonStyle(.plain)
                         }.frame(height: 300)
                     }
                 }
@@ -302,7 +312,7 @@ struct ContentView: View {
                     }
                     
                 }
-                .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
+                .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
                 
                 if agent.chatLog.count == 0 {
                     if self.showUsage {
