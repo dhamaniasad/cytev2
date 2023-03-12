@@ -4,11 +4,8 @@
 <dict>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-			<key>NSAllowsArbitraryLoads</key>
+		<key>NSAllowsArbitraryLoads</key>
 		<true/>
-	</dict>
-	<key>NSAppTransportSecurity</key>
-	<dict>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>localhost</key>
@@ -20,7 +17,5 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSSystemAdministrationUsageDescription</key>
-	<string>To track files used, Cyte needs to access files across the system.</string>
 </dict>
 </plist>
