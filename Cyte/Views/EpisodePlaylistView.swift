@@ -34,18 +34,21 @@ struct EpisodePlaylistView: View {
             intervals[i].length = (intervals[i].end.timeIntervalSinceReferenceDate - intervals[i].start.timeIntervalSinceReferenceDate)
             intervals[i].offset = offset
             offset += intervals[i].length
-            print("\(intervals[i].offset) ::: \(intervals[i].length)")
+//            print("\(intervals[i].offset) ::: \(intervals[i].length)")
+//            print("\(startTimeForEpisode(interval: intervals[i])) --- \(endTimeForEpisode(interval: intervals[i]))")
+            
         }
     }
     
-    func generateThumbnails(numThumbs: Int = 6) async {
+    func generateThumbnails(numThumbs: Int = 4) async {
         if intervals.count == 0 { return }
-        let start: Double = secondsOffsetFromLastEpisode - Double(EpisodePlaylistView.windowLengthInSeconds)
-        let end: Double = secondsOffsetFromLastEpisode
+        let start: Double = secondsOffsetFromLastEpisode
+        let end: Double = secondsOffsetFromLastEpisode + Double(EpisodePlaylistView.windowLengthInSeconds)
         let slide = EpisodePlaylistView.windowLengthInSeconds / numThumbs
-        let times = stride(from: start, to: end, by: Double(slide))
+        let times = stride(from: start, to: end, by: Double(slide)).reversed()
         thumbnailImages.removeAll()
         for time in times {
+            print(time)
             // get the AppInterval at this time, load the asset and find offset
             var offset_sum = 0.0
             let active_interval: AppInterval? = intervals.first { interval in
@@ -88,13 +91,14 @@ struct EpisodePlaylistView: View {
         lastX = gesture.location.x
         let xScale = CGFloat(Timeline.windowLengthInSeconds) / chartWidth
         let deltaSeconds = Double(deltaX) * xScale * 2
-        print(deltaSeconds)
+//        print(deltaSeconds)
         
         let newStart = secondsOffsetFromLastEpisode + deltaSeconds
         if newStart > 0 {
             secondsOffsetFromLastEpisode = newStart
         }
         if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) > 0.5 {
+            lastThumbnailRefresh = Date()
             updateData()
         }
 //        print(displayInterval)
@@ -135,11 +139,10 @@ struct EpisodePlaylistView: View {
     
     func windowOffsetToCenter(of: AppInterval) -> Double {
         // I know this is really poorly written. I'm tired. I'll fix it when I see it again.
-//        let interval_center = (of.start.timeIntervalSinceReferenceDate + of.end.timeIntervalSinceReferenceDate) / 2
-//        let window_length = displayInterval.1.timeIntervalSinceReferenceDate - displayInterval.0.timeIntervalSinceReferenceDate
-//        let portion = (interval_center - displayInterval.0.timeIntervalSinceReferenceDate) / window_length
-//        return portion
-        return 0.5
+        let interval_center = (startTimeForEpisode(interval: of) + endTimeForEpisode(interval: of)) / 2
+        let window_length = Double(EpisodePlaylistView.windowLengthInSeconds)
+        let portion = interval_center / window_length
+        return portion
     }
     
     func playerEnded() {
@@ -153,14 +156,16 @@ struct EpisodePlaylistView: View {
     }
     
     func endTimeForEpisode(interval: AppInterval) -> Double {
-        return min(Double(EpisodePlaylistView.windowLengthInSeconds), Double(EpisodePlaylistView.windowLengthInSeconds) + Double(secondsOffsetFromLastEpisode) - Double(interval.offset))
+        let end =  min(Double(EpisodePlaylistView.windowLengthInSeconds), Double(secondsOffsetFromLastEpisode) + Double(EpisodePlaylistView.windowLengthInSeconds) - Double(interval.offset))
+//        print("\(startTimeForEpisode(interval: interval)) --- \(end)")
+        return end
     }
     
     var chart: some View {
         Chart {
             ForEach(intervals.filter { interval in
-                return interval.offset <= (secondsOffsetFromLastEpisode + Double(EpisodePlaylistView.windowLengthInSeconds)) &&
-                interval.offset >= (secondsOffsetFromLastEpisode - Double(EpisodePlaylistView.windowLengthInSeconds))
+                return startTimeForEpisode(interval: interval) <= Double(EpisodePlaylistView.windowLengthInSeconds) &&
+                endTimeForEpisode(interval: interval) >= 0
             }) { (interval: AppInterval) in
                 BarMark(
                     xStart: .value("Start Time", startTimeForEpisode(interval: interval)),
@@ -197,12 +202,44 @@ struct EpisodePlaylistView: View {
             updateIntervals()
         }
     }
-
+    
+    // @todo handle singlular/plural
+    func humanReadableOffset() -> String {
+        var offset_sum = 0.0
+        let active_interval: AppInterval? = intervals.first { interval in
+            let window_center = secondsOffsetFromLastEpisode
+            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+            let is_within = offset_sum <= window_center && next_offset >= window_center
+            offset_sum = next_offset
+            return is_within
+        }
+        
+        let progress = offset_sum - secondsOffsetFromLastEpisode
+        let anchor = Date().timeIntervalSinceReferenceDate - ((active_interval ?? intervals.last)!.end.timeIntervalSinceReferenceDate)
+        let seconds = anchor - progress
+        var (hr,  minf) = modf(seconds / 3600)
+        let (min, secf) = modf(60 * minf)
+        let days = Int(hr / 24)
+        hr -= (Double(days) * 24.0)
+        var res = ""
+        if days > 0 {
+            res += "\(days) days, "
+        }
+        if hr > 0 {
+            res += "\(Int(hr)) hours, "
+        }
+        if min > 0 {
+            res += "\(Int(min)) minutes, "
+        }
+        res += "\(Int(60 * secf)) seconds ago"
+        return res
+    }
+    
     var body: some View {
         VStack {
-            HStack(alignment: .bottom) {
-                Text("\(secondsOffsetFromLastEpisode)")
-                    .frame(maxWidth: .infinity)
+            VStack(alignment: .trailing) {
+                Text(humanReadableOffset())
+                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .font(Font.caption)
             .padding(10)
@@ -211,7 +248,8 @@ struct EpisodePlaylistView: View {
                     chart
                     ZStack {
                         ForEach(intervals.filter { interval in
-                            return interval.offset <= (secondsOffsetFromLastEpisode + Double(EpisodePlaylistView.windowLengthInSeconds))
+                            return startTimeForEpisode(interval: interval) <= Double(EpisodePlaylistView.windowLengthInSeconds) &&
+                                endTimeForEpisode(interval: interval) >= 0
                         }) { interval in
                             
                             GeometryReader { metrics in
@@ -233,18 +271,17 @@ struct EpisodePlaylistView: View {
                         if image != nil {
                             Image(image!, scale: 1.0, label: Text(""))
                                 .resizable()
-                                .frame(width: 112*2, height: 56*2)
+                                .frame(width: 300, height: 170)
                         } else {
                             Rectangle()
                                 .fill(.white)
-                                .frame(width: 112*2, height: 56*2)
+                                .frame(width: 300, height: 170)
                         }
                     }
                 }
             }
             VStack {
                     VideoPlayer(player: player)
-                        .disabled(true)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                             //
                         }

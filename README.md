@@ -29,6 +29,7 @@ A lot of research involves collating information from multiple sources; internal
 ## Feature requests
 
 - Highlight interval results
+- Easily copy code blocks in chat
 - Keyword autoblacklist
 - Filter incognito and chrome tabs from capture
 - Investivate SQLite vs CoreData efficiency at scale
