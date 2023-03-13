@@ -35,6 +35,12 @@ struct ContentView: View {
     @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]
     @State private var appIntervals : [AppInterval] = []
     
+    // Hover states
+    @State private var isHoveringSearch: Bool = false
+    @State private var isHoveringRetrySearch: Bool = false
+    @State private var isHoveringUsage: Bool = false
+    @State private var isHoveringSettings: Bool = false
+    
     // @todo make this responsive
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -210,38 +216,28 @@ struct ContentView: View {
                 if agent.chatLog.count > 0 {
                     ChatView()
                 }
-                ZStack {
-                    let binding = Binding<String>(get: {
-                        self.filter
-                    }, set: {
-                        self.filter = $0
-                        self.refreshData()
-                    })
-                    HStack(alignment: .center) {
-                        TextField(
-                            "Search \(agent.isConnected ? "or chat " : "")your history",
-                            text: binding
-                        )
-                        .frame(width: 950, height: 48)
-                        .cornerRadius(5)
-                        .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
-                        .textFieldStyle(.plain)
-                        .background(.white)
-                        .cornerRadius(6.0)
-                        .font(Font.title)
-                        .prefersDefaultFocus(in: mainNamespace)
-                        .onSubmit {
-                            if agent.isConnected {
-                                if agent.chatLog.count == 0 {
-                                    agent.reset(promptStyle: promptMode)
-                                }
-                                agent.query(request: self.filter)
-                                self.filter = ""
-                            }
-                        }
-                        
-                        HStack {
-                            Button(action: {
+                VStack(alignment: .leading) {
+                    ZStack {
+                        let binding = Binding<String>(get: {
+                            self.filter
+                        }, set: {
+                            self.filter = $0
+                            self.refreshData()
+                        })
+                        HStack(alignment: .center) {
+                            TextField(
+                                "Search \(agent.isConnected ? "or chat " : "")your history",
+                                text: binding
+                            )
+                            .frame(width: agent.chatLog.count == 0 ? 950 : nil, height: 48)
+                            .cornerRadius(5)
+                            .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
+                            .textFieldStyle(.plain)
+                            .background(.white)
+                            .cornerRadius(6.0)
+                            .font(Font.title)
+                            .prefersDefaultFocus(in: mainNamespace)
+                            .onSubmit {
                                 if agent.isConnected {
                                     if agent.chatLog.count == 0 {
                                         agent.reset(promptStyle: promptMode)
@@ -249,58 +245,102 @@ struct ContentView: View {
                                     agent.query(request: self.filter)
                                     self.filter = ""
                                 }
-                            }) {
-                                Image(systemName: "paperplane")
-                                    .frame(width: 50, height: 50)
-                                    .colorInvert()
                             }
-                            .frame(width: 40, height: 40)
-                            .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
-                            .cornerRadius(5.0)
-                            .buttonStyle(.plain)
                             
-                            if agent.chatLog.count > 0 {
-                                Picker("", selection: $promptMode) {
-                                    ForEach(chatModes, id: \.self) {
-                                        Text($0)
+                            HStack {
+                                Button(action: {
+                                    if agent.isConnected {
+                                        if agent.chatLog.count == 0 {
+                                            agent.reset(promptStyle: promptMode)
+                                        }
+                                        agent.query(request: self.filter)
+                                        self.filter = ""
                                     }
-                                }
-                                .onChange(of: promptMode) { mode in agent.reset(promptStyle: promptMode) }
-                                .pickerStyle(.menu)
-                                .frame(width: 100)
-                                Button(action: {
-                                    self.refreshData()
-                                    agent.reset(promptStyle: promptMode)
                                 }) {
-                                    Image(systemName: "xmark.circle")
+                                    Image(systemName: "paperplane")
+                                        .frame(width: 50, height: 50)
+                                        .colorInvert()
+                                        .onHover(perform: { hovering in
+                                            self.isHoveringSearch = hovering
+                                            if hovering {
+                                                NSCursor.pointingHand.set()
+                                            } else {
+                                                NSCursor.arrow.set()
+                                            }
+                                        })
                                 }
-                                .padding()
-                                .opacity(0.8)
+                                .frame(width: 40, height: 40)
+                                .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
+                                .cornerRadius(5.0)
                                 .buttonStyle(.plain)
-                            } else {
-                                Button(action: {
-                                    showUsage = !showUsage
-                                }) {
-                                    Image(systemName: "tray.and.arrow.down")
+                                .opacity(self.isHoveringSearch ? 0.8 : 1.0)
+                                
+                                if agent.chatLog.count == 0 {
+                                    Button(action: {
+                                        showUsage = !showUsage
+                                    }) {
+                                        Image(systemName: "tray.and.arrow.down")
+                                    }
+                                    .padding()
+                                    .opacity(0.8)
+                                    .buttonStyle(.plain)
+                                    .opacity(isHoveringUsage ? 0.8 : 1.0)
+                                    .onHover(perform: { hovering in
+                                        self.isHoveringUsage = hovering
+                                        if hovering {
+                                            NSCursor.pointingHand.set()
+                                        } else {
+                                            NSCursor.arrow.set()
+                                        }
+                                    })
+                                    NavigationLink {
+                                        Settings()
+                                    } label: {
+                                        Image(systemName: "folder.badge.gearshape")
+                                    }
+                                    .opacity(isHoveringSettings ? 0.8 : 1.0)
+                                    .buttonStyle(.plain)
+                                    .onHover(perform: { hovering in
+                                        self.isHoveringSettings = hovering
+                                        if hovering {
+                                            NSCursor.pointingHand.set()
+                                        } else {
+                                            NSCursor.arrow.set()
+                                        }
+                                    })
                                 }
-                                .padding()
-                                .opacity(0.8)
-                                .buttonStyle(.plain)
-                                NavigationLink {
-                                    Settings()
-                                } label: {
-                                    Image(systemName: "folder.badge.gearshape")
+                                if agent.chatLog.count == 0 {
+                                    Spacer()
                                 }
-                                .opacity(0.8)
-                                .buttonStyle(.plain)
                             }
-                            Spacer()
+                            .offset(x: -60.0)
                         }
-                        .offset(x: -60.0)
                     }
-                    
+                    if agent.chatLog.count > 0 {
+                        HStack {
+                            Button(action: {
+                                self.refreshData()
+                                agent.reset(promptStyle: promptMode)
+                            }) {
+                                Text("Retry Search")
+                                    .underline()
+                            }
+                            .onHover(perform: { hovering in
+                                self.isHoveringRetrySearch = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
+                            })
+                            .opacity(isHoveringRetrySearch ? 0.8 : 1.0)
+                            .foregroundColor(.gray)
+                            .buttonStyle(.plain)
+                        }
+                        .padding()
+                    }
                 }
-                .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+                .padding(EdgeInsets(top: 10, leading: agent.chatLog.count == 0 ? 0 : 210, bottom: 10, trailing: agent.chatLog.count == 0 ? 0 : 150))
                 
                 if agent.chatLog.count == 0 {
                     if self.showUsage {

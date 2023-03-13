@@ -48,7 +48,6 @@ struct EpisodePlaylistView: View {
         let times = stride(from: start, to: end, by: Double(slide)).reversed()
         thumbnailImages.removeAll()
         for time in times {
-            print(time)
             // get the AppInterval at this time, load the asset and find offset
             var offset_sum = 0.0
             let active_interval: AppInterval? = intervals.first { interval in

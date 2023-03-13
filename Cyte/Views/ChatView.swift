@@ -35,12 +35,14 @@ struct ChatView: View {
         ForEach(Array(agent.chatLog.enumerated()), id: \.offset) { index, chat in
             HStack {
                 if chat.0 == "user" {
-                    Text(getUserInitials())
-                        .frame(width: 50, height: 50)
+                    Image(systemName: "person")
+                        .colorInvert()
+                        .frame(width: 30, height: 30)
                         .background(
-                            RoundedRectangle(cornerRadius: 5)
-                                .foregroundColor(.gray))
-                        .font(Font.title)
+                            RoundedRectangle(cornerRadius: 15)
+                                .foregroundColor(Color.gray)
+                        )
+                        
                 } else {
                     Image(nsImage: getIcon(bundleID: Bundle.main.bundleIdentifier!)!)
                         .resizable()
@@ -72,9 +74,9 @@ struct ChatView: View {
                     VStack(spacing: 0) {
                         messages
                     }
+                    .padding(EdgeInsets(top: 10, leading: 200, bottom: 10, trailing: 200))
                 }
             }
-            .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }

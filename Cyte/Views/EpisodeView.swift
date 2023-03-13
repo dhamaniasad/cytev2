@@ -25,16 +25,17 @@ struct EpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @State var player: AVPlayer
-    @State private var thumbnailImage: CGImage?
     @State var episode: Episode
     
     @State var selection: Int = 0
     @State var results: [Interval]
-    // @todo Ideally accept a subview so we don't need this data
-    @State var intervals: [AppInterval]
     @State var highlight: [CGRect] = []
     
-    @State var showDetail: Bool = false
+    // @todo Ideally accept a subview so we don't need this data
+    @State var intervals: [AppInterval]
+    
+    @State private var isHoveringSave: Bool = false
+    @State private var isHoveringExpand: Bool = false
     
     func generateThumbnail(offset: Double) async {
         let asset = AVAsset(url: (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!)
@@ -43,9 +44,9 @@ struct EpisodeView: View {
         generator.requestedTimeToleranceBefore = CMTime.zero;
         generator.requestedTimeToleranceAfter = CMTime.zero;
         do {
-            try thumbnailImage = generator.copyCGImage(at: CMTime(seconds: offset, preferredTimescale: 1), actualTime: nil)
+            let thumbnail_image = try generator.copyCGImage(at: CMTime(seconds: offset, preferredTimescale: 1), actualTime: nil)
             // Run through vision and store results
-            let requestHandler = VNImageRequestHandler(cgImage: thumbnailImage!, orientation: .up)
+            let requestHandler = VNImageRequestHandler(cgImage: thumbnail_image, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
             if !utsname.isAppleSilicon {
                 // fallback for intel
@@ -69,7 +70,8 @@ struct EpisodeView: View {
         }
         highlight.removeAll()
         let selected = results[selection]
-        let recognizedStringsAndRects: [(String, CGRect)] = observations.compactMap { observation in
+        // @todo replace map with loop if observations remain unused
+        let _: [(String, CGRect)] = observations.compactMap { observation in
             // Find the top observation.
             guard let candidate = observation.topCandidates(1).first else { return ("", .zero) }
             
@@ -90,11 +92,6 @@ struct EpisodeView: View {
                                                 Int(1920),
                                                 Int(1080)))
         }
-        let text = recognizedStringsAndRects.reduce("") { (result, adding) in
-            return "\(result) \(adding.0)"
-        }
-        // save bboxes related to current matched interval for display
-//        print(text)
     }
     
     func updateSelection() {
@@ -172,6 +169,15 @@ struct EpisodeView: View {
                         Image(systemName: "rectangle.expand.vertical")
                     }
                     .buttonStyle(.plain)
+                    .opacity(isHoveringExpand ? 0.8 : 1.0)
+                    .onHover(perform: { hovering in
+                        self.isHoveringExpand = hovering
+                        if hovering {
+                            NSCursor.pointingHand.set()
+                        } else {
+                            NSCursor.arrow.set()
+                        }
+                    })
 
                     Image(systemName: episode.save ? "star.fill" : "star")
                         .onTapGesture {
@@ -181,6 +187,15 @@ struct EpisodeView: View {
                             } catch {
                             }
                         }
+                        .opacity(isHoveringSave ? 0.8 : 1.0)
+                        .onHover(perform: { hovering in
+                            self.isHoveringSave = hovering
+                            if hovering {
+                                NSCursor.pointingHand.set()
+                            } else {
+                                NSCursor.arrow.set()
+                            }
+                        })
                     Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
                 }
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
