@@ -60,8 +60,8 @@ struct ChatView: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: Alignment.leading)
             .background(
-                RoundedRectangle(cornerRadius: String(chat.0) == "user" ? 0 : 10)
-                    .foregroundColor(String(chat.0) == "user" ? .clear : .white))
+                RoundedRectangle(cornerRadius: String(chat.0) == "bot" ? 0 : 10)
+                    .foregroundColor(String(chat.0) == "bot" ? .clear : .white))
         }
     }
     

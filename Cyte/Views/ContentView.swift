@@ -217,14 +217,17 @@ struct ContentView: View {
                         self.filter = $0
                         self.refreshData()
                     })
-                    HStack {
+                    HStack(alignment: .center) {
                         TextField(
                             "Search \(agent.isConnected ? "or chat " : "")your history",
                             text: binding
                         )
-                        .frame(height: 48)
+                        .frame(width: 950, height: 48)
                         .cornerRadius(5)
-                        .padding(EdgeInsets(top: 0, leading: 6, bottom: 0, trailing: 6))
+                        .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
+                        .textFieldStyle(.plain)
+                        .background(.white)
+                        .cornerRadius(6.0)
                         .font(Font.title)
                         .prefersDefaultFocus(in: mainNamespace)
                         .onSubmit {
@@ -237,33 +240,63 @@ struct ContentView: View {
                             }
                         }
                         
-                        if agent.chatLog.count > 0 {
-                            Picker("", selection: $promptMode) {
-                                ForEach(chatModes, id: \.self) {
-                                    Text($0)
+                        HStack {
+                            Button(action: {
+                                if agent.isConnected {
+                                    if agent.chatLog.count == 0 {
+                                        agent.reset(promptStyle: promptMode)
+                                    }
+                                    agent.query(request: self.filter)
+                                    self.filter = ""
                                 }
-                            }
-                            .onChange(of: promptMode) { mode in agent.reset(promptStyle: promptMode) }
-                            .pickerStyle(.menu)
-                            .frame(width: 100)
-                            Button(action: {
-                                self.refreshData()
-                                agent.reset(promptStyle: promptMode)
                             }) {
-                                Image(systemName: "xmark.circle")
+                                Image(systemName: "paperplane")
+                                    .frame(width: 50, height: 50)
+                                    .colorInvert()
                             }
-                        } else {
-                            Button(action: {
-                                showUsage = !showUsage
-                            }) {
-                                Image(systemName: "chart.bar")
+                            .frame(width: 40, height: 40)
+                            .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
+                            .cornerRadius(5.0)
+                            .buttonStyle(.plain)
+                            
+                            if agent.chatLog.count > 0 {
+                                Picker("", selection: $promptMode) {
+                                    ForEach(chatModes, id: \.self) {
+                                        Text($0)
+                                    }
+                                }
+                                .onChange(of: promptMode) { mode in agent.reset(promptStyle: promptMode) }
+                                .pickerStyle(.menu)
+                                .frame(width: 100)
+                                Button(action: {
+                                    self.refreshData()
+                                    agent.reset(promptStyle: promptMode)
+                                }) {
+                                    Image(systemName: "xmark.circle")
+                                }
+                                .padding()
+                                .opacity(0.8)
+                                .buttonStyle(.plain)
+                            } else {
+                                Button(action: {
+                                    showUsage = !showUsage
+                                }) {
+                                    Image(systemName: "tray.and.arrow.down")
+                                }
+                                .padding()
+                                .opacity(0.8)
+                                .buttonStyle(.plain)
+                                NavigationLink {
+                                    Settings()
+                                } label: {
+                                    Image(systemName: "folder.badge.gearshape")
+                                }
+                                .opacity(0.8)
+                                .buttonStyle(.plain)
                             }
-                            NavigationLink {
-                                Settings()
-                            } label: {
-                                Image(systemName: "gearshape")
-                            }
+                            Spacer()
                         }
+                        .offset(x: -60.0)
                     }
                     
                 }
@@ -281,6 +314,10 @@ struct ContentView: View {
                 }
             }
         }
+        .padding(EdgeInsets(top: 0.0, leading: 30.0, bottom: 0.0, trailing: 30.0))
+//        .background(
+//            Rectangle().foregroundColor(Color(red: 194.0 / 255.0, green: 191.0 / 255.0, blue: 191.0 / 255.0 ))
+//        )
     }
 }
 

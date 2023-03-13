@@ -159,6 +159,7 @@ struct EpisodeView: View {
                     Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
                         .font(SwiftUI.Font.caption)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .opacity(0.8)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
@@ -182,6 +183,7 @@ struct EpisodeView: View {
                         }
                     Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
                 }
+                .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }
         }.frame(height: 300)
     }

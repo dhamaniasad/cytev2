@@ -31,6 +31,7 @@ A lot of research involves collating information from multiple sources; internal
     
 ## Feature requests
 
+- Automatically select first result for episode previews during search
 - Easily copy code blocks in chat
 - Keyword autoblacklist
 - Filter incognito and chrome tabs from capture

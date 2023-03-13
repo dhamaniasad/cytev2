@@ -14,7 +14,7 @@ class Agent : WebSocketDelegate, ObservableObject {
     static let shared : Agent = Agent()
     
     @Published var isConnected: Bool = false
-    @Published public var chatLog : [(String, String)] = []
+    @Published public var chatLog : [(String, String)] = [("user", "When was swift invented?"), ("bot", "Swift was first introduced by Apple in 2014 as a replacement for Objective-C. It was designed to be a faster and more modern programming language for developing iOS, macOS, watchOS, and tvOS applications.")]
     
     private var socket : WebSocket
     private let secret = "34d87526839e9b49"
