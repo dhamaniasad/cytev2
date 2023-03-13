@@ -93,7 +93,7 @@ struct EpisodePlaylistView: View {
 //        print(deltaSeconds)
         
         let newStart = secondsOffsetFromLastEpisode + deltaSeconds
-        if newStart > 0 && newStart < ((intervals.last!.offset + intervals.last!.length) - Double(EpisodePlaylistView.windowLengthInSeconds) / 2.0) {
+        if newStart > 0 && newStart < ((intervals.last!.offset + intervals.last!.length)) {
             secondsOffsetFromLastEpisode = newStart
         }
         if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) > 0.5 {
@@ -145,8 +145,25 @@ struct EpisodePlaylistView: View {
     }
     
     func playerEnded() {
-        // Switch over to next interval. If it's empty, setup a timer to move time forward.
-
+        // @todo Switch over to next interval. If it's empty, setup a timer to move time forward.
+        var offset_sum = 0.0
+        var previous_interval: AppInterval?
+        let window_center = secondsOffsetFromLastEpisode + 0.5
+        let active_interval: AppInterval? = intervals.first { interval in
+            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+            let is_within = offset_sum <= window_center && next_offset >= window_center
+            offset_sum = next_offset
+            if !is_within {
+                previous_interval = interval
+            }
+            return is_within
+        }
+        if previous_interval != nil {
+            // reset the AVPlayer to the new asset
+            player = AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(previous_interval!.title).mov"))!)
+            self.player!.play()
+            secondsOffsetFromLastEpisode = previous_interval!.offset + previous_interval!.length
+        }
         
     }
     
@@ -159,6 +176,39 @@ struct EpisodePlaylistView: View {
 //        print("\(startTimeForEpisode(interval: interval)) --- \(end)")
         return end
     }
+    
+    // @todo handle singlular/plural
+    func humanReadableOffset() -> String {
+        var offset_sum = 0.0
+        let active_interval: AppInterval? = intervals.first { interval in
+            let window_center = secondsOffsetFromLastEpisode
+            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+            let is_within = offset_sum <= window_center && next_offset >= window_center
+            offset_sum = next_offset
+            return is_within
+        }
+        
+        let progress = offset_sum - secondsOffsetFromLastEpisode
+        let anchor = Date().timeIntervalSinceReferenceDate - ((active_interval ?? intervals.last)!.end.timeIntervalSinceReferenceDate)
+        let seconds = anchor - progress
+        var (hr,  minf) = modf(seconds / 3600)
+        let (min, secf) = modf(60 * minf)
+        let days = Int(hr / 24)
+        hr -= (Double(days) * 24.0)
+        var res = ""
+        if days > 0 {
+            res += "\(days) days, "
+        }
+        if hr > 0 {
+            res += "\(Int(hr)) hours, "
+        }
+        if min > 0 {
+            res += "\(Int(min)) minutes, "
+        }
+        res += "\(Int(60 * secf)) seconds ago"
+        return res
+    }
+    
     
     var chart: some View {
         Chart {
@@ -200,38 +250,6 @@ struct EpisodePlaylistView: View {
             updateData()
             updateIntervals()
         }
-    }
-    
-    // @todo handle singlular/plural
-    func humanReadableOffset() -> String {
-        var offset_sum = 0.0
-        let active_interval: AppInterval? = intervals.first { interval in
-            let window_center = secondsOffsetFromLastEpisode
-            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-            let is_within = offset_sum <= window_center && next_offset >= window_center
-            offset_sum = next_offset
-            return is_within
-        }
-        
-        let progress = offset_sum - secondsOffsetFromLastEpisode
-        let anchor = Date().timeIntervalSinceReferenceDate - ((active_interval ?? intervals.last)!.end.timeIntervalSinceReferenceDate)
-        let seconds = anchor - progress
-        var (hr,  minf) = modf(seconds / 3600)
-        let (min, secf) = modf(60 * minf)
-        let days = Int(hr / 24)
-        hr -= (Double(days) * 24.0)
-        var res = ""
-        if days > 0 {
-            res += "\(days) days, "
-        }
-        if hr > 0 {
-            res += "\(Int(hr)) hours, "
-        }
-        if min > 0 {
-            res += "\(Int(min)) minutes, "
-        }
-        res += "\(Int(60 * secf)) seconds ago"
-        return res
     }
     
     var body: some View {
@@ -282,7 +300,18 @@ struct EpisodePlaylistView: View {
             VStack {
                     VideoPlayer(player: player)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                            //
+                            if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 {
+                                return
+                            }
+                            var offset_sum = 0.0
+                            let active_interval: AppInterval? = intervals.first { interval in
+                                let window_center = secondsOffsetFromLastEpisode
+                                let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+                                let is_within = offset_sum <= window_center && next_offset >= window_center
+                                offset_sum = next_offset
+                                return is_within
+                            }
+                            secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                         }
                         .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
                             playerEnded()
