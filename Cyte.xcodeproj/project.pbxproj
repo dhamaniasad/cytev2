@@ -12,6 +12,7 @@
 		3F14BDCA29BCEF6500F12FE7 /* Highlightr in Frameworks */ = {isa = PBXBuildFile; productRef = 3F14BDC929BCEF6500F12FE7 /* Highlightr */; };
 		3F14BDCC29BD920200F12FE7 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F14BDCB29BD920200F12FE7 /* ChatView.swift */; };
 		3F14BDD029BDE82F00F12FE7 /* EpisodePlaylistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F14BDCF29BDE82F00F12FE7 /* EpisodePlaylistView.swift */; };
+		3F14BDD229BF06F900F12FE7 /* EpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F14BDD129BF06F900F12FE7 /* EpisodeView.swift */; };
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
@@ -35,6 +36,7 @@
 		3F0B8C0329B316920018BD60 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3F14BDCB29BD920200F12FE7 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		3F14BDCF29BDE82F00F12FE7 /* EpisodePlaylistView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EpisodePlaylistView.swift; sourceTree = "<group>"; };
+		3F14BDD129BF06F900F12FE7 /* EpisodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EpisodeView.swift; sourceTree = "<group>"; };
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 		3FAD36AF29B1C21E00CCCE82 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3F14BDD129BF06F900F12FE7 /* EpisodeView.swift */,
 				3F14BDCF29BDE82F00F12FE7 /* EpisodePlaylistView.swift */,
 				3FCAA20629AC7C0100898995 /* ContentView.swift */,
 				3FB7F3D729B5BDB0007CBAF9 /* Timeline.swift */,
@@ -263,6 +266,7 @@
 				3F14BDCC29BD920200F12FE7 /* ChatView.swift in Sources */,
 				3FB7F3D829B5BDB0007CBAF9 /* Timeline.swift in Sources */,
 				3FCAA20029AC7C0100898995 /* CyteApp.swift in Sources */,
+				3F14BDD229BF06F900F12FE7 /* EpisodeView.swift in Sources */,
 				3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */,
 				3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */,
 				3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */,

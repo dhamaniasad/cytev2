@@ -21,6 +21,7 @@ struct ContentView: View {
     @StateObject private var agent = Agent.shared
 
     @State private var episodes: [Episode] = []
+    @State private var intervals: [Interval] = []
     @State private var documentsForBundle: [Document] = []
     
     // The search terms currently active
@@ -31,7 +32,8 @@ struct ContentView: View {
     @State private var chatModes = ["agent", "qa", "chat"]
     @State private var promptMode = "chat"
     
-    @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]    
+    @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]
+    @State private var appIntervals : [AppInterval] = []
     
     // @todo make this responsive
     let feedColumnLayout = [
@@ -50,6 +52,7 @@ struct ContentView: View {
             }
             do {
                 episodes = try viewContext.fetch(episodeFetch)
+                intervals.removeAll()
             } catch {
                 
             }
@@ -66,24 +69,27 @@ struct ContentView: View {
                 intervalFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
             }
             episodes.removeAll()
+            intervals.removeAll()
             if concepts.count < 5 {
                 do {
-                    let intervals = try viewContext.fetch(intervalFetch)
+                    intervals = try viewContext.fetch(intervalFetch)
                     for interval in intervals {
-                        // @todo this creates duplicates
                         let ep_included: Episode? = episodes.first(where: { ep in
                             return ep.title == interval.episode!.title
                         })
                         if ep_included == nil {
                             episodes.append(interval.episode!)
-                            //                    print(interval.concept!.name!)
-                            //                    print(interval.episode!.start!)
                         }
                     }
                 } catch {
                     
                 }
             }
+        }
+        
+        refreshIcons()
+        appIntervals = episodes.enumerated().map { (index, episode) in
+            return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
         }
         // now that we have episodes, if a bundle is highlighted get the documents too
         // @todo break this out into its own component and use FetchRequest
@@ -100,7 +106,6 @@ struct ContentView: View {
                 
             }
         }
-        refreshIcons()
     }
     
     func refreshIcons() {
@@ -175,68 +180,18 @@ struct ContentView: View {
         }
     }
     
+    func intervalsForEpisode(episode: Episode) -> [Interval] {
+        return intervals.filter { interval in
+            return interval.episode!.start == episode.start
+        }
+    }
+    
     var feed: some View {
         withAnimation {
             ScrollView {
                 LazyVGrid(columns: feedColumnLayout, spacing: 20) {
                     ForEach(episodes) { episode in
-                        VStack {
-                            VideoPlayer(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!))
-                                .contextMenu {
-                                    
-                                    Button {
-                                        episode.save = !episode.save
-                                        do {
-                                            try viewContext.save()
-                                        } catch {
-                                        }
-                                        self.refreshData()
-                                    } label: {
-                                        Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
-                                    }
-                                    Button {
-                                        Memory.shared.delete(episode: episode)
-                                        self.refreshData()
-                                    } label: {
-                                        Label("Delete", systemImage: "xmark.bin")
-                                    }
-                                    
-                                }
-                            HStack {
-                                VStack {
-                                    Text(getApplicationNameFromBundleID(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!) ?? "")
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                    Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
-                                        .font(SwiftUI.Font.caption)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                HStack {
-                                    NavigationLink {
-                                        ZStack {
-                                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: episodes.enumerated().map { (index, episode) in
-                                                return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
-                                            }
-                                            )
-                                        }
-                                    } label: {
-                                        Image(systemName: "rectangle.expand.vertical")
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    Image(systemName: episode.save ? "star.fill" : "star")
-                                        .onTapGesture {
-                                            episode.save = !episode.save
-                                            do {
-                                                try viewContext.save()
-                                            } catch {
-                                            }
-                                            self.refreshData()
-                                        }
-                                    Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
-                                }
-                            }
-                        }.frame(height: 300)
+                        EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
                     }
                 }
                 .padding(.all)

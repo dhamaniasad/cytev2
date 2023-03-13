@@ -19,7 +19,7 @@ struct EpisodePlaylistView: View {
     @State var intervals: [AppInterval]
     @State static var windowLengthInSeconds: Int = 60 * 2
     
-    @State var secondsOffsetFromLastEpisode: Double = 0.0
+    @State var secondsOffsetFromLastEpisode: Double
     
     @State private var lastThumbnailRefresh: Date = Date()
     @State private var lastKnownInteractionPoint: CGPoint = CGPoint()
@@ -30,7 +30,7 @@ struct EpisodePlaylistView: View {
     
     func updateIntervals() {
         var offset = 0.0
-        for i in 0..<(intervals.count - 1) {
+        for i in 0..<intervals.count {
             intervals[i].length = (intervals[i].end.timeIntervalSinceReferenceDate - intervals[i].start.timeIntervalSinceReferenceDate)
             intervals[i].offset = offset
             offset += intervals[i].length
@@ -94,7 +94,7 @@ struct EpisodePlaylistView: View {
 //        print(deltaSeconds)
         
         let newStart = secondsOffsetFromLastEpisode + deltaSeconds
-        if newStart > 0 {
+        if newStart > 0 && newStart < ((intervals.last!.offset + intervals.last!.length) - Double(EpisodePlaylistView.windowLengthInSeconds) / 2.0) {
             secondsOffsetFromLastEpisode = newStart
         }
         if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) > 0.5 {
