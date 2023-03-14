@@ -395,6 +395,8 @@ struct EpisodePlaylistView: View {
                     }
 //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+            Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
