@@ -78,10 +78,13 @@ struct ContentView: View {
             intervals.removeAll()
             if concepts.count < 5 {
                 do {
-                    intervals = try viewContext.fetch(intervalFetch)
-                    for interval in intervals {
+                    let potentials = try viewContext.fetch(intervalFetch)
+                    for interval in potentials {
+                        // @todo how can this occur? Suspect it has to do with no inverse relations on Episode
+                        if interval.episode?.start == nil { continue }
+                        intervals.append(interval)
                         let ep_included: Episode? = episodes.first(where: { ep in
-                            return ep.title == interval.episode!.title
+                            return ep.start == interval.episode!.start
                         })
                         if ep_included == nil {
                             episodes.append(interval.episode!)
@@ -187,9 +190,12 @@ struct ContentView: View {
     }
     
     func intervalsForEpisode(episode: Episode) -> [Interval] {
-        return intervals.filter { interval in
-            return interval.episode!.start == episode.start
+        let ints = intervals.filter { interval in
+            let match = interval.from!.timeIntervalSinceReferenceDate >= episode.start!.timeIntervalSinceReferenceDate &&
+            interval.from!.timeIntervalSinceReferenceDate <= episode.end!.timeIntervalSinceReferenceDate
+            return match
         }
+        return ints
     }
     
     var feed: some View {
@@ -346,8 +352,6 @@ struct ContentView: View {
                     if self.showUsage {
                         usage
                     }
-                    Divider()
-                    
                     feed
                 } else {
                     

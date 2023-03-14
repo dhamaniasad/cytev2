@@ -21,14 +21,14 @@ A lot of research involves collating information from multiple sources; internal
 
 ## Issues
 
+- Searching does not show all intervals for results
 - Bookmarking, episode closing and some other model state changes not causing the feed to update
 - file change tracking hangs the UI (Need to move some memory functions off the main thread)
 - Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/questions/70961951/how-to-get-permission-to-access-all-files-on-macos
 - Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
-- Opening timeline view does not always target the correct playhead position
-- Searching does not show all intervals for results
 - OCR highlighting os slightly offset over videos
-    
+- Timeline slider not updating while video playing (timeJumped notification not sent until pause)
+
 ## Feature requests
 
 - Automatically select first result for episode previews during search

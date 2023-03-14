@@ -83,7 +83,7 @@ struct EpisodeView: View {
             let boundingBox = boxObservation?.boundingBox ?? .zero
             
             if candidate.string.lowercased().contains((selected.concept?.name?.lowercased())!) {
-                print(boundingBox)
+                print("\(selected.concept?.name?.lowercased()) \(candidate.string.lowercased())")
                 highlight.append(boundingBox)
             }
             
@@ -104,6 +104,15 @@ struct EpisodeView: View {
 //            print("Seeking to \(target)")
             player.seek(to: CMTime(seconds: target, preferredTimescale: 1), toleranceBefore: .zero, toleranceAfter: .zero)
         }
+    }
+    
+    func offsetForEpisode(episode: Episode) -> Double {
+        var offset_sum = 0.0
+        let active_interval: AppInterval? = intervals.first { interval in
+            offset_sum = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+            return episode.start == interval.start
+        }
+        return offset_sum + (active_interval?.length ?? 0.0)
     }
     
     var playerView: some View {
@@ -138,14 +147,15 @@ struct EpisodeView: View {
                 GeometryReader { metrics in
                     ZStack {
                         ForEach(highlight, id:\.self) { box in
-                            Rectangle()
-                                .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
-                                .position(x: box.minX * metrics.size.width, y: box.minY * metrics.size.height)
-                                .foregroundColor(.yellow)
-                                .opacity(0.5)
+                            ZStack {
+                                RippleEffectView()
+                                    .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
+                                    .position(x: box.minX * metrics.size.width, y: metrics.size.height - (box.minY * metrics.size.height))
+                                    .opacity(0.5)
+                                
+                            }
                         }
                     }
-//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .padding(0)
@@ -162,7 +172,7 @@ struct EpisodeView: View {
                 HStack {
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: player, intervals: intervals, secondsOffsetFromLastEpisode: ((intervals.first?.end ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate
+                            EpisodePlaylistView(player: player, intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - player.currentTime().seconds, search: results.count > 0 ? results[selection].concept?.name : nil
                             )
                         }
                     } label: {
@@ -200,7 +210,11 @@ struct EpisodeView: View {
                 }
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }
-        }.frame(height: 300)
+        }
+        .frame(height: 300)
+        .onAppear {
+            updateSelection()
+        }
     }
 
 

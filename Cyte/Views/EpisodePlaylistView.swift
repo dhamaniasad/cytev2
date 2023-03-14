@@ -10,6 +10,7 @@ import SwiftUI
 import Charts
 import AVKit
 import Combine
+import Vision
 
 struct EpisodePlaylistView: View {
     
@@ -25,6 +26,9 @@ struct EpisodePlaylistView: View {
     @State private var lastKnownInteractionPoint: CGPoint = CGPoint()
     @State private var lastX: CGFloat = 0.0
     @State private var subscriptions = Set<AnyCancellable>()
+    
+    @State var search: String?
+    @State var highlight: [CGRect] = []
     
     private let timelineSize: CGFloat = 16
     
@@ -49,6 +53,7 @@ struct EpisodePlaylistView: View {
         thumbnailImages.removeAll()
         for time in times {
             // get the AppInterval at this time, load the asset and find offset
+            // @todo getting active interval code is duplicated in this file. Extract to function
             var offset_sum = 0.0
             let active_interval: AppInterval? = intervals.first { interval in
                 let window_center = time
@@ -76,8 +81,53 @@ struct EpisodePlaylistView: View {
                 }
             }
         }
+        if search != nil && thumbnailImages.last! != nil {
+            // Run through vision and store results
+            let requestHandler = VNImageRequestHandler(cgImage: thumbnailImages.last!!, orientation: .up)
+            let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
+            if !utsname.isAppleSilicon {
+                // fallback for intel
+                request.recognitionLevel = .fast
+            }
+            do {
+                // Perform the text-recognition request.
+                try requestHandler.perform([request])
+            } catch {
+                print("Unable to perform the requests: \(error).")
+            }
+            
+        }
         lastThumbnailRefresh = Date()
-        
+    }
+    
+    // @todo Function is duplicated 3 times (here, episodeview and analysis. needs to be Factored out)
+    func recognizeTextHandler(request: VNRequest, error: Error?) {
+        guard let observations =
+                request.results as? [VNRecognizedTextObservation] else {
+            return
+        }
+        highlight.removeAll()
+        // @todo replace map with loop if observations remain unused
+        let _: [(String, CGRect)] = observations.compactMap { observation in
+            // Find the top observation.
+            guard let candidate = observation.topCandidates(1).first else { return ("", .zero) }
+            
+            // Find the bounding-box observation for the string range.
+            let stringRange = candidate.string.startIndex..<candidate.string.endIndex
+            let boxObservation = try? candidate.boundingBox(for: stringRange)
+            
+            // Get the normalized CGRect value.
+            let boundingBox = boxObservation?.boundingBox ?? .zero
+            
+            if candidate.string.lowercased().contains((search!.lowercased())) {
+                highlight.append(boundingBox)
+            }
+            
+            // Convert the rectangle from normalized coordinates to image coordinates.
+            return (candidate.string, VNImageRectForNormalizedRect(boundingBox,
+                                                Int(1920),
+                                                Int(1080)))
+        }
     }
     
     func updateDisplayInterval(proxy: ChartProxy, geometry: GeometryProxy, gesture: DragGesture.Value) {
@@ -131,7 +181,7 @@ struct EpisodePlaylistView: View {
         player = AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!)
         // seek to correct offset
         let ep_len = (active_interval!.end.timeIntervalSinceReferenceDate - active_interval!.start.timeIntervalSinceReferenceDate)
-        let progress = secondsOffsetFromLastEpisode - (offset_sum - ep_len)
+        let progress = (offset_sum) - secondsOffsetFromLastEpisode
         let offset: CMTime = CMTime(seconds: progress, preferredTimescale: player!.currentTime().timescale)
         self.player!.seek(to: offset, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
     }
@@ -298,26 +348,40 @@ struct EpisodePlaylistView: View {
                 }
             }
             VStack {
-                    VideoPlayer(player: player)
-                        .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                            if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 {
-                                return
+                GeometryReader { metrics in
+                    ZStack {
+                        VideoPlayer(player: player)
+                            .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
+                                if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 {
+                                    return
+                                }
+                                var offset_sum = 0.0
+                                let active_interval: AppInterval? = intervals.first { interval in
+                                    let window_center = secondsOffsetFromLastEpisode
+                                    let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+                                    let is_within = offset_sum <= window_center && next_offset >= window_center
+                                    offset_sum = next_offset
+                                    return is_within
+                                }
+                                secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                             }
-                            var offset_sum = 0.0
-                            let active_interval: AppInterval? = intervals.first { interval in
-                                let window_center = secondsOffsetFromLastEpisode
-                                let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-                                let is_within = offset_sum <= window_center && next_offset >= window_center
-                                offset_sum = next_offset
-                                return is_within
+                            .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
+                                playerEnded()
                             }
-                            secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
+                    
+                        ForEach(highlight, id:\.self) { box in
+                            ZStack {
+                                RippleEffectView()
+                                    .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
+                                    .position(x: box.minX * metrics.size.width, y: metrics.size.height - (box.minY * metrics.size.height))
+                                    .opacity(0.5)
+                                
+                            }
                         }
-                        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
-                            playerEnded()
-                        }
+                    }
+//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-            
+            }
         }
     }
 }
