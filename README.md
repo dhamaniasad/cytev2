@@ -22,16 +22,16 @@ A lot of research involves collating information from multiple sources; internal
 ## Issues
 
 - Searching does not show all intervals for results
-- Bookmarking, episode closing and some other model state changes not causing the feed to update
+- Episode closing and some other model state changes not causing the feed to update
 - file change tracking hangs the UI (Need to move some memory functions off the main thread - or is there a spotlight or similar API that can get the file list from cache?)
 - Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Extract usage and search bars to own views from ContentView
 - Extract episode slider from EpisodeTimelineView into own view
 - Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
+    * Maybe not though, we can't do this retrospectively for other eps so does it make sense to do it live?
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
 - Icon should be above Search bar in z index (causes incorrect cursor to show)
-- HStacks used for bundles and documents in usage chart legend should be grids
 - Thumbnails flash when regenerated
 
 ## Feature requests

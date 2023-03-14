@@ -14,6 +14,7 @@
 		3F14BDD029BDE82F00F12FE7 /* EpisodePlaylistView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F14BDCF29BDE82F00F12FE7 /* EpisodePlaylistView.swift */; };
 		3F14BDD229BF06F900F12FE7 /* EpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F14BDD129BF06F900F12FE7 /* EpisodeView.swift */; };
 		3F14BDD429C0145200F12FE7 /* RippleEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F14BDD329C0145200F12FE7 /* RippleEffect.swift */; };
+		3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F14BDD529C0D4A800F12FE7 /* AVKit.framework */; };
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
@@ -39,6 +40,7 @@
 		3F14BDCF29BDE82F00F12FE7 /* EpisodePlaylistView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EpisodePlaylistView.swift; sourceTree = "<group>"; };
 		3F14BDD129BF06F900F12FE7 /* EpisodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EpisodeView.swift; sourceTree = "<group>"; };
 		3F14BDD329C0145200F12FE7 /* RippleEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RippleEffect.swift; sourceTree = "<group>"; };
+		3F14BDD529C0D4A800F12FE7 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AVKit.framework; sourceTree = DEVELOPER_DIR; };
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
@@ -67,6 +69,7 @@
 			files = (
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
 				3F14BDCA29BCEF6500F12FE7 /* Highlightr in Frameworks */,
+				3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */,
 				3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -87,6 +90,7 @@
 		3F8F932829B5CF9C00C938DE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3F14BDD529C0D4A800F12FE7 /* AVKit.framework */,
 				3F8F932929B5CF9C00C938DE /* Charts.framework */,
 			);
 			name = Frameworks;

@@ -46,7 +46,8 @@ struct ChatView: View {
                 } else {
                     Image(nsImage: getIcon(bundleID: Bundle.main.bundleIdentifier!)!)
                         .resizable()
-                        .frame(width: 50, height: 50)
+                        .cornerRadius(15.0)
+                        .frame(width: 30, height: 30)
                 }
                 VStack(spacing: 0) {
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
