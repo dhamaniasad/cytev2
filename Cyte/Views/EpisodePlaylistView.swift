@@ -153,6 +153,10 @@ struct EpisodePlaylistView: View {
 //        print(displayInterval)
     }
     
+    func urlOfCurrentlyPlayingInPlayer(player : AVPlayer) -> URL? {
+        return ((player.currentItem?.asset) as? AVURLAsset)?.url
+    }
+    
     func updateData() {
         for subscription in subscriptions {
             subscription.cancel()
@@ -178,9 +182,12 @@ struct EpisodePlaylistView: View {
             return
         }
         // reset the AVPlayer to the new asset
-        player = AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!)
+        let current_url = urlOfCurrentlyPlayingInPlayer(player: player!)
+        let new_url = (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!
+        if current_url != new_url {
+            player = AVPlayer(url: new_url)
+        }
         // seek to correct offset
-        let ep_len = (active_interval!.end.timeIntervalSinceReferenceDate - active_interval!.start.timeIntervalSinceReferenceDate)
         let progress = (offset_sum) - secondsOffsetFromLastEpisode
         let offset: CMTime = CMTime(seconds: progress, preferredTimescale: player!.currentTime().timescale)
         self.player!.seek(to: offset, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
@@ -332,6 +339,7 @@ struct EpisodePlaylistView: View {
                         }
                     }
                     .frame(height: timelineSize * 4)
+                    .allowsHitTesting(false)
                 }
                 HStack(spacing: 0) {
                     ForEach(thumbnailImages, id: \.self) { image in
@@ -346,11 +354,25 @@ struct EpisodePlaylistView: View {
                         }
                     }
                 }
+                .frame(height: 170)
             }
             VStack {
-                GeometryReader { metrics in
+                
                     ZStack {
-                        VideoPlayer(player: player)
+                        VideoPlayer(player: player, videoOverlay: {
+                            GeometryReader { metrics in
+                                ForEach(highlight, id:\.self) { box in
+                                    ZStack {
+                                        RippleEffectView()
+                                            .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
+                                            .position(x: box.midX * metrics.size.width, y: metrics.size.height - (box.midY * metrics.size.height))
+                                            .opacity(0.5)
+                                        
+                                    }
+                                }
+                            }
+                        })
+                            .frame(width: 710, height: 400)
                             .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                                 if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 {
                                     return
@@ -369,18 +391,9 @@ struct EpisodePlaylistView: View {
                                 playerEnded()
                             }
                     
-                        ForEach(highlight, id:\.self) { box in
-                            ZStack {
-                                RippleEffectView()
-                                    .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
-                                    .position(x: box.minX * metrics.size.width, y: metrics.size.height - (box.minY * metrics.size.height))
-                                    .opacity(0.5)
-                                
-                            }
-                        }
+                        
                     }
 //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                }
             }
         }
     }

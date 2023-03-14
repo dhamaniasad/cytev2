@@ -41,8 +41,15 @@ struct ContentView: View {
     @State private var isHoveringUsage: Bool = false
     @State private var isHoveringSettings: Bool = false
     
-    // @todo make this responsive
     let feedColumnLayout = [
+        GridItem(.flexible(), spacing: 60),
+        GridItem(.flexible(), spacing: 60),
+        GridItem(.flexible(), spacing: 60)
+    ]
+    let documentsColumnLayout = [
+        GridItem(.flexible(), spacing: 60),
+        GridItem(.flexible(), spacing: 60),
+        GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60)
@@ -153,39 +160,43 @@ struct ContentView: View {
                 .chartLegend {
                 }
                 HStack {
-                    ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
-                        HStack {
-                            Image(nsImage: getIcon(bundleID: bundle)!)
-                            Text(getApplicationNameFromBundleID(bundleID: bundle)!)
-                                .foregroundColor(.black)
-                        }
-                        .contentShape(Rectangle())
-                        .onTapGesture { gesture in
-                            if highlightedBundle.count == 0 {
-                                highlightedBundle = bundle
-                            } else {
-                                highlightedBundle = ""
+                    LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
+                        ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
+                            HStack {
+                                Image(nsImage: getIcon(bundleID: bundle)!)
+                                Text(getApplicationNameFromBundleID(bundleID: bundle)!)
+                                    .foregroundColor(.black)
                             }
-                            self.refreshData()
+                            .contentShape(Rectangle())
+                            .onTapGesture { gesture in
+                                if highlightedBundle.count == 0 {
+                                    highlightedBundle = bundle
+                                } else {
+                                    highlightedBundle = ""
+                                }
+                                self.refreshData()
+                            }
                         }
                     }
                 }
                 HStack {
-                    ForEach(documentsForBundle) { doc in
-                        HStack {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
-                            Text(doc.path!.lastPathComponent)
-                                .foregroundColor(.black)
-                        }
-                        .onTapGesture { gesture in
-                            // @todo should really open with currently highlighted bundle
-                            NSWorkspace.shared.open(doc.path!)
+                    LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
+                        ForEach(documentsForBundle) { doc in
+                            HStack {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
+                                Text(doc.path!.lastPathComponent)
+                                    .foregroundColor(.black)
+                            }
+                            .onTapGesture { gesture in
+                                // @todo should really open with currently highlighted bundle
+                                NSWorkspace.shared.open(doc.path!)
+                            }
                         }
                     }
                 }
             }
             .contentShape(Rectangle())
-            .padding(EdgeInsets(top: 10, leading: 100, bottom: 10, trailing: 100))
+            .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
         }
     }
     
@@ -283,7 +294,9 @@ struct ContentView: View {
                                 
                                 if agent.chatLog.count == 0 {
                                     Button(action: {
+                                        highlightedBundle = ""
                                         showUsage = !showUsage
+                                        self.refreshData()
                                     }) {
                                         Image(systemName: "tray.and.arrow.down")
                                     }
@@ -359,9 +372,9 @@ struct ContentView: View {
             }
         }
         .padding(EdgeInsets(top: 0.0, leading: 30.0, bottom: 0.0, trailing: 30.0))
-//        .background(
-//            Rectangle().foregroundColor(Color(red: 194.0 / 255.0, green: 191.0 / 255.0, blue: 191.0 / 255.0 ))
-//        )
+        .background(
+            Rectangle().foregroundColor(Color(red: 233.0 / 255.0, green: 233.0 / 255.0, blue: 233.0 / 255.0 ))
+        )
     }
 }
 

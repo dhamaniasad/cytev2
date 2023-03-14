@@ -23,16 +23,24 @@ A lot of research involves collating information from multiple sources; internal
 
 - Searching does not show all intervals for results
 - Bookmarking, episode closing and some other model state changes not causing the feed to update
-- file change tracking hangs the UI (Need to move some memory functions off the main thread)
-- Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/questions/70961951/how-to-get-permission-to-access-all-files-on-macos
-- Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
-- OCR highlighting os slightly offset over videos
+- file change tracking hangs the UI (Need to move some memory functions off the main thread - or is there a spotlight or similar API that can get the file list from cache?)
+- Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
+- Extract usage and search bars to own views from ContentView
+- Extract episode slider from EpisodeTimelineView into own view
+- Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
+- Duplicate code in vision analysis handlers and get active interval (timeline views)
+- Icon should be above Search bar in z index (causes incorrect cursor to show)
+- HStacks used for bundles and documents in usage chart legend should be grids
+- Thumbnails flash when regenerated
 
 ## Feature requests
 
-- Automatically select first result for episode previews during search
+- Chat to get video results inline
+- Filter feed by time interval
 - Easily copy code blocks in chat
+- Prefix episode titles with a summary of window names used in session
+- Set default playback speed 2.0
 - Keyword autoblacklist
 - Filter incognito and chrome tabs from capture
 - Investivate SQLite vs CoreData efficiency at scale

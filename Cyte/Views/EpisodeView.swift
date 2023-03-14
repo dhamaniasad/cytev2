@@ -136,7 +136,21 @@ struct EpisodeView: View {
                 }
             }
             ZStack {
-                VideoPlayer(player: player)
+                VideoPlayer(player: player, videoOverlay: {
+                    GeometryReader { metrics in
+                        ForEach(highlight, id:\.self) { box in
+                            ZStack {
+                                RippleEffectView()
+                                    .foregroundColor(.yellow)
+                                    .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
+                                    .position(x:  (box.midX * metrics.size.width), y: metrics.size.height - (box.midY * metrics.size.height))
+                                    .opacity(0.5)
+                                
+                            }
+                        }
+                    }
+                })
+                .frame(width: 360, height: 203)
                     .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                         //
                     }
@@ -144,19 +158,7 @@ struct EpisodeView: View {
                         
                     }
                     .padding(0)
-                GeometryReader { metrics in
-                    ZStack {
-                        ForEach(highlight, id:\.self) { box in
-                            ZStack {
-                                RippleEffectView()
-                                    .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
-                                    .position(x: box.minX * metrics.size.width, y: metrics.size.height - (box.minY * metrics.size.height))
-                                    .opacity(0.5)
-                                
-                            }
-                        }
-                    }
-                }
+                
             }
             .padding(0)
             HStack {
@@ -211,7 +213,7 @@ struct EpisodeView: View {
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }
         }
-        .frame(height: 300)
+        .frame(height: 260)
         .onAppear {
             updateSelection()
         }
