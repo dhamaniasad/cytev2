@@ -244,29 +244,28 @@ struct ContentView: View {
                             self.refreshData()
                         })
                         HStack(alignment: .center) {
-                            TextField(
-                                "Search \(agent.isConnected ? "or chat " : "")your history",
-                                text: binding
-                            )
-                            .frame(width: agent.chatLog.count == 0 ? 950 : nil, height: 48)
-                            .cornerRadius(5)
-                            .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
-                            .textFieldStyle(.plain)
-                            .background(.white)
-                            .cornerRadius(6.0)
-                            .font(Font.title)
-                            .prefersDefaultFocus(in: mainNamespace)
-                            .onSubmit {
-                                if agent.isConnected {
-                                    if agent.chatLog.count == 0 {
-                                        agent.reset(promptStyle: promptMode)
+                            ZStack(alignment:.trailing) {
+                                TextField(
+                                    "Search \(agent.isConnected ? "or chat " : "")your history",
+                                    text: binding
+                                )
+                                .frame(width: agent.chatLog.count == 0 ? 950 : nil, height: 48)
+                                .cornerRadius(5)
+                                .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
+                                .textFieldStyle(.plain)
+                                .background(.white)
+                                .cornerRadius(6.0)
+                                .font(Font.title)
+                                .prefersDefaultFocus(in: mainNamespace)
+                                .onSubmit {
+                                    if agent.isConnected {
+                                        if agent.chatLog.count == 0 {
+                                            agent.reset(promptStyle: promptMode)
+                                        }
+                                        agent.query(request: self.filter)
+                                        self.filter = ""
                                     }
-                                    agent.query(request: self.filter)
-                                    self.filter = ""
                                 }
-                            }
-                            
-                            HStack {
                                 Button(action: {
                                     if agent.isConnected {
                                         if agent.chatLog.count == 0 {
@@ -293,7 +292,10 @@ struct ContentView: View {
                                 .cornerRadius(5.0)
                                 .buttonStyle(.plain)
                                 .opacity(self.isHoveringSearch ? 0.8 : 1.0)
-                                
+                                .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
+                            }
+                            
+                            HStack {
                                 if agent.chatLog.count == 0 {
                                     Button(action: {
                                         highlightedBundle = ""
@@ -334,7 +336,6 @@ struct ContentView: View {
                                     Spacer()
                                 }
                             }
-                            .offset(x: -60.0)
                         }
                     }
                     if agent.chatLog.count > 0 {
@@ -361,7 +362,7 @@ struct ContentView: View {
                         .padding()
                     }
                 }
-                .padding(EdgeInsets(top: 10, leading: agent.chatLog.count == 0 ? 0 : 210, bottom: 10, trailing: agent.chatLog.count == 0 ? 0 : 150))
+                .padding(EdgeInsets(top: 10, leading: agent.chatLog.count == 0 ? 0 : 210, bottom: 10, trailing: agent.chatLog.count == 0 ? 0 : 210))
                 
                 if agent.chatLog.count == 0 {
                     if self.showUsage {

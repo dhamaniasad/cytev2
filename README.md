@@ -31,7 +31,6 @@ A lot of research involves collating information from multiple sources; internal
 - Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
     * Maybe not though, we can't do this retrospectively for other eps so does it make sense to do it live?
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
-- Icon should be above Search bar in z index (causes incorrect cursor to show)
 - Thumbnails flash when regenerated
 
 
