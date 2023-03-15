@@ -22,8 +22,6 @@ A lot of research involves collating information from multiple sources; internal
 ## Issues
 
 - Searching does not show all intervals for results
-- Episode closing and some other model state changes not causing the feed to update
-- file change tracking hangs the UI (Need to move some memory functions off the main thread - or is there a spotlight or similar API that can get the file list from cache?)
 - Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Extract usage and search bars to own views from ContentView
@@ -34,11 +32,13 @@ A lot of research involves collating information from multiple sources; internal
 - Icon should be above Search bar in z index (causes incorrect cursor to show)
 - Thumbnails flash when regenerated
 
+
 ## Feature requests
 
 - Chat to get video results inline
 - Filter feed by time interval
 - Easily copy code blocks in chat
+- Reduce color space for raw videos
 - Prefix episode titles with a summary of window names used in session
 - Set default playback speed 2.0
 - Keyword autoblacklist

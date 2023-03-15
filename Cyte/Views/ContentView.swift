@@ -55,7 +55,7 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 60)
     ]
     
-    // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can.
+    // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func refreshData() {
         if self.filter.count == 0 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
@@ -213,7 +213,9 @@ struct ContentView: View {
         withAnimation {
             ScrollView {
                 LazyVGrid(columns: feedColumnLayout, spacing: 20) {
-                    ForEach(episodes) { episode in
+                    ForEach(episodes.filter { ep in
+                        return (ep.title ?? "").count > 0
+                    }) { episode in
                         EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
                     }
                 }

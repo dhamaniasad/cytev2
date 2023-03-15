@@ -62,7 +62,7 @@ class Memory {
                         !(
                             fileURL.pathComponents.contains("Movies") &&
                             fileURL.pathComponents.contains(Bundle.main.bundleIdentifier!) &&
-                            fileURL.pathExtension != ".html"
+                            fileURL.pathExtension != "html"
                         ) {
                         recentFiles.append((fileURL, modificationDate))
                     }
@@ -84,12 +84,12 @@ class Memory {
         guard let front = NSWorkspace.shared.frontmostApplication else { return "" }
         let context = front.bundleIdentifier ?? "Unnamed"
         if front.isActive && currentContext != context {
-            if assetWriter != nil {
+            if assetWriter != nil && assetWriterInput!.isReadyForMoreMediaData {
                 closeEpisode()
             }
             currentContext = context
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
-            if currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
+            if  assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
                 openEpisode()
             } else {
                 print("Bypass exclusion context \(currentContext)")
@@ -135,7 +135,7 @@ class Memory {
         episode = Episode(context: PersistenceController.shared.container.viewContext)
         episode!.start = currentStart
         episode!.bundle = currentContext
-        episode!.title = assetWriter?.outputURL.deletingPathExtension().lastPathComponent
+        episode!.title = ""//assetWriter?.outputURL.deletingPathExtension().lastPathComponent
         episode!.end = currentStart
         do {
             try PersistenceController.shared.container.viewContext.save()
@@ -143,6 +143,33 @@ class Memory {
             let nsError = error as NSError
             fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
         }
+    }
+    
+    func trackFileChanges(ep: Episode) {
+        if shouldTrackFileChanges {
+            // Make this follow a user preference, since it chews cpu
+            let files = Memory.getRecentFiles(earliest: currentStart)
+            for fileAndModified: (URL, Date) in files! {
+                let doc = Document(context: PersistenceController.shared.container.viewContext)
+                doc.path = fileAndModified.0
+                doc.episode = ep
+                do {
+                    try PersistenceController.shared.container.viewContext.save()
+                } catch {
+                    let nsError = error as NSError
+                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                }
+                Agent.shared.index(path: doc.path!)
+            }
+        }
+    }
+    
+    func reset()  {
+        self.assetWriterInput = nil
+        self.assetWriter = nil
+        self.assetWriterAdaptor = nil
+        self.frameCount = 0
+        self.episode = nil
     }
     
     //
@@ -162,48 +189,26 @@ class Memory {
         assetWriterInput!.markAsFinished()
         self.update(force_close: true)
         
-        // Delete episodes < 20s (allows enough time for document search, once that is configurable this can change)
-        if frameCount < 10 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
+        if frameCount < 7 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
             assetWriter!.cancelWriting()
             PersistenceController.shared.container.viewContext.delete(episode!)
             Logger().info("Supressed small episode for \(self.currentContext)")
         } else {
+            let ep = self.episode!
             assetWriter!.finishWriting {
-                //outputMovieURL now has the video
-                Logger().info("Finished video")
+                self.trackFileChanges(ep:ep)
             }
-            episode!.title = assetWriter?.outputURL.deletingPathExtension().lastPathComponent
-            episode!.end = Date()
+            
+            self.episode!.title = self.assetWriter?.outputURL.deletingPathExtension().lastPathComponent
+            self.episode!.end = Date()
             do {
                 try PersistenceController.shared.container.viewContext.save()
             } catch {
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
-            
-            if shouldTrackFileChanges {
-                // Make this follow a user preference, since it chews cpu
-                let files = Memory.getRecentFiles(earliest: currentStart)
-                for fileAndModified: (URL, Date) in files! {
-                    let doc = Document(context: PersistenceController.shared.container.viewContext)
-                    doc.path = fileAndModified.0
-                    doc.episode = episode
-                    do {
-                        try PersistenceController.shared.container.viewContext.save()
-                    } catch {
-                        let nsError = error as NSError
-                        fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-                    }
-                    Agent.shared.index(path: doc.path!)
-                }
-            }
         }
-
-        assetWriterInput = nil
-        assetWriter = nil
-        assetWriterAdaptor = nil
-        frameCount = 0
-        episode = nil
+        self.reset()
     }
     
     //
@@ -211,14 +216,13 @@ class Memory {
     //
     func addFrame(frame: CapturedFrame, secondLength: Int64) {
         if assetWriter != nil {
-            //            fatalError("Can't add a frame to an unopened episode")
             if assetWriterInput!.isReadyForMoreMediaData {
                 let frameTime = CMTimeMake(value: Int64(frameCount) * secondLength, timescale: 1)
                 //append the contents of the pixelBuffer at the correct time
                 assetWriterAdaptor!.append(frame.data!, withPresentationTime: frameTime)
+                Analysis.shared.runOnFrame(frame: frame)
                 frameCount += 1
             }
-            Analysis.shared.runOnFrame(frame: frame)
         }
     }
     
@@ -274,7 +278,6 @@ class Memory {
             conceptTimes.removeValue(forKey: concept)
             concepts.remove(concept)
         }
-//        print(concepts)
     }
 
     func observe(what: String) {

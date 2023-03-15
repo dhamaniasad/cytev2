@@ -216,6 +216,7 @@ struct EpisodeView: View {
         .frame(width: 360, height: 260)
         .onAppear {
             updateSelection()
+            print(((player.currentItem?.asset) as? AVURLAsset)?.url)
         }
     }
 

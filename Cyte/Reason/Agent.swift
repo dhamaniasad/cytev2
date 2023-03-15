@@ -51,6 +51,7 @@ class Agent : WebSocketDelegate, ObservableObject {
     }
     
     func index(path: URL) {
+        print("Indexing \(path.absoluteString)")
         sendMessage(data: [
             "type": "index",
             "message": path.absoluteString
