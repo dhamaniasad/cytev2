@@ -30,7 +30,7 @@ struct ContentView: View {
     @State private var showUsage = false
     
     @State private var chatModes = ["agent", "qa", "chat"]
-    @State private var promptMode = "chat"
+    @State private var promptMode = "qa"
     
     @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]
     @State private var appIntervals : [AppInterval] = []
@@ -115,8 +115,12 @@ struct ContentView: View {
             docFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
             do {
                 let docs = try viewContext.fetch(docFetch)
+                var paths = Set<URL>()
                 for doc in docs {
-                    documentsForBundle.append(doc)
+                    if !paths.contains(doc.path!) {
+                        documentsForBundle.append(doc)
+                        paths.insert(doc.path!)
+                    }
                 }
             } catch {
                 
@@ -147,7 +151,9 @@ struct ContentView: View {
         withAnimation {
             VStack {
                 Chart {
-                    ForEach(episodes) { shape in
+                    ForEach(episodes.sorted {
+                        return $0.bundle!.compare($1.bundle!).rawValue == 1
+                    }) { shape in
                         BarMark(
                             x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start!)),
                             y: .value("Total Count", shape.end!.timeIntervalSince(shape.start!))
