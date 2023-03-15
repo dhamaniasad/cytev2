@@ -1,5 +1,7 @@
 # Cyte
 
+[![Xcode - Build and Analyze](https://github.com/shaunnarayan/cytev2/actions/workflows/swift-xcode.yml/badge.svg)](https://github.com/shaunnarayan/cytev2/actions/workflows/swift-xcode.yml)
+
 A background screen recorder for easy history search. There is an [optional companion app](https://github.com/shaunnarayan/cytev2-explore), which enables GPT features when running in background.
 
 ## Uses
