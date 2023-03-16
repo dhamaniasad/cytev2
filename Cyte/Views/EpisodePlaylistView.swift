@@ -374,7 +374,7 @@ struct EpisodePlaylistView: View {
                         })
                             .frame(width: 710, height: 400)
                             .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                                if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 {
+                                if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 || (player!.error != nil) {
                                     return
                                 }
                                 var offset_sum = 0.0
@@ -385,10 +385,20 @@ struct EpisodePlaylistView: View {
                                     offset_sum = next_offset
                                     return is_within
                                 }
-                                secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
+                                let url = (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!
+                                if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
+                                    // @todo hack to get around some form of off by one issue in the overall logic
+                                    // Active interval comes out as the next episode when the playhead is at the end of the video
+                                    secondsOffsetFromLastEpisode += 0.1
+                                } else {
+                                    secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
+                                }
+                                print(secondsOffsetFromLastEpisode)
+                                print(player!.currentTime().seconds)
                             }
                             .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
-                                playerEnded()
+//                                playerEnded()
+                                player!.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
                             }
                     
                         

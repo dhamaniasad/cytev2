@@ -158,8 +158,7 @@ struct ContentView: View {
                             x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start!)),
                             y: .value("Total Count", shape.end!.timeIntervalSince(shape.start!))
                         )
-                        .opacity(highlightedBundle == shape.bundle! ? 0.7 : 1.0)
-                        .foregroundStyle(by: .value("App", shape.bundle!))
+                        .foregroundStyle(bundleColors[shape.bundle!] ?? .gray)
                     }
                 }
                 .frame(height: 100)
@@ -223,6 +222,25 @@ struct ContentView: View {
                         return (ep.title ?? "").count > 0
                     }) { episode in
                         EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
+                            .contextMenu {                                        
+                                Button {
+                                    episode.save = !episode.save
+                                    do {
+                                        try PersistenceController.shared.container.viewContext.save()
+                                        self.refreshData()
+                                    } catch {
+                                    }
+                                } label: {
+                                    Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
+                                }
+                                Button {
+                                    Memory.shared.delete(episode: episode)
+                                    self.refreshData()
+                                } label: {
+                                    Label("Delete", systemImage: "xmark.bin")
+                                }
+                            
+                            }
                     }
                 }
                 .padding(.all)

@@ -46,7 +46,7 @@ struct CyteApp: App {
                 }
         }
         MenuBarExtra(
-                    "App Menu Bar Extra", systemImage: "timelapse",
+                    "App Menu Bar Extra", image: "LogoIcon",
                     isInserted: $showMenuBarExtra)
                 {
                     VStack {

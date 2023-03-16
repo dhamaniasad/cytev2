@@ -37,6 +37,7 @@ A lot of research involves collating information from multiple sources; internal
 ## Feature requests
 
 - Chat to get video results inline
+- Filter by bookmarked
 - Filter feed by time interval
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
