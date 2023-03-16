@@ -28,6 +28,10 @@ struct ContentView: View {
     @State private var filter = ""
     @State private var highlightedBundle = ""
     @State private var showUsage = false
+    @State private var showFaves = false
+    
+    @State private var startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!
+    @State private var endDate = Date()
     
     @State private var chatModes = ["agent", "qa", "chat"]
     @State private var promptMode = "qa"
@@ -40,6 +44,7 @@ struct ContentView: View {
     @State private var isHoveringRetrySearch: Bool = false
     @State private var isHoveringUsage: Bool = false
     @State private var isHoveringSettings: Bool = false
+    @State private var isHoveringFaves: Bool = false
     
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -60,9 +65,16 @@ struct ContentView: View {
         if self.filter.count == 0 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
             episodeFetch.sortDescriptors = [NSSortDescriptor(key:"start", ascending: false)]
+            var pred = String("start >= %@ AND end <= %@")
+            var args = [startDate as CVarArg, endDate as CVarArg]
             if highlightedBundle.count != 0 {
-                episodeFetch.predicate = NSPredicate(format: "bundle == %@", highlightedBundle)
+                pred += String("AND bundle == %@")
+                args.append(highlightedBundle)
             }
+            if showFaves {
+                pred += String("AND save == true")
+            }
+            episodeFetch.predicate = NSPredicate(format: pred, argumentArray: args)
             do {
                 episodes = try viewContext.fetch(episodeFetch)
                 intervals.removeAll()
@@ -76,11 +88,20 @@ struct ContentView: View {
                 concepts.append(Memory.shared.getOrCreateConcept(name: concept.lowercased()))
             }
             let intervalFetch : NSFetchRequest<Interval> = Interval.fetchRequest()
-            intervalFetch.predicate = NSPredicate(format: "concept IN %@", concepts)
             intervalFetch.sortDescriptors = [NSSortDescriptor(key:"episode.start", ascending: false)]
+            
+            var pred = String("episode.start >= %@ AND episode.end <= %@ AND concept IN %@")
+            var args = [startDate as CVarArg, endDate as CVarArg, concepts]
             if highlightedBundle.count != 0 {
-                intervalFetch.predicate = NSPredicate(format: "episode.bundle == %@", highlightedBundle)
+                pred += String("AND episode.bundle == %@")
+                args.append(highlightedBundle)
             }
+            if showFaves {
+                pred += String("AND episode.save == true")
+            }
+            
+            intervalFetch.predicate = NSPredicate(format: pred, argumentArray: args)
+            
             episodes.removeAll()
             intervals.removeAll()
             if concepts.count < 5 {
@@ -222,7 +243,7 @@ struct ContentView: View {
                         return (ep.title ?? "").count > 0
                     }) { episode in
                         EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
-                            .contextMenu {                                        
+                            .contextMenu {
                                 Button {
                                     episode.save = !episode.save
                                     do {
@@ -251,6 +272,14 @@ struct ContentView: View {
                 }
             }
         }
+    }
+    
+    func getDateRange(start: Bool) -> ClosedRange<Date> {
+        if start {
+            return (episodes.last?.start ?? Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!) ... (endDate)
+        }
+        return (startDate) ... (episodes.first?.end ?? Date())
+        
     }
 
     var body: some View {
@@ -340,11 +369,32 @@ struct ContentView: View {
                                             NSCursor.arrow.set()
                                         }
                                     })
+                                    
+                                    Button(action: {
+                                        highlightedBundle = ""
+                                        showFaves = !showFaves
+                                        self.refreshData()
+                                    }) {
+                                        Image(systemName: "star")
+                                    }
+                                    .opacity(0.8)
+                                    .buttonStyle(.plain)
+                                    .opacity(isHoveringFaves ? 0.8 : 1.0)
+                                    .onHover(perform: { hovering in
+                                        self.isHoveringFaves = hovering
+                                        if hovering {
+                                            NSCursor.pointingHand.set()
+                                        } else {
+                                            NSCursor.arrow.set()
+                                        }
+                                    })
+                                    
                                     NavigationLink {
                                         Settings()
                                     } label: {
                                         Image(systemName: "folder.badge.gearshape")
                                     }
+                                    .padding()
                                     .opacity(isHoveringSettings ? 0.8 : 1.0)
                                     .buttonStyle(.plain)
                                     .onHover(perform: { hovering in
@@ -368,7 +418,7 @@ struct ContentView: View {
                                 self.refreshData()
                                 agent.reset(promptStyle: promptMode)
                             }) {
-                                Text("Retry Search")
+                                Text("Back to Search")
                                     .underline()
                             }
                             .onHover(perform: { hovering in
@@ -389,6 +439,36 @@ struct ContentView: View {
                 .padding(EdgeInsets(top: 10, leading: agent.chatLog.count == 0 ? 0 : 210, bottom: 10, trailing: agent.chatLog.count == 0 ? 0 : 210))
                 
                 if agent.chatLog.count == 0 {
+                    let bindingStart = Binding<Date>(get: {
+                        self.startDate
+                    }, set: {
+                        self.startDate = $0
+                        self.refreshData()
+                    })
+                    let bindingEnd = Binding<Date>(get: {
+                        self.endDate
+                    }, set: {
+                        self.endDate = $0
+                        self.refreshData()
+                    })
+                    HStack(alignment: .center) {
+                        DatePicker(
+                            "",
+                            selection: bindingStart,
+//                            in: getDateRange(start:true),
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        .frame(width: 200)
+                        Text(" > ")
+                        DatePicker(
+                            "",
+                            selection: bindingEnd,
+//                            in: getDateRange(start:false),
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        .frame(width: 200)
+                        Spacer()
+                    }
                     if self.showUsage {
                         usage
                     }

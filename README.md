@@ -31,14 +31,12 @@ A lot of research involves collating information from multiple sources; internal
 - Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
     * Maybe not though, we can't do this retrospectively for other eps so does it make sense to do it live?
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
-- Thumbnails flash when regenerated
+- Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 
 
 ## Feature requests
 
 - Chat to get video results inline
-- Filter by bookmarked
-- Filter feed by time interval
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
 - Prefix episode titles with a summary of window names used in session
