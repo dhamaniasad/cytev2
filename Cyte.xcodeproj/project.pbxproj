@@ -18,6 +18,7 @@
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3F6FE07C29C357290061DBF5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3F6FE07B29C357290061DBF5 /* MainMenu.xib */; };
+		3F6FE07E29C424230061DBF5 /* StaticEpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6FE07D29C424230061DBF5 /* StaticEpisodeView.swift */; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
 		3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8F932929B5CF9C00C938DE /* Charts.framework */; };
 		3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 3F9E3DF829B9D87C00FE31CB /* Starscream */; };
@@ -45,6 +46,7 @@
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3F6FE07B29C357290061DBF5 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
+		3F6FE07D29C424230061DBF5 /* StaticEpisodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StaticEpisodeView.swift; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3F8F932929B5CF9C00C938DE /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/Charts.framework; sourceTree = DEVELOPER_DIR; };
 		3F9E3DFA29BA157600FE31CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 		3FAD36AF29B1C21E00CCCE82 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3F6FE07D29C424230061DBF5 /* StaticEpisodeView.swift */,
 				3F14BDD129BF06F900F12FE7 /* EpisodeView.swift */,
 				3F14BDCF29BDE82F00F12FE7 /* EpisodePlaylistView.swift */,
 				3FCAA20629AC7C0100898995 /* ContentView.swift */,
@@ -286,6 +289,7 @@
 				3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */,
 				3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */,
 				3F58AE2629B18344007E7703 /* Events.swift in Sources */,
+				3F6FE07E29C424230061DBF5 /* StaticEpisodeView.swift in Sources */,
 				3FAD36A929B1BB9800CCCE82 /* Memory.swift in Sources */,
 				3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */,
 				3FCAA20229AC7C0100898995 /* Persistence.swift in Sources */,

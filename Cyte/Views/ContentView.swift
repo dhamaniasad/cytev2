@@ -62,7 +62,7 @@ struct ContentView: View {
     
     // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func refreshData() {
-        if self.filter.count == 0 {
+        if self.filter.count < 3 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
             episodeFetch.sortDescriptors = [NSSortDescriptor(key:"start", ascending: false)]
             var pred = String("start >= %@ AND end <= %@")
@@ -239,29 +239,37 @@ struct ContentView: View {
         withAnimation {
             ScrollView {
                 LazyVGrid(columns: feedColumnLayout, spacing: 20) {
-                    ForEach(episodes.filter { ep in
-                        return (ep.title ?? "").count > 0
-                    }) { episode in
-                        EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
-                            .contextMenu {
-                                Button {
-                                    episode.save = !episode.save
-                                    do {
-                                        try PersistenceController.shared.container.viewContext.save()
-                                        self.refreshData()
-                                    } catch {
+                    if filter.count < 3 {
+                        ForEach(episodes.filter { ep in
+                            return (ep.title ?? "").count > 0
+                        }) { episode in
+                            EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
+                                .contextMenu {
+                                    Button {
+                                        episode.save = !episode.save
+                                        do {
+                                            try PersistenceController.shared.container.viewContext.save()
+                                            self.refreshData()
+                                        } catch {
+                                        }
+                                    } label: {
+                                        Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
                                     }
-                                } label: {
-                                    Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
+                                    Button {
+                                        Memory.shared.delete(episode: episode)
+                                        self.refreshData()
+                                    } label: {
+                                        Label("Delete", systemImage: "xmark.bin")
+                                    }
+                                    
                                 }
-                                Button {
-                                    Memory.shared.delete(episode: episode)
-                                    self.refreshData()
-                                } label: {
-                                    Label("Delete", systemImage: "xmark.bin")
-                                }
-                            
-                            }
+                        }
+                    } else {
+                        ForEach(intervals.filter { interval in
+                            return interval.episode != nil && (interval.episode!.title ?? "").count > 0
+                        }) { interval in
+                            StaticEpisodeView(asset: AVAsset(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(interval.episode!.title ?? "").mov"))!), episode: interval.episode!, result: interval, intervals: appIntervals)
+                        }
                     }
                 }
                 .padding(.all)
