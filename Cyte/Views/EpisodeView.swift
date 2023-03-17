@@ -21,6 +21,24 @@ extension CGRect: Hashable {
     }
 }
 
+extension View {
+    func cutout<S: Shape>(_ shape: S) -> some View {
+        self.clipShape(StackedShape(bottom: Rectangle(), top: shape), style: FillStyle(eoFill: true))
+    }
+}
+
+struct StackedShape<Bottom: Shape, Top: Shape>: Shape {
+    var bottom: Bottom
+    var top: Top
+    
+    func path(in rect: CGRect) -> Path {
+        return Path { path in
+            path.addPath(bottom.path(in: rect))
+            path.addPath(top.path(in: rect))
+        }
+    }
+}
+
 struct EpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
@@ -138,17 +156,31 @@ struct EpisodeView: View {
             ZStack {
                 VideoPlayer(player: player, videoOverlay: {
                     GeometryReader { metrics in
-                        ForEach(highlight, id:\.self) { box in
-                            ZStack {
+                        ZStack {
+                            if highlight.count > 0 {
+                                Color.black
+                                    .opacity(0.5)
+                                    .cutout(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
+                                            .offset(x:-180 + (highlight.first!.midX * 360), y:102 - (highlight.first!.midY * 203))
+                                            
+                                    )
+                            } else {
+                                Color.black
+                                    .opacity(0.0)
+                            }
+                        
+                            ForEach(highlight, id:\.self) { box in
                                 RippleEffectView()
                                     .foregroundColor(.yellow)
                                     .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
                                     .position(x:  (box.midX * metrics.size.width), y: metrics.size.height - (box.midY * metrics.size.height))
                                     .opacity(0.5)
-                                
                             }
                         }
                     }
+
                 })
                 .frame(width: 360, height: 203)
                     .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in

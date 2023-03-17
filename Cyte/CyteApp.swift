@@ -11,12 +11,11 @@ import SwiftUI
 struct CyteApp: App {
     let persistenceController = PersistenceController.shared
 
+    @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
     @StateObject var screenRecorder = ScreenRecorder()
-    let appDelegate = AppDelegate()
     
     func setup() {
-        NSApp.delegate = appDelegate
         Task {
             if await screenRecorder.canRecord {
                 await screenRecorder.start()
@@ -74,6 +73,11 @@ struct CyteApp: App {
 }
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        let nib = NSNib(nibNamed: NSNib.Name("MainMenu"), bundle: Bundle.main)
+        nib?.instantiate(withOwner: NSApplication.shared, topLevelObjects: nil)
+    }
     
     func applicationWillTerminate(_ notification: Notification) {
         Memory.shared.closeEpisode()

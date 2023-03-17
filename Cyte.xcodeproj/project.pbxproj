@@ -17,6 +17,7 @@
 		3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F14BDD529C0D4A800F12FE7 /* AVKit.framework */; };
 		3F58AE2629B18344007E7703 /* Events.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F58AE2529B18344007E7703 /* Events.swift */; };
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
+		3F6FE07C29C357290061DBF5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3F6FE07B29C357290061DBF5 /* MainMenu.xib */; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
 		3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8F932929B5CF9C00C938DE /* Charts.framework */; };
 		3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 3F9E3DF829B9D87C00FE31CB /* Starscream */; };
@@ -43,6 +44,7 @@
 		3F14BDD529C0D4A800F12FE7 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/AVKit.framework; sourceTree = DEVELOPER_DIR; };
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
+		3F6FE07B29C357290061DBF5 /* MainMenu.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MainMenu.xib; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3F8F932929B5CF9C00C938DE /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/Charts.framework; sourceTree = DEVELOPER_DIR; };
 		3F9E3DFA29BA157600FE31CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -176,6 +178,7 @@
 				3FAD36A329B1BACB00CCCE82 /* Classify */,
 				3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */,
 				3FCAA1FF29AC7C0100898995 /* CyteApp.swift */,
+				3F6FE07B29C357290061DBF5 /* MainMenu.xib */,
 				3FCAA20829AC7C0400898995 /* Assets.xcassets */,
 				3FCAA20A29AC7C0400898995 /* Cyte.entitlements */,
 				3FCAA20B29AC7C0400898995 /* Preview Content */,
@@ -259,6 +262,7 @@
 			files = (
 				3FCAA20D29AC7C0400898995 /* Preview Assets.xcassets in Resources */,
 				3FCAA20929AC7C0400898995 /* Assets.xcassets in Resources */,
+				3F6FE07C29C357290061DBF5 /* MainMenu.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

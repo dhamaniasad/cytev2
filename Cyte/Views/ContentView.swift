@@ -453,15 +453,14 @@ struct ContentView: View {
                     })
                     HStack(alignment: .center) {
                         DatePicker(
-                            "",
+                            "From",
                             selection: bindingStart,
 //                            in: getDateRange(start:true),
                             displayedComponents: [.date, .hourAndMinute]
                         )
                         .frame(width: 200)
-                        Text(" > ")
                         DatePicker(
-                            "",
+                            "Until",
                             selection: bindingEnd,
 //                            in: getDateRange(start:false),
                             displayedComponents: [.date, .hourAndMinute]
