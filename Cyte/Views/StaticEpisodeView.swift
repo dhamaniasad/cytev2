@@ -16,10 +16,10 @@ struct StaticEpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @State var asset: AVAsset
-    @State var episode: Episode
+    @ObservedObject var episode: Episode
     
     @State var selection: Int = 0
-    @State var result: Interval
+    @ObservedObject var result: Interval
     @State var highlight: [CGRect] = []
     @State var thumbnail: CGImage?
     
@@ -76,7 +76,6 @@ struct StaticEpisodeView: View {
             let boundingBox = boxObservation?.boundingBox ?? .zero
             
             if candidate.string.lowercased().contains((selected.concept?.name?.lowercased())!) {
-                print("\(selected.concept?.name?.lowercased()) \(candidate.string.lowercased())")
                 highlight.append(boundingBox)
             }
             

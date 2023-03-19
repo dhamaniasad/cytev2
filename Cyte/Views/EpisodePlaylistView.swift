@@ -234,6 +234,21 @@ struct EpisodePlaylistView: View {
         return end
     }
     
+    func activeTime() -> String {
+        var offset_sum = 0.0
+        let active_interval: AppInterval? = intervals.first { interval in
+            let window_center = secondsOffsetFromLastEpisode
+            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+            let is_within = offset_sum <= window_center && next_offset >= window_center
+            offset_sum = next_offset
+            return is_within
+        }
+        if active_interval == nil || player == nil {
+            return Date().formatted()
+        }
+        return Date(timeIntervalSinceReferenceDate: active_interval!.start.timeIntervalSinceReferenceDate + player!.currentTime().seconds).formatted()
+    }
+    
     // @todo handle singlular/plural
     func humanReadableOffset() -> String {
         var offset_sum = 0.0
@@ -312,6 +327,7 @@ struct EpisodePlaylistView: View {
     var body: some View {
         VStack {
             VStack(alignment: .trailing) {
+                Text(activeTime())
                 Text(humanReadableOffset())
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
@@ -393,8 +409,6 @@ struct EpisodePlaylistView: View {
                                 } else {
                                     secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                                 }
-                                print(secondsOffsetFromLastEpisode)
-                                print(player!.currentTime().seconds)
                             }
                             .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
 //                                playerEnded()

@@ -16,7 +16,7 @@ import Charts
 import Foundation
 
 struct ContentView: View {
-    @Namespace var mainNamespace
+//    @Namespace var mainNamespace
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var agent = Agent.shared
 
@@ -69,6 +69,8 @@ struct ContentView: View {
             return
         }
         lastRefresh = Date()
+        episodes.removeAll()
+        intervals.removeAll()
         if self.filter.count < 3 || self.filter.split(separator: " ").count > 5 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
             episodeFetch.sortDescriptors = [NSSortDescriptor(key:"start", ascending: false)]
@@ -109,14 +111,10 @@ struct ContentView: View {
             
             intervalFetch.predicate = NSPredicate(format: pred, argumentArray: args)
             
-            episodes.removeAll()
-            intervals.removeAll()
             if concepts.count < 5 {
                 do {
                     let potentials = try viewContext.fetch(intervalFetch)
                     for interval in potentials {
-                        // @todo how can this occur? Suspect it has to do with no inverse relations on Episode
-                        if interval.episode?.start == nil { continue }
                         intervals.append(interval)
                         let ep_included: Episode? = episodes.first(where: { ep in
                             return ep.start == interval.episode!.start
@@ -263,7 +261,7 @@ struct ContentView: View {
                                         Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
                                     }
                                     Button {
-                                        Memory.shared.delete(episode: episode)
+                                        Memory.shared.delete(delete_episode: episode)
                                         self.refreshData()
                                     } label: {
                                         Label("Delete", systemImage: "xmark.bin")
@@ -309,7 +307,7 @@ struct ContentView: View {
                             self.filter
                         }, set: {
                             self.filter = $0
-                           self.refreshData()
+//                           self.refreshData()
                         })
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {
@@ -324,7 +322,7 @@ struct ContentView: View {
                                 .background(.white)
                                 .cornerRadius(6.0)
                                 .font(Font.title)
-                                .prefersDefaultFocus(in: mainNamespace)
+//                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
                                         if agent.isConnected {

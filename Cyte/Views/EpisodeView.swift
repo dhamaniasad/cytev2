@@ -43,7 +43,7 @@ struct EpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     
     @State var player: AVPlayer
-    @State var episode: Episode
+    @ObservedObject var episode: Episode
     
     @State var selection: Int = 0
     @State var results: [Interval]

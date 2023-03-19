@@ -191,7 +191,7 @@ class Memory {
         
         if frameCount < 7 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
             assetWriter!.cancelWriting()
-            PersistenceController.shared.container.viewContext.delete(episode!)
+            delete(delete_episode: episode!)
             Logger().info("Supressed small episode for \(self.currentContext)")
         } else {
             let ep = self.episode!
@@ -289,12 +289,20 @@ class Memory {
         }
     }
 
-    func delete(episode: Episode) {
-        PersistenceController.shared.container.viewContext.delete(episode)
+    func delete(delete_episode: Episode) {
+        let intervalFetch : NSFetchRequest<Interval> = Interval.fetchRequest()
+        intervalFetch.predicate = NSPredicate(format: "episode == %@", delete_episode)
+        if let result = try? PersistenceController.shared.container.viewContext.fetch(intervalFetch) {
+            for object in result {
+                print("DELETED INTERVAL \(object.concept?.name)")
+                PersistenceController.shared.container.viewContext.delete(object)
+            }
+        }
+        PersistenceController.shared.container.viewContext.delete(delete_episode)
         do {
             try PersistenceController.shared.container.viewContext.save()
             try FileManager.default.removeItem(at:
-                                            (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!
+                                            (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(delete_episode.title ?? "").mov"))!
             )
         } catch {
         }
