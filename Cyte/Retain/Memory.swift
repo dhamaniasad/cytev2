@@ -26,7 +26,7 @@ class Memory {
     private var subscriptions = Set<AnyCancellable>()
     private var concepts: Set<String> = Set()
     private var conceptTimes: Dictionary<String, DateInterval> = Dictionary()
-    private var shouldTrackFileChanges: Bool = true
+    private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
     
     init() {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()

@@ -101,7 +101,6 @@ struct EpisodeView: View {
             let boundingBox = boxObservation?.boundingBox ?? .zero
             
             if candidate.string.lowercased().contains((selected.concept?.name?.lowercased())!) {
-                print("\(selected.concept?.name?.lowercased()) \(candidate.string.lowercased())")
                 highlight.append(boundingBox)
             }
             
