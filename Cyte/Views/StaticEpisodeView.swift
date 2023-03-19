@@ -161,7 +161,7 @@ struct StaticEpisodeView: View {
                     }
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) + (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: highlight.count > 0 ? result.concept?.name : nil
+                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: highlight.count > 0 ? result.concept?.name : nil
                             )
                         }
                     } label: {
@@ -203,7 +203,7 @@ struct StaticEpisodeView: View {
         .frame(width: 360, height: 260)
         .onAppear {
             genTask = Task {
-                await generateThumbnail(offset: 0.0)
+                await generateThumbnail(offset: (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate))
             }
         }
         .onDisappear {
