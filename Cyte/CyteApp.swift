@@ -16,6 +16,7 @@ struct CyteApp: App {
     @StateObject var screenRecorder = ScreenRecorder()
     
     func setup() {
+        appDelegate.mainApp = self
         Task {
             if await screenRecorder.canRecord {
                 await screenRecorder.start()
@@ -74,9 +75,40 @@ struct CyteApp: App {
 
 class AppDelegate: NSObject, NSApplicationDelegate {
     
+    var mainApp: CyteApp?
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         let nib = NSNib(nibNamed: NSNib.Name("MainMenu"), bundle: Bundle.main)
         nib?.instantiate(withOwner: NSApplication.shared, topLevelObjects: nil)
+
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),
+                                                          name: NSWorkspace.willSleepNotification, object: nil)
+        NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),
+                                                          name: NSWorkspace.didWakeNotification, object: nil)
+    }
+
+
+    @objc private func sleepListener(_ aNotification: Notification) {
+        print("listening to sleep")
+        if aNotification.name == NSWorkspace.willSleepNotification {
+            print("Going to sleep")
+            if mainApp != nil {
+                Task {
+                    if await mainApp!.screenRecorder.isRunning {
+                        await mainApp!.screenRecorder.stop()
+                    }
+                }
+            }
+        } else if aNotification.name == NSWorkspace.didWakeNotification {
+            print("Woke up")
+            if mainApp != nil {
+                Task {
+                    if await mainApp!.screenRecorder.canRecord {
+                        await mainApp!.screenRecorder.start()
+                    }
+                }
+            }
+        }
     }
     
     func applicationWillTerminate(_ notification: Notification) {

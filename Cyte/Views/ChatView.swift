@@ -21,14 +21,14 @@ struct ChatView: View {
         return formatter.string(from: components)
     }
     
-    private func toArray(chat : (String, String)) -> EnumeratedSequence<[String.SubSequence]> {
-        return chat.1.split(separator:"```").enumerated()
+    private func toArray(chat : (String, String, String)) -> EnumeratedSequence<[String.SubSequence]> {
+        return chat.2.split(separator:"```").enumerated()
     }
     
     private func formatString(offset: Int, message: String) -> AttributedString {
         return offset % 2 == 1 ?
              AttributedString(highlightr!.highlight(message)!) :
-                try! AttributedString(markdown:message)
+                try! AttributedString(markdown:message, options: AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace))
     }
     
     var messages: some View {
@@ -50,6 +50,10 @@ struct ChatView: View {
                         .frame(width: 30, height: 30)
                 }
                 VStack(spacing: 0) {
+                    if chat.0 != "user" {
+                        Text(chat.1)
+                            .font(Font.caption)
+                    }
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
                     Text(formatString(offset:Int(subindex), message:String(subchat)))
                         .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))

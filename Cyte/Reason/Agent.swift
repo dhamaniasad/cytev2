@@ -14,7 +14,7 @@ class Agent : WebSocketDelegate, ObservableObject {
     static let shared : Agent = Agent()
     
     @Published var isConnected: Bool = false
-    @Published public var chatLog : [(String, String)] = []
+    @Published public var chatLog : [(String, String, String)] = []
     
     private var socket : WebSocket
     private let secret = "34d87526839e9b49"
@@ -74,12 +74,13 @@ class Agent : WebSocketDelegate, ObservableObject {
         if data["sender"] == "bot" {
             //this could be a whole message or a single token, either way needs to make it's way to the UI
             if data["type"] == "start" {
-                chatLog.append((data["sender"]!, ""))
+                chatLog.append((data["sender"]!, data["botname"]!, ""))
             } else if data["type"] == "stream" {
                 let chatId = chatLog.lastIndex(where: { log in
                     return log.0 == "bot"
                 })
-                chatLog[chatId!].1.append(data["message"]!)
+                chatLog[chatId!].2.append(data["message"]!.replacingOccurrences(of: "\\n", with: "\n"))
+                chatLog[chatId!].1 = data["botname"]!
             } else if data["type"] == "info" {
 //                chatLog.append((data["type"]!, "\(data["message"]!)"))
             } else if data["type"] == "end" {
@@ -92,7 +93,7 @@ class Agent : WebSocketDelegate, ObservableObject {
             }
         } else {
             // echo of your own message
-            chatLog.append(("user", data["message"]!))
+            chatLog.append(("user", "", data["message"]!))
         }
     }
     

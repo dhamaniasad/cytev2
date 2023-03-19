@@ -64,7 +64,7 @@ class Analysis {
         tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
             if let tag = tag {
                 // if verb or noun
-                if tag.rawValue == "Noun" {
+                if tag.rawValue == "Verb" || tag.rawValue == "Noun" {
                     let concept = text[tokenRange]
                     // @todo normalize terms (stem etc.)
 //                    print("\(con cept): \(tag.rawValue)")

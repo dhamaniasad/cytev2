@@ -46,6 +46,8 @@ struct ContentView: View {
     @State private var isHoveringSettings: Bool = false
     @State private var isHoveringFaves: Bool = false
     
+    @State private var lastRefresh: Date = Date()
+    
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60),
@@ -62,7 +64,12 @@ struct ContentView: View {
     
     // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func refreshData() {
-        if self.filter.count < 3 {
+        if (Date().timeIntervalSinceReferenceDate - lastRefresh.timeIntervalSinceReferenceDate) < 0.5 {
+            //@fixme poor mans debounce because it will miss the trailing edge, still deciding best way to structure
+            return
+        }
+        lastRefresh = Date()
+        if self.filter.count < 3 || self.filter.split(separator: " ").count > 5 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
             episodeFetch.sortDescriptors = [NSSortDescriptor(key:"start", ascending: false)]
             var pred = String("start >= %@ AND end <= %@")
@@ -302,7 +309,7 @@ struct ContentView: View {
                             self.filter
                         }, set: {
                             self.filter = $0
-                            self.refreshData()
+                           self.refreshData()
                         })
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {
@@ -319,12 +326,15 @@ struct ContentView: View {
                                 .font(Font.title)
                                 .prefersDefaultFocus(in: mainNamespace)
                                 .onSubmit {
-                                    if agent.isConnected {
-                                        if agent.chatLog.count == 0 {
-                                            agent.reset(promptStyle: promptMode)
+                                    Task {
+                                        if agent.isConnected {
+                                            if agent.chatLog.count == 0 {
+                                                agent.reset(promptStyle: promptMode)
+                                            }
+                                            agent.query(request: self.filter)
+                                            self.filter = ""
                                         }
-                                        agent.query(request: self.filter)
-                                        self.filter = ""
+                                        refreshData()
                                     }
                                 }
                                 Button(action: {

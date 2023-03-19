@@ -23,7 +23,7 @@ A lot of research involves collating information from multiple sources; internal
 
 ## Issues
 
-- Searching does not show all intervals for results
+- Searching results in some episodes without interval highlighting
 - Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Extract usage and search bars to own views from ContentView
