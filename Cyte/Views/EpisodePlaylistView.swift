@@ -29,6 +29,8 @@ struct EpisodePlaylistView: View {
     
     @State var search: String?
     @State var highlight: [CGRect] = []
+    @State private var genTask: Task<Sendable, Error>? = nil
+    @State private var genTime: Double = 0.0
     
     private let timelineSize: CGFloat = 16
     
@@ -46,6 +48,10 @@ struct EpisodePlaylistView: View {
     
     func generateThumbnails(numThumbs: Int = 4) async {
         if intervals.count == 0 { return }
+        if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.1 {
+            return
+        }
+        lastThumbnailRefresh = Date()
         let start: Double = secondsOffsetFromLastEpisode
         let end: Double = secondsOffsetFromLastEpisode + Double(EpisodePlaylistView.windowLengthInSeconds)
         let slide = EpisodePlaylistView.windowLengthInSeconds / numThumbs
@@ -73,8 +79,7 @@ struct EpisodePlaylistView: View {
                 generator.requestedTimeToleranceAfter = CMTime.zero;
                 do {
                     // turn the absolute time into a relative offset in the episode
-                    let ep_len = (active_interval!.end.timeIntervalSinceReferenceDate - active_interval!.start.timeIntervalSinceReferenceDate)
-                    let offset = secondsOffsetFromLastEpisode - (offset_sum - ep_len)
+                    let offset = offset_sum - secondsOffsetFromLastEpisode
                     try thumbnailImages.append( generator.copyCGImage(at: CMTime(seconds: offset, preferredTimescale: 1), actualTime: nil) )
                 } catch {
                     print("Failed to generate thumbnail!")
@@ -82,6 +87,7 @@ struct EpisodePlaylistView: View {
             }
         }
         if search != nil && thumbnailImages.last! != nil {
+            genTime = secondsOffsetFromLastEpisode
             // Run through vision and store results
             let requestHandler = VNImageRequestHandler(cgImage: thumbnailImages.last!!, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
@@ -97,7 +103,6 @@ struct EpisodePlaylistView: View {
             }
             
         }
-        lastThumbnailRefresh = Date()
     }
     
     // @todo Function is duplicated 3 times (here, episodeview and analysis. needs to be Factored out)
@@ -173,11 +178,16 @@ struct EpisodePlaylistView: View {
         }
         
         // generate thumbs
-        Task {
-            await self.generateThumbnails()
+        if genTask != nil {
+            genTask!.cancel()
+            genTask = nil
+        } else {
+            genTask = Task {
+                await self.generateThumbnails()
+            }
         }
         
-        if active_interval == nil || active_interval!.title.count == 0 {
+        if active_interval == nil || active_interval!.title.count == 0 || player == nil {
             player = nil
             return
         }
@@ -319,21 +329,82 @@ struct EpisodePlaylistView: View {
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
         .onAppear {
-            updateData()
             updateIntervals()
+            updateData()
         }
     }
     
     var body: some View {
         VStack {
-            VStack(alignment: .trailing) {
-                Text(activeTime())
-                Text(humanReadableOffset())
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .font(Font.caption)
-            .padding(10)
             VStack {
+                    ZStack {
+                        VideoPlayer(player: player, videoOverlay: {
+
+                                if highlight.count > 0 && abs(secondsOffsetFromLastEpisode - genTime) < 1.0 {
+                                    Color.black
+                                        .opacity(0.5)
+                                        .cutout(
+                                            RoundedRectangle(cornerRadius: 4)
+                                                .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
+                                                .offset(x:-355 + (highlight.first!.midX * 710), y:200 - (highlight.first!.midY * 400))
+                                            
+                                        )
+                                } else {
+                                    Color.black
+                                        .opacity(0.0)
+                                }
+                                        
+
+                        })
+                            .frame(width: 710, height: 400)
+                            .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
+                                if (player!.error != nil) {
+                                    return
+                                }
+                                var offset_sum = 0.0
+                                let active_interval: AppInterval? = intervals.first { interval in
+                                    let window_center = secondsOffsetFromLastEpisode
+                                    let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+                                    let is_within = offset_sum <= window_center && next_offset >= window_center
+                                    offset_sum = next_offset
+                                    return is_within
+                                }
+                                let url = (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!
+                                if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
+                                    // @todo hack to get around some form of off by one issue in the overall logic
+                                    // Active interval comes out as the next episode when the playhead is at the end of the video
+                                    secondsOffsetFromLastEpisode += 0.1
+                                } else {
+                                    secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
+                                }
+                                if abs(secondsOffsetFromLastEpisode - genTime) > 1.0 {
+                                    updateData()
+                                }
+                            }
+                            .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
+//                                playerEnded()
+                                player!.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+                            }
+                    
+                        
+                    }
+//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            VStack {
+                HStack(spacing: 0) {
+                    ForEach(thumbnailImages, id: \.self) { image in
+                        if image != nil {
+                            Image(image!, scale: 1.0, label: Text(""))
+                                .resizable()
+                                .frame(width: 300, height: 170)
+                        } else {
+                            Rectangle()
+                                .fill(.white)
+                                .frame(width: 300, height: 170)
+                        }
+                    }
+                }
+                .frame(height: 170)
                 ZStack {
                     chart
                     ZStack {
@@ -357,69 +428,14 @@ struct EpisodePlaylistView: View {
                     .frame(height: timelineSize * 4)
                     .allowsHitTesting(false)
                 }
-                HStack(spacing: 0) {
-                    ForEach(thumbnailImages, id: \.self) { image in
-                        if image != nil {
-                            Image(image!, scale: 1.0, label: Text(""))
-                                .resizable()
-                                .frame(width: 300, height: 170)
-                        } else {
-                            Rectangle()
-                                .fill(.white)
-                                .frame(width: 300, height: 170)
-                        }
-                    }
-                }
-                .frame(height: 170)
-            }
-            VStack {
                 
-                    ZStack {
-                        VideoPlayer(player: player, videoOverlay: {
-                            GeometryReader { metrics in
-                                ForEach(highlight, id:\.self) { box in
-                                    ZStack {
-                                        RippleEffectView()
-                                            .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
-                                            .position(x: box.midX * metrics.size.width, y: metrics.size.height - (box.midY * metrics.size.height))
-                                            .opacity(0.5)
-                                        
-                                    }
-                                }
-                            }
-                        })
-                            .frame(width: 710, height: 400)
-                            .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                                if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.5 || (player!.error != nil) {
-                                    return
-                                }
-                                var offset_sum = 0.0
-                                let active_interval: AppInterval? = intervals.first { interval in
-                                    let window_center = secondsOffsetFromLastEpisode
-                                    let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-                                    let is_within = offset_sum <= window_center && next_offset >= window_center
-                                    offset_sum = next_offset
-                                    return is_within
-                                }
-                                let url = (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!
-                                if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
-                                    // @todo hack to get around some form of off by one issue in the overall logic
-                                    // Active interval comes out as the next episode when the playhead is at the end of the video
-                                    secondsOffsetFromLastEpisode += 0.1
-                                } else {
-                                    secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
-                                }
-                            }
-                            .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
-//                                playerEnded()
-                                player!.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
-                            }
-                    
-                        
-                    }
-//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            Spacer()
+            HStack(alignment: .top) {
+                Text(activeTime())
+                Text(humanReadableOffset())
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+            }
+            .font(Font.caption)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

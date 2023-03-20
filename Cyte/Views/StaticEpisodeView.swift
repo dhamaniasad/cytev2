@@ -125,7 +125,7 @@ struct StaticEpisodeView: View {
                             )
                     } else {
                         Color.black
-                            .opacity(0.0)
+                            .opacity(0.9)
                     }
                 }
                 
@@ -143,25 +143,32 @@ struct StaticEpisodeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
                     if highlight.count > 1 {
-                        Text("\(selection+1) / \(highlight.count)")
-                            .frame(maxWidth: .infinity, alignment: .trailing)
-                        Image(systemName: "forward")
-                            .onTapGesture {
-                                updateSelection()
-                            }
-                            .opacity(isHoveringNext ? 0.8 : 1.0)
-                            .onHover(perform: { hovering in
-                                self.isHoveringNext = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.set()
-                                } else {
-                                    NSCursor.arrow.set()
+                        HStack {
+                            Text("\(selection+1)/\(highlight.count)")
+                            Image(systemName: "arrow.forward")
+                                .onTapGesture {
+                                    updateSelection()
                                 }
-                            })
+                                .opacity(isHoveringNext ? 0.8 : 1.0)
+                                .onHover(perform: { hovering in
+                                    self.isHoveringNext = hovering
+                                    if hovering {
+                                        NSCursor.pointingHand.set()
+                                    } else {
+                                        NSCursor.arrow.set()
+                                    }
+                                })
+                        }
+                        .foregroundColor(Color(red: 120.0 / 255.0, green: 120.0 / 255.0, blue: 120.0 / 255.0))
+                        .padding(EdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10))
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .foregroundColor(Color(red: 210.0 / 255.0, green: 210.0 / 255.0, blue: 210.0 / 255.0))
+                        )
                     }
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: highlight.count > 0 ? result.concept?.name : nil
+                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: result.concept?.name
                             )
                         }
                     } label: {

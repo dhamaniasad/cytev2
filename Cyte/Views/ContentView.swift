@@ -16,9 +16,12 @@ import Charts
 import Foundation
 
 struct ContentView: View {
-//    @Namespace var mainNamespace
+    @Namespace var mainNamespace
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var agent = Agent.shared
+    
+    @State private var dateRangeSelection = "Last 7 days"
+    let dateRangeOptions = ["Last 24 hours", "Last 7 days", "Last 14 days", "Last 28 days"]
 
     @State private var episodes: [Episode] = []
     @State private var intervals: [Interval] = []
@@ -33,15 +36,11 @@ struct ContentView: View {
     @State private var startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!
     @State private var endDate = Date()
     
-    @State private var chatModes = ["agent", "qa", "chat"]
-    @State private var promptMode = "qa"
-    
     @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]
     @State private var appIntervals : [AppInterval] = []
     
     // Hover states
     @State private var isHoveringSearch: Bool = false
-    @State private var isHoveringRetrySearch: Bool = false
     @State private var isHoveringUsage: Bool = false
     @State private var isHoveringSettings: Bool = false
     @State private var isHoveringFaves: Bool = false
@@ -64,11 +63,9 @@ struct ContentView: View {
     
     // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func refreshData() {
-        if (Date().timeIntervalSinceReferenceDate - lastRefresh.timeIntervalSinceReferenceDate) < 0.5 {
-            //@fixme poor mans debounce because it will miss the trailing edge, still deciding best way to structure
-            return
-        }
-        lastRefresh = Date()
+        let ranges = [1, 7, 14, 28]
+        startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -ranges[dateRangeOptions.firstIndex(of: dateRangeSelection)!], to: Date())!
+        endDate = Date()
         episodes.removeAll()
         intervals.removeAll()
         if self.filter.count < 3 || self.filter.split(separator: " ").count > 5 {
@@ -244,7 +241,7 @@ struct ContentView: View {
         withAnimation {
             ScrollView {
                 LazyVGrid(columns: feedColumnLayout, spacing: 20) {
-                    if filter.count < 3 {
+                    if intervals.count == 0 {
                         ForEach(episodes.filter { ep in
                             return (ep.title ?? "").count > 0
                         }) { episode in
@@ -307,7 +304,10 @@ struct ContentView: View {
                             self.filter
                         }, set: {
                             self.filter = $0
-//                           self.refreshData()
+                            self.intervals.removeAll()
+                            if self.filter.count == 0 {
+                                self.refreshData()
+                            }
                         })
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {
@@ -315,19 +315,20 @@ struct ContentView: View {
                                     "Search \(agent.isConnected ? "or chat " : "")your history",
                                     text: binding
                                 )
-                                .frame(width: agent.chatLog.count == 0 ? 950 : nil, height: 48)
+                                .frame(width: agent.chatLog.count == 0 ? 850 : nil, height: 48)
                                 .cornerRadius(5)
                                 .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
                                 .textFieldStyle(.plain)
                                 .background(.white)
+                                .border(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                                 .cornerRadius(6.0)
                                 .font(Font.title)
-//                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
+                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
                                         if agent.isConnected {
                                             if agent.chatLog.count == 0 {
-                                                agent.reset(promptStyle: promptMode)
+                                                agent.reset()
                                             }
                                             agent.query(request: self.filter)
                                             self.filter = ""
@@ -338,15 +339,13 @@ struct ContentView: View {
                                 Button(action: {
                                     if agent.isConnected {
                                         if agent.chatLog.count == 0 {
-                                            agent.reset(promptStyle: promptMode)
+                                            agent.reset()
                                         }
                                         agent.query(request: self.filter)
                                         self.filter = ""
                                     }
                                 }) {
                                     Image(systemName: "paperplane")
-                                        .frame(width: 50, height: 50)
-                                        .colorInvert()
                                         .onHover(perform: { hovering in
                                             self.isHoveringSearch = hovering
                                             if hovering {
@@ -355,10 +354,9 @@ struct ContentView: View {
                                                 NSCursor.arrow.set()
                                             }
                                         })
+                                        .foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                                 }
                                 .frame(width: 40, height: 40)
-                                .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
-                                .cornerRadius(5.0)
                                 .buttonStyle(.plain)
                                 .opacity(self.isHoveringSearch ? 0.8 : 1.0)
                                 .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
@@ -395,6 +393,7 @@ struct ContentView: View {
                                     }
                                     .opacity(0.8)
                                     .buttonStyle(.plain)
+                                    .padding(EdgeInsets(top: 0.0, leading: 0.0, bottom: 0.0, trailing: 0.0))
                                     .opacity(isHoveringFaves ? 0.8 : 1.0)
                                     .onHover(perform: { hovering in
                                         self.isHoveringFaves = hovering
@@ -421,6 +420,29 @@ struct ContentView: View {
                                             NSCursor.arrow.set()
                                         }
                                     })
+                                    Spacer()
+                                    HStack {
+                                        let calbinding = Binding<String>(get: {
+                                            self.dateRangeSelection
+                                        }, set: {
+                                            self.dateRangeSelection = $0
+                                            self.refreshData()
+                                        })
+                                        Image(systemName: "calendar")
+                                        Picker("", selection: calbinding) {
+                                            ForEach(dateRangeOptions, id: \.self) {
+                                                Text($0)
+                                            }
+                                        }
+                                        .pickerStyle(.menu)
+                                    }
+                                    .padding()
+                                    .foregroundColor(.gray)
+                                    .border(.gray)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 5.0)
+                                            .foregroundColor(.white)
+                                    )
                                 }
                                 if agent.chatLog.count == 0 {
                                     Spacer()
@@ -428,62 +450,10 @@ struct ContentView: View {
                             }
                         }
                     }
-                    if agent.chatLog.count > 0 {
-                        HStack {
-                            Button(action: {
-                                self.refreshData()
-                                agent.reset(promptStyle: promptMode)
-                            }) {
-                                Text("Back to Search")
-                                    .underline()
-                            }
-                            .onHover(perform: { hovering in
-                                self.isHoveringRetrySearch = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.set()
-                                } else {
-                                    NSCursor.arrow.set()
-                                }
-                            })
-                            .opacity(isHoveringRetrySearch ? 0.8 : 1.0)
-                            .foregroundColor(.gray)
-                            .buttonStyle(.plain)
-                        }
-                        .padding()
-                    }
                 }
                 .padding(EdgeInsets(top: 10, leading: agent.chatLog.count == 0 ? 0 : 210, bottom: 10, trailing: agent.chatLog.count == 0 ? 0 : 210))
                 
                 if agent.chatLog.count == 0 {
-                    let bindingStart = Binding<Date>(get: {
-                        self.startDate
-                    }, set: {
-                        self.startDate = $0
-                        self.refreshData()
-                    })
-                    let bindingEnd = Binding<Date>(get: {
-                        self.endDate
-                    }, set: {
-                        self.endDate = $0
-                        self.refreshData()
-                    })
-                    HStack(alignment: .center) {
-                        DatePicker(
-                            "From",
-                            selection: bindingStart,
-//                            in: getDateRange(start:true),
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .frame(width: 200)
-                        DatePicker(
-                            "Until",
-                            selection: bindingEnd,
-//                            in: getDateRange(start:false),
-                            displayedComponents: [.date, .hourAndMinute]
-                        )
-                        .frame(width: 200)
-                        Spacer()
-                    }
                     if self.showUsage {
                         usage
                     }
@@ -495,7 +465,7 @@ struct ContentView: View {
         }
         .padding(EdgeInsets(top: 0.0, leading: 30.0, bottom: 0.0, trailing: 30.0))
         .background(
-            Rectangle().foregroundColor(Color(red: 233.0 / 255.0, green: 233.0 / 255.0, blue: 233.0 / 255.0 ))
+            Rectangle().foregroundColor(Color(red: 250.0 / 255.0, green: 250.0 / 255.0, blue: 250.0 / 255.0 ))
         )
     }
 }
