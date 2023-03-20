@@ -1,16 +1,18 @@
-# Cyte
+# 🧐 Cyte
 
 [![Xcode - Build and Analyze](https://github.com/shaunnarayan/cytev2/actions/workflows/swift-xcode.yml/badge.svg)](https://github.com/shaunnarayan/cytev2/actions/workflows/swift-xcode.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cataddict42.svg?style=social&label=Follow%20%40CatAddict42)](https://twitter.com/cataddict42)
 
 A background screen recorder for easy history search. There is an [optional companion app](https://github.com/shaunnarayan/cytev2-explore), which enables GPT features when running in background.
 
 ## Uses
 
-### Train-of-thought recovery
+### 🧠 Train-of-thought recovery
 
 Autosave isn’t always an option, in those cases you can easily recover your train of thought, a screenshot to use as a stencil, or extracted copy from memories recorded.
 
-### Search across applications
+### 🌏 Search across applications
 
 A lot of research involves collating information from multiple sources; internal tools like confluence, websites like wikipedia, pdf and doc files etc; When searching for something we don’t always remember the source (or it's at the tip of your tongue)
 
@@ -23,7 +25,7 @@ A lot of research involves collating information from multiple sources; internal
 
 ## Issues
 
-- Searching results in some episodes without interval highlighting
+- Searching results in some episodes without interval highlighting (Pretty sure this was due to low confidence tags being saved; pending validation)
 - Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Extract usage and search bars to own views from ContentView
@@ -32,7 +34,7 @@ A lot of research involves collating information from multiple sources; internal
     * Maybe not though, we can't do this retrospectively for other eps so does it make sense to do it live?
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
-
+- Searchbar and playhead updates should be debounced (currently just reducing the race likelihood)
 
 ## Feature requests
 
@@ -49,5 +51,5 @@ A lot of research involves collating information from multiple sources; internal
     * Extract the main text from OCR results, embed/index it, and store the raw text as ranged meta
 - Encryption e.g. Filevault?
 - NL Embedding search 
-- Search improvement: term expansion, stemming, verbs... 
+- Search improvement: term expansion, stemming... 
 - Audio support
