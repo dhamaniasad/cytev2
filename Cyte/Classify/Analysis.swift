@@ -42,6 +42,7 @@ class Analysis {
         let recognizedStringsAndRects: [(String, CGRect)] = observations.compactMap { observation in
             // Find the top observation.
             guard let candidate = observation.topCandidates(1).first else { return ("", .zero) }
+            if observation.confidence < 0.8 { return ("", .zero) }
             
             // Find the bounding-box observation for the string range.
             let stringRange = candidate.string.startIndex..<candidate.string.endIndex
