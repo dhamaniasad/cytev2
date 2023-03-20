@@ -337,7 +337,7 @@ struct EpisodePlaylistView: View {
     var body: some View {
         VStack {
             VStack {
-                    ZStack {
+                ZStack(alignment: .topLeading) {
                         VideoPlayer(player: player, videoOverlay: {
 
                                 if highlight.count > 0 && abs(secondsOffsetFromLastEpisode - genTime) < 1.0 {

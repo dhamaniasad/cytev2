@@ -421,6 +421,7 @@ struct ContentView: View {
                                         }
                                     })
                                     Spacer()
+                                        .frame(maxWidth: .infinity)
                                     HStack {
                                         let calbinding = Binding<String>(get: {
                                             self.dateRangeSelection
@@ -438,11 +439,9 @@ struct ContentView: View {
                                     }
                                     .padding()
                                     .foregroundColor(.gray)
+                                    .background(.white)
                                     .border(.gray)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 5.0)
-                                            .foregroundColor(.white)
-                                    )
+                                    .cornerRadius(4.0)
                                 }
                                 if agent.chatLog.count == 0 {
                                     Spacer()

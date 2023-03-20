@@ -308,7 +308,7 @@ class Memory {
         }
     }
     
-    func getOrCreateBundleExclusion(name: String) -> BundleExclusion {
+    func getOrCreateBundleExclusion(name: String, excluded: Bool = false) -> BundleExclusion {
         let bundleFetch : NSFetchRequest<BundleExclusion> = BundleExclusion.fetchRequest()
         bundleFetch.predicate = NSPredicate(format: "bundle == %@", name)
         do {
@@ -321,7 +321,7 @@ class Memory {
         }
         let bundle = BundleExclusion(context: PersistenceController.shared.container.viewContext)
         bundle.bundle = name
-        bundle.excluded = false
+        bundle.excluded = excluded
         do {
             try PersistenceController.shared.container.viewContext.save()
         } catch {

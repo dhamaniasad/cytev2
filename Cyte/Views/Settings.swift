@@ -13,13 +13,30 @@ struct Settings: View {
             sortDescriptors: [NSSortDescriptor(keyPath: \BundleExclusion.bundle, ascending: true)],
             animation: .default)
     private var bundles: FetchedResults<BundleExclusion>
+    @State var isShowing = false
     
     var body: some View {
         VStack {
-            Text("Settings")
-                .font(Font.title)
-            Text("Tick to prevent recording the application")
-                .font(Font.subheadline)
+            HStack {
+                Text("Tick to prevent recording the application")
+                    .font(Font.subheadline)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                Button(action: {
+                    isShowing.toggle()
+                }) {
+                    Image(systemName: "macwindow.badge.plus")
+                }
+                .fileImporter(isPresented: $isShowing, allowedContentTypes: [.application], onCompletion: { result in
+                    switch result {
+                        case .success(let Fileurl):
+                            let _ = Memory.shared.getOrCreateBundleExclusion(name: (Bundle(url: Fileurl)?.bundleIdentifier)!, excluded: true)
+                            break
+                        case .failure(let error):
+                            print(error)
+                    }
+                })
+            }
+            .padding(EdgeInsets(top: 10.0, leading: 200.0, bottom: 10.0, trailing: 200.0))
             List(bundles, id: \.self) { bundle in
                 if bundle.bundle != Bundle.main.bundleIdentifier {
                     HStack {
