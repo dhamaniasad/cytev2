@@ -38,8 +38,4 @@
         <relationship name="concept" maxCount="1" deletionRule="No Action" destinationEntity="Concept"/>
         <relationship name="episode" maxCount="1" deletionRule="Cascade" destinationEntity="Episode"/>
     </entity>
-    <entity name="Relation" representedClassName="Relation" syncable="YES" codeGenerationType="class">
-        <relationship name="from" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
-        <relationship name="to" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Concept"/>
-    </entity>
 </model>

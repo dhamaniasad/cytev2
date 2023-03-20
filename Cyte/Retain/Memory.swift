@@ -294,7 +294,6 @@ class Memory {
         intervalFetch.predicate = NSPredicate(format: "episode == %@", delete_episode)
         if let result = try? PersistenceController.shared.container.viewContext.fetch(intervalFetch) {
             for object in result {
-                print("DELETED INTERVAL \(object.concept?.name)")
                 PersistenceController.shared.container.viewContext.delete(object)
             }
         }

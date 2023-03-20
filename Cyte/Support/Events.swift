@@ -29,7 +29,7 @@ func getColor(bundleID: String) -> NSColor? {
 }
 
 func getIcon(bundleID: String) -> NSImage? {
-    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
+    guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
     else { return nil }
     
     guard FileManager.default.fileExists(atPath: path)
@@ -39,7 +39,7 @@ func getIcon(bundleID: String) -> NSImage? {
 }
 
 func getApplicationNameFromBundleID(bundleID: String) -> String? {
-    guard let path = NSWorkspace.shared.absolutePathForApplication(withBundleIdentifier: bundleID)
+    guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
     else { return nil }
     guard let appBundle = Bundle(path: path),
           let executableName = appBundle.executableURL?.lastPathComponent else {

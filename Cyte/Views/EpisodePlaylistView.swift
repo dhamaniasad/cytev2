@@ -216,7 +216,7 @@ struct EpisodePlaylistView: View {
         var offset_sum = 0.0
         var previous_interval: AppInterval?
         let window_center = secondsOffsetFromLastEpisode + 0.5
-        let active_interval: AppInterval? = intervals.first { interval in
+        let _: AppInterval? = intervals.first { interval in
             let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
             let is_within = offset_sum <= window_center && next_offset >= window_center
             offset_sum = next_offset
