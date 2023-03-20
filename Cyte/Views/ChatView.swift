@@ -12,6 +12,8 @@ import Highlightr
 struct ChatView: View {
     @StateObject private var agent = Agent.shared
     
+    @State private var isHoveringReturn: Bool = false
+    
     private let highlightr = Highlightr()
     
     private func getUserInitials() -> String {
@@ -36,11 +38,10 @@ struct ChatView: View {
             HStack {
                 if chat.0 == "user" {
                     Image(systemName: "person")
-                        .colorInvert()
                         .frame(width: 30, height: 30)
                         .background(
                             RoundedRectangle(cornerRadius: 15)
-                                .foregroundColor(Color.gray)
+                                .foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                         )
                         
                 } else {
@@ -50,10 +51,10 @@ struct ChatView: View {
                         .frame(width: 30, height: 30)
                 }
                 VStack(spacing: 0) {
-                    if chat.0 != "user" {
-                        Text(chat.1)
-                            .font(Font.caption)
-                    }
+//                    if chat.0 != "user" {
+//                        Text(chat.1)
+//                            .font(Font.caption)
+//                    }
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
                     Text(formatString(offset:Int(subindex), message:String(subchat)))
                         .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
@@ -67,19 +68,45 @@ struct ChatView: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: Alignment.leading)
             .background(
-                RoundedRectangle(cornerRadius: String(chat.0) == "bot" ? 0 : 10)
-                    .foregroundColor(String(chat.0) == "bot" ? .clear : .white))
+                RoundedRectangle(cornerRadius: String(chat.0) == "bot" ? 0 : 17)
+                    .foregroundColor(String(chat.0) == "bot" ? .clear : Color(red: 190.0/255.0, green: 190.0/255.0, blue: 190.0/255.0)))
         }
     }
     
     var body: some View {
         withAnimation {
-            HStack(alignment: .bottom ) {
+            HStack(alignment: .top ) {
+                VStack(alignment:.leading) {
+                    Spacer().frame(height:10)
+                    Button {
+                        agent.reset()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.backward")
+                                .foregroundColor(.white)
+                            Text("Return")
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .padding()
+                    .buttonStyle(.plain)
+                    .background(RoundedRectangle(cornerRadius: 4.0).foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0)))
+                    .onHover(perform: { hovering in
+                        self.isHoveringReturn = hovering
+                        if hovering {
+                            NSCursor.pointingHand.set()
+                        } else {
+                            NSCursor.arrow.set()
+                        }
+                    })
+                    Spacer()
+                }
+                .frame(minWidth: 200, maxHeight: .infinity, alignment: .leading)
                 ScrollView {
                     VStack(spacing: 0) {
                         messages
                     }
-                    .padding(EdgeInsets(top: 10, leading: 200, bottom: 10, trailing: 200))
+                    .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 210))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
