@@ -37,6 +37,7 @@ A lot of research involves collating information from multiple sources; internal
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 - Multithreaded analysis of search results to smooth out scrolling 
+- Context change can be delayed behind incoming frames causing one frame from next context into the last context video
 
 ### Feature requests
 

@@ -78,6 +78,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var mainApp: CyteApp?
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        do {
+            // @fixme: remove this block once xib loading in notarized bundle is fixed
+            NSApplication.shared.mainMenu?.removeItem(at: 5)
+            NSApplication.shared.mainMenu?.removeItem(at: 4)
+            NSApplication.shared.mainMenu?.removeItem(at: 3)
+            NSApplication.shared.mainMenu?.removeItem(at: 2)
+            NSApplication.shared.mainMenu?.removeItem(at: 1)
+        }
+        
         let nib = NSNib(nibNamed: NSNib.Name("MainMenu"), bundle: Bundle.main)
         nib?.instantiate(withOwner: NSApplication.shared, topLevelObjects: nil)
 
