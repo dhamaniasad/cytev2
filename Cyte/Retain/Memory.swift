@@ -20,13 +20,14 @@ class Memory {
     private var assetWriterInput : AVAssetWriterInput? = nil
     private var assetWriterAdaptor : AVAssetWriterInputPixelBufferAdaptor? = nil
     private var frameCount = 0
-    private var currentContext : String = "Startup"
     private var currentStart: Date = Date()
     private var episode: Episode?
     private var subscriptions = Set<AnyCancellable>()
     private var concepts: Set<String> = Set()
     private var conceptTimes: Dictionary<String, DateInterval> = Dictionary()
     private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
+    
+    var currentContext : String = "Startup"
     
     init() {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
@@ -73,15 +74,15 @@ class Memory {
         }
         
         recentFiles.sort(by: { $0.1 > $1.1 })
-        return recentFiles//Array(recentFiles.prefix(maxCount)) // change this number to show more or less files
+        return recentFiles
     }
     
     //
     // Check the currently active app, if different since last check
     // then close the current episode and start a new one
     //
-    func updateActiveContext() -> String {
-        guard let front = NSWorkspace.shared.frontmostApplication else { return "" }
+    func updateActiveContext(windowTitles: Dictionary<String, String>) {
+        guard let front = NSWorkspace.shared.frontmostApplication else { return }
         let context = front.bundleIdentifier ?? "Unnamed"
         if front.isActive && currentContext != context {
             if assetWriter != nil && assetWriterInput!.isReadyForMoreMediaData {
@@ -90,18 +91,19 @@ class Memory {
             currentContext = context
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
             if  assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
-                openEpisode()
+                let title = "\(front.localizedName ?? currentContext): \(windowTitles[currentContext] ?? "No title")"
+                openEpisode(title: title)
             } else {
                 print("Bypass exclusion context \(currentContext)")
             }
         }
-        return currentContext
     }
     
     //
     // Sets up a stream to disk
     //
-    func openEpisode() {
+    func openEpisode(title: String) {
+        print("Open \(title)")
         Timer.publish(every: 2, on: .main, in: .common).autoconnect().sink { [weak self] _ in
             guard let self = self else { return }
             Task {
@@ -111,9 +113,9 @@ class Memory {
         .store(in: &subscriptions)
         
         currentStart = Date()
-        guard let front = NSWorkspace.shared.frontmostApplication else { return }
+        let full_title = "\(title.replacingOccurrences(of: ":", with: ".")) \(currentStart.formatted(date: .abbreviated, time: .standard).replacingOccurrences(of: ":", with: "."))"
         //generate a file url to store the video. some_image.jpg becomes some_image.mov
-        let outputMovieURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(front.localizedName!) \(currentStart.formatted(date: .abbreviated, time: .standard)).mov".replacingOccurrences(of: ":", with: "."))
+        let outputMovieURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(full_title).mov")
         //create an assetwriter instance
         do {
             try assetWriter = AVAssetWriter(outputURL: outputMovieURL!, fileType: .mov)
@@ -135,7 +137,7 @@ class Memory {
         episode = Episode(context: PersistenceController.shared.container.viewContext)
         episode!.start = currentStart
         episode!.bundle = currentContext
-        episode!.title = ""//assetWriter?.outputURL.deletingPathExtension().lastPathComponent
+        episode!.title = full_title
         episode!.end = currentStart
         do {
             try PersistenceController.shared.container.viewContext.save()
@@ -184,6 +186,7 @@ class Memory {
             sub.cancel()
         }
         subscriptions.removeAll()
+        print("Close \(episode!.title)")
                 
         //close everything
         assetWriterInput!.markAsFinished()
@@ -199,7 +202,6 @@ class Memory {
                 self.trackFileChanges(ep:ep)
             }
             
-            self.episode!.title = self.assetWriter?.outputURL.deletingPathExtension().lastPathComponent
             self.episode!.end = Date()
             do {
                 try PersistenceController.shared.container.viewContext.save()

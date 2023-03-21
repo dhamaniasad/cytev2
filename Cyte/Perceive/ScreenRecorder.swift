@@ -97,8 +97,8 @@ class ScreenRecorder: ObservableObject {
             // @todo understand why this runs on main thread and fix.
             // Memory is marked as MainActor and I suspect that enforces some global context
             Task {
-                let context = Memory.shared.updateActiveContext()
-                if context != Bundle.main.bundleIdentifier {
+                if Memory.shared.currentContext != Bundle.main.bundleIdentifier {
+                    await self.refreshAvailableContent()
                     if let screenNumber = NSScreen.main!.deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID {
                             print("Screen # on context refresh \(screenNumber)")
                             for screen in self.availableDisplays {
@@ -108,7 +108,6 @@ class ScreenRecorder: ObservableObject {
                                 }
                             }
                         }
-                    await self.refreshAvailableContent()
                 }
             }
         }
@@ -141,6 +140,7 @@ class ScreenRecorder: ObservableObject {
             isRunning = true
             // Start the stream and await new video frames.
             for try await frame in captureEngine.startCapture(configuration: config, filter: filter) {
+                Memory.shared.updateActiveContext(windowTitles: Dictionary(self.availableWindows.map{ ($0.owningApplication!.bundleIdentifier, $0.title ?? "") }, uniquingKeysWith: { (first, _) in first }))
                 Memory.shared.addFrame(frame: frame, secondLength: secondsBetweenFrames)
                 
                 if contentSize != frame.size {
@@ -189,7 +189,9 @@ class ScreenRecorder: ObservableObject {
             // exclude it by matching its bundle identifier.
             if isAppExcluded {
                 excludedApps = availableApps.filter { app in
-                    Bundle.main.bundleIdentifier == app.bundleIdentifier
+                    if Bundle.main.bundleIdentifier == app.bundleIdentifier || app.bundleIdentifier.count == 0 { return true }
+                    let exclusion = Memory.shared.getOrCreateBundleExclusion(name: app.bundleIdentifier)
+                    return exclusion.excluded
                 }
             }
             // Create a content filter with excluded apps.

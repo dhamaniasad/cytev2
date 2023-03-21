@@ -133,7 +133,7 @@ struct StaticEpisodeView: View {
             .padding(0)
             HStack {
                 VStack {
-                    Text(getApplicationNameFromBundleID(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!) ?? "")
+                    Text((episode.title ?? "")!.split(separator: " ").dropLast(6).joined(separator: " "))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text((result.from ?? Date()).formatted(date: .abbreviated, time: .standard) )
                         .font(SwiftUI.Font.caption)

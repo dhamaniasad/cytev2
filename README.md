@@ -28,32 +28,27 @@ A lot of research involves collating information from multiple sources; internal
 ### Issues
 
 - Searching results in some episodes without interval highlighting (Pretty sure this was due to low confidence tags being saved; pending validation)
-- Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
+- Re-enable app sandbox which is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
-- Extract usage and search bars to own views from ContentView
-- Extract episode slider from EpisodeTimelineView into own view
-- Windows matching Excluded bundles should be passed to exclusion list in ScreenCaptureKit
-    * Maybe not though, we can't do this retrospectively for other eps so does it make sense to do it live?
-- Duplicate code in vision analysis handlers and get active interval (timeline views)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 - Multithreaded analysis of search results to smooth out scrolling 
-- Context change can be delayed behind incoming frames causing one frame from next context into the last context video
+- Set scroll to top when filter changes
+
+### Refactor
+
+- Extract usage and search bars to own views from ContentView
+- Extract episode slider from EpisodeTimelineView into own view
+- Duplicate code in vision analysis handlers and get active interval (timeline views)
 
 ### Feature requests
 
 - Chat to get video results inline
-- Stop SCK when Cyte is open
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
-- Prefix episode titles with a summary of window names used in session
 - Set default playback speed 2.0
 - Keyword autoblacklist
-- Filter incognito and chrome tabs from capture
-- Investivate SQLite vs CoreData efficiency at scale
+- Filter incognito and safari private windows from capture
 - Fallback to object recognition
-- Generate and Save medium granularity features as MP4 metadata
-    * Extract the main text from OCR results, embed/index it, and store the raw text as ranged meta
 - Encryption e.g. Filevault?
-- NL Embedding search 
-- Search improvement: term expansion, stemming... 
+- Search improvement: term expansion, stemming, local embedding... 
 - Audio support
