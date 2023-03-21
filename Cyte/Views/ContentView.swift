@@ -46,6 +46,7 @@ struct ContentView: View {
     @State private var isHoveringFaves: Bool = false
     
     @State private var refreshTask: Task<(), Never>? = nil
+    @State private var scrollViewID = UUID()
     
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -76,6 +77,7 @@ struct ContentView: View {
     
     // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func performRefreshData() {
+        scrollViewID = UUID()
         let ranges = [1, 7, 14, 28]
         startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -ranges[dateRangeOptions.firstIndex(of: dateRangeSelection)!], to: Date())!
         endDate = Date()
@@ -289,6 +291,7 @@ struct ContentView: View {
                 }
                 .padding(.all)
             }
+            .id(self.scrollViewID)
             .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                     self.refreshData()
