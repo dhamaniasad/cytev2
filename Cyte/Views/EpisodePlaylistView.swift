@@ -22,15 +22,12 @@ struct EpisodePlaylistView: View {
     
     @State var secondsOffsetFromLastEpisode: Double
     
-    @State private var lastThumbnailRefresh: Date = Date()
     @State private var lastKnownInteractionPoint: CGPoint = CGPoint()
     @State private var lastX: CGFloat = 0.0
-    @State private var subscriptions = Set<AnyCancellable>()
     
     @State var search: String?
     @State var highlight: [CGRect] = []
-    @State private var genTask: Task<Sendable, Error>? = nil
-    @State private var genTime: Double = 0.0
+    @State private var genTask: Task<(), Never>? = nil
     
     private let timelineSize: CGFloat = 16
     
@@ -48,10 +45,6 @@ struct EpisodePlaylistView: View {
     
     func generateThumbnails(numThumbs: Int = 4) async {
         if intervals.count == 0 { return }
-        if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) < 0.1 {
-            return
-        }
-        lastThumbnailRefresh = Date()
         let start: Double = secondsOffsetFromLastEpisode
         let end: Double = secondsOffsetFromLastEpisode + Double(EpisodePlaylistView.windowLengthInSeconds)
         let slide = EpisodePlaylistView.windowLengthInSeconds / numThumbs
@@ -87,7 +80,6 @@ struct EpisodePlaylistView: View {
             }
         }
         if search != nil && thumbnailImages.last! != nil {
-            genTime = secondsOffsetFromLastEpisode
             // Run through vision and store results
             let requestHandler = VNImageRequestHandler(cgImage: thumbnailImages.last!!, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
@@ -151,11 +143,7 @@ struct EpisodePlaylistView: View {
         if newStart > 0 && newStart < ((intervals.last!.offset + intervals.last!.length)) {
             secondsOffsetFromLastEpisode = newStart
         }
-        if (Date().timeIntervalSinceReferenceDate - lastThumbnailRefresh.timeIntervalSinceReferenceDate) > 0.5 {
-            lastThumbnailRefresh = Date()
-            updateData()
-        }
-//        print(displayInterval)
+        updateData()
     }
     
     func urlOfCurrentlyPlayingInPlayer(player : AVPlayer) -> URL? {
@@ -163,11 +151,6 @@ struct EpisodePlaylistView: View {
     }
     
     func updateData() {
-        for subscription in subscriptions {
-            subscription.cancel()
-        }
-        subscriptions.removeAll()
-        
         var offset_sum = 0.0
         let active_interval: AppInterval? = intervals.first { interval in
             let window_center = secondsOffsetFromLastEpisode
@@ -178,13 +161,15 @@ struct EpisodePlaylistView: View {
         }
         
         // generate thumbs
-        if genTask != nil {
+        if genTask != nil && !genTask!.isCancelled {
             genTask!.cancel()
-            genTask = nil
-        } else {
-            genTask = Task {
+        }
+        genTask = Task {
+            // debounce to 600ms
+            do {
+                try await Task.sleep(nanoseconds: 600_000_000)
                 await self.generateThumbnails()
-            }
+            } catch { }
         }
         
         if active_interval == nil || active_interval!.title.count == 0 || player == nil {
@@ -340,7 +325,7 @@ struct EpisodePlaylistView: View {
                 ZStack(alignment: .topLeading) {
                         VideoPlayer(player: player, videoOverlay: {
 
-                                if highlight.count > 0 && abs(secondsOffsetFromLastEpisode - genTime) < 1.0 {
+                                if highlight.count > 0 {
                                     Color.black
                                         .opacity(0.5)
                                         .cutout(
@@ -377,9 +362,7 @@ struct EpisodePlaylistView: View {
                                 } else {
                                     secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                                 }
-                                if abs(secondsOffsetFromLastEpisode - genTime) > 1.0 {
-                                    updateData()
-                                }
+                                updateData()
                             }
                             .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
 //                                playerEnded()

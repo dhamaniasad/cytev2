@@ -2,7 +2,7 @@
 
 [![Xcode - Build and Analyze](https://github.com/shaunnarayan/cytev2/actions/workflows/swift-xcode.yml/badge.svg)](https://github.com/shaunnarayan/cytev2/actions/workflows/swift-xcode.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
-[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cataddict42.svg?style=social&label=Follow%20%40CatAddict42)](https://twitter.com/cataddict42)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cataddict42.svg?style=social&label=%20%40CatAddict42)](https://twitter.com/cataddict42)
 
 A background screen recorder for easy history search. There is an [optional companion app](https://github.com/shaunnarayan/cytev2-explore), which enables GPT features when running in background.
 
@@ -23,7 +23,9 @@ A lot of research involves collating information from multiple sources; internal
 > - Set applications that are not to be recorded (while taking keystrokes)
 > - Chat your data; ask questions about work you've done
 
-## Issues
+## Development
+
+### Issues
 
 - Searching results in some episodes without interval highlighting (Pretty sure this was due to low confidence tags being saved; pending validation)
 - Re-enable app sandbox which is disabled to allow file tracking; instead should request document permissions: https://stackoverflow.com/a/70972475
@@ -34,11 +36,12 @@ A lot of research involves collating information from multiple sources; internal
     * Maybe not though, we can't do this retrospectively for other eps so does it make sense to do it live?
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
-- Searchbar and playhead updates should be debounced (currently just reducing the race likelihood)
+- Multithreaded analysis of search results to smooth out scrolling 
 
-## Feature requests
+### Feature requests
 
 - Chat to get video results inline
+- Stop SCK when Cyte is open
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
 - Prefix episode titles with a summary of window names used in session

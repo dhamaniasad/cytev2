@@ -45,7 +45,7 @@ struct ContentView: View {
     @State private var isHoveringSettings: Bool = false
     @State private var isHoveringFaves: Bool = false
     
-    @State private var lastRefresh: Date = Date()
+    @State private var refreshTask: Task<(), Never>? = nil
     
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -61,8 +61,21 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 60)
     ]
     
-    // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func refreshData() {
+        if refreshTask != nil && !refreshTask!.isCancelled {
+            refreshTask!.cancel()
+        }
+        refreshTask = Task {
+            // debounce to 600ms
+            do {
+                try await Task.sleep(nanoseconds: 600_000_000)
+                self.performRefreshData()
+            } catch { }
+        }
+    }
+    
+    // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
+    @MainActor func performRefreshData() {
         let ranges = [1, 7, 14, 28]
         startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -ranges[dateRangeOptions.firstIndex(of: dateRangeSelection)!], to: Date())!
         endDate = Date()
@@ -305,9 +318,7 @@ struct ContentView: View {
                         }, set: {
                             self.filter = $0
                             self.intervals.removeAll()
-                            if self.filter.count == 0 {
-                                self.refreshData()
-                            }
+                            self.refreshData()
                         })
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {
