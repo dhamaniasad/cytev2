@@ -21,7 +21,10 @@ class Analysis {
         let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
         if !utsname.isAppleSilicon {
             // fallback for intel
+            request.automaticallyDetectsLanguage = false
+            request.recognitionLanguages = ["en_US"]
             request.recognitionLevel = .fast
+            request.usesLanguageCorrection = false
         }
         do {
             // Perform the text-recognition request.
