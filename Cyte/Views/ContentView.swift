@@ -258,7 +258,7 @@ struct ContentView: View {
                 LazyVGrid(columns: feedColumnLayout, spacing: 20) {
                     if intervals.count == 0 {
                         ForEach(episodes.filter { ep in
-                            return (ep.title ?? "").count > 0
+                            return (ep.title ?? "").count > 0 && (ep.start != ep.end)
                         }) { episode in
                             EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
                                 .contextMenu {
@@ -456,6 +456,7 @@ struct ContentView: View {
                                     .background(.white)
                                     .border(.gray)
                                     .cornerRadius(4.0)
+                                    .frame(width:190)
                                 }
                                 if agent.chatLog.count == 0 {
                                     Spacer()

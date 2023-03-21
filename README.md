@@ -25,14 +25,15 @@ A lot of research involves collating information from multiple sources; internal
 
 ## Development
 
+Happy to accept PRs related to any of the following
+
 ### Issues
 
 - Searching results in some episodes without interval highlighting (Pretty sure this was due to low confidence tags being saved; pending validation)
-- Re-enable app sandbox which is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
+- App sandbox is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
-- Multithreaded analysis of search results to smooth out scrolling 
-- Set scroll to top when filter changes
+- Scrolling lags while loading videos/processing vision
 
 ### Refactor
 
@@ -42,12 +43,12 @@ A lot of research involves collating information from multiple sources; internal
 
 ### Feature requests
 
+- Filter incognito and safari private windows from capture
 - Chat to get video results inline
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
 - Set default playback speed 2.0
 - Keyword autoblacklist
-- Filter incognito and safari private windows from capture
 - Fallback to object recognition
 - Encryption e.g. Filevault?
 - Search improvement: term expansion, stemming, local embedding... 
