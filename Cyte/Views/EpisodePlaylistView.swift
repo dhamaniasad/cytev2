@@ -45,6 +45,7 @@ struct EpisodePlaylistView: View {
     
     func generateThumbnails(numThumbs: Int = 4) async {
         if intervals.count == 0 { return }
+        highlight.removeAll()
         let start: Double = secondsOffsetFromLastEpisode
         let end: Double = secondsOffsetFromLastEpisode + Double(EpisodePlaylistView.windowLengthInSeconds)
         let slide = EpisodePlaylistView.windowLengthInSeconds / numThumbs
@@ -103,7 +104,6 @@ struct EpisodePlaylistView: View {
                 request.results as? [VNRecognizedTextObservation] else {
             return
         }
-        highlight.removeAll()
         // @todo replace map with loop if observations remain unused
         let _: [(String, CGRect)] = observations.compactMap { observation in
             // Find the top observation.
