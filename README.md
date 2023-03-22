@@ -43,12 +43,14 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 
+- Add sqlite FTS
+- Swift Agent
+- Predefined blacklist
 - Filter incognito and safari private windows from capture
 - Chat to get video results inline
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
 - Set default playback speed 2.0
-- Keyword autoblacklist
 - Fallback to object recognition
 - Encryption e.g. Filevault?
 - Search improvement: term expansion, stemming, local embedding... 

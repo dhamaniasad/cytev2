@@ -19,6 +19,7 @@
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3F6FE07C29C357290061DBF5 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3F6FE07B29C357290061DBF5 /* MainMenu.xib */; };
 		3F6FE07E29C424230061DBF5 /* StaticEpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6FE07D29C424230061DBF5 /* StaticEpisodeView.swift */; };
+		3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 3F6FE08029CAB0170061DBF5 /* SQLite */; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
 		3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8F932929B5CF9C00C938DE /* Charts.framework */; };
 		3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = 3F9E3DF829B9D87C00FE31CB /* Starscream */; };
@@ -71,6 +72,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */,
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
 				3F14BDCA29BCEF6500F12FE7 /* Highlightr in Frameworks */,
 				3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */,
@@ -216,6 +218,7 @@
 			packageProductDependencies = (
 				3F9E3DF829B9D87C00FE31CB /* Starscream */,
 				3F14BDC929BCEF6500F12FE7 /* Highlightr */,
+				3F6FE08029CAB0170061DBF5 /* SQLite */,
 			);
 			productName = Cyte;
 			productReference = 3FCAA1FC29AC7C0100898995 /* Cyte.app */;
@@ -248,6 +251,7 @@
 			packageReferences = (
 				3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */,
 				3F14BDC829BCEF6500F12FE7 /* XCRemoteSwiftPackageReference "Highlightr" */,
+				3F6FE07F29CAB0170061DBF5 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
 			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
 			projectDirPath = "";
@@ -538,6 +542,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		3F6FE07F29CAB0170061DBF5 /* XCRemoteSwiftPackageReference "SQLite.swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/stephencelis/SQLite.swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.9.2;
+			};
+		};
 		3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/daltoniam/Starscream.git";
@@ -553,6 +565,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3F14BDC829BCEF6500F12FE7 /* XCRemoteSwiftPackageReference "Highlightr" */;
 			productName = Highlightr;
+		};
+		3F6FE08029CAB0170061DBF5 /* SQLite */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3F6FE07F29CAB0170061DBF5 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
+			productName = SQLite;
 		};
 		3F9E3DF829B9D87C00FE31CB /* Starscream */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -122,12 +122,6 @@ class ScreenRecorder: ObservableObject {
         if !isSetup {
             // Starting polling for available screen content.
             await monitorAvailableContent()
-            let memoryPath = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!)
-            do {
-                try FileManager.default.createDirectory(at: memoryPath!, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                print("Failed")
-            }
             isSetup = true
         }
         

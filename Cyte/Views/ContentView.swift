@@ -260,7 +260,7 @@ struct ContentView: View {
                         ForEach(episodes.filter { ep in
                             return (ep.title ?? "").count > 0 && (ep.start != ep.end)
                         }) { episode in
-                            EpisodeView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
+                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
                                 .contextMenu {
                                     Button {
                                         episode.save = !episode.save
@@ -285,7 +285,7 @@ struct ContentView: View {
                         ForEach(intervals.filter { interval in
                             return interval.episode != nil && (interval.episode!.title ?? "").count > 0
                         }) { interval in
-                            StaticEpisodeView(asset: AVAsset(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(interval.episode!.title ?? "").mov"))!), episode: interval.episode!, result: interval, intervals: appIntervals)
+                            StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode?.start, title: interval.episode?.title)), episode: interval.episode!, result: interval, intervals: appIntervals)
                         }
                     }
                 }

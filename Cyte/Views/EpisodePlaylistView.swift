@@ -66,7 +66,7 @@ struct EpisodePlaylistView: View {
                 // placeholder thumb
                 thumbnailImages.append(nil)
             } else {
-                let asset = AVAsset(url: (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!)
+                let asset = AVAsset(url: urlForEpisode(start: active_interval!.start, title: active_interval!.title))
                 
                 let generator = AVAssetImageGenerator(asset: asset)
                 generator.requestedTimeToleranceBefore = CMTime.zero;
@@ -178,7 +178,7 @@ struct EpisodePlaylistView: View {
         }
         // reset the AVPlayer to the new asset
         let current_url = urlOfCurrentlyPlayingInPlayer(player: player!)
-        let new_url = (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!
+        let new_url = urlForEpisode(start: active_interval!.start, title: active_interval!.title)
         if current_url != new_url {
             player = AVPlayer(url: new_url)
         }
@@ -212,7 +212,7 @@ struct EpisodePlaylistView: View {
         }
         if previous_interval != nil {
             // reset the AVPlayer to the new asset
-            player = AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(previous_interval!.title).mov"))!)
+            player = AVPlayer(url: urlForEpisode(start: previous_interval!.start, title: previous_interval!.title))
             self.player!.play()
             secondsOffsetFromLastEpisode = previous_interval!.offset + previous_interval!.length
         }
@@ -354,7 +354,7 @@ struct EpisodePlaylistView: View {
                                     offset_sum = next_offset
                                     return is_within
                                 }
-                                let url = (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!
+                                let url = urlForEpisode(start: active_interval?.start, title: active_interval?.title)
                                 if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
                                     // @todo hack to get around some form of off by one issue in the overall logic
                                     // Active interval comes out as the next episode when the playhead is at the end of the video

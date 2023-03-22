@@ -56,7 +56,7 @@ struct EpisodeView: View {
     @State private var isHoveringExpand: Bool = false
     
     func generateThumbnail(offset: Double) async {
-        let asset = AVAsset(url: (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!)
+        let asset = AVAsset(url: urlForEpisode(start: episode.start, title: episode.title))
         
         let generator = AVAssetImageGenerator(asset: asset)
         generator.requestedTimeToleranceBefore = CMTime.zero;

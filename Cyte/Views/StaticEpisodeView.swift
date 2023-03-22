@@ -168,7 +168,7 @@ struct StaticEpisodeView: View {
                     }
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(episode.title ?? "").mov"))!), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: result.concept?.name
+                            EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: result.concept?.name
                             )
                         }
                     } label: {

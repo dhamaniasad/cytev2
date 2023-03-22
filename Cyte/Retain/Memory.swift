@@ -1,5 +1,5 @@
 //
-//  Index.swift
+//  Memory.swift
 //  Cyte
 //
 //  Tracks active application context (driven by external caller)
@@ -11,6 +11,17 @@ import Foundation
 import AVKit
 import OSLog
 import Combine
+import SQLite
+
+func urlForEpisode(start: Date?, title: String?) -> URL {
+    var url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
+    let components = Calendar.current.dateComponents([.year, .month, .day], from: start ?? Date())
+    url = url.appendingPathComponent("\(components.year ?? 0)")
+    url = url.appendingPathComponent("\(components.month ?? 0)")
+    url = url.appendingPathComponent("\(components.day ?? 0)")
+    url = url.appendingPathComponent("\(title ?? "").mov")
+    return url
+}
 
 @MainActor
 class Memory {
@@ -26,6 +37,8 @@ class Memory {
     private var concepts: Set<String> = Set()
     private var conceptTimes: Dictionary<String, DateInterval> = Dictionary()
     private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
+    private var intervalDb: Connection?
+    private var intervalTable: Table = Table("Interval")
     
     var currentContext : String = "Startup"
     
@@ -33,6 +46,23 @@ class Memory {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
         unclosedFetch.predicate = NSPredicate(format: "start == end")
         do {
+            let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("CyteIntervals.sqlite3"))!
+            intervalDb = try Connection(url.path(percentEncoded: false))
+            do {
+                let id = Expression<Int64>("id")
+                let from = Expression<Date>("from")
+                let to = Expression<Date>("to")
+                let episodeStart = Expression<Date>("episode_start")
+                let document = Expression<String>("document")
+                try intervalDb!.run(intervalTable.create(ifNotExists: true) { t in
+                    t.column(id, primaryKey: .autoincrement)
+                    t.column(from, unique: true)
+                    t.column(to, unique: true)
+                    t.column(episodeStart)
+                    t.column(document)
+                })
+            }
+            
             let fetched = try PersistenceController.shared.container.viewContext.fetch(unclosedFetch)
             for unclosed in fetched {
                 PersistenceController.shared.container.viewContext.delete(unclosed)
@@ -40,6 +70,7 @@ class Memory {
         } catch {
             
         }
+        
     }
     
     static func getRecentFiles(earliest: Date) -> [(URL, Date)]? {
@@ -91,7 +122,7 @@ class Memory {
             currentContext = context
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
             if  assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
-                let title = "\(front.localizedName ?? currentContext): \(windowTitles[currentContext] ?? "No title")"
+                let title = windowTitles[currentContext] ?? front.localizedName ?? currentContext
                 openEpisode(title: title)
             } else {
                 print("Bypass exclusion context \(currentContext)")
@@ -114,11 +145,13 @@ class Memory {
         
         currentStart = Date()
         let full_title = "\(title.replacingOccurrences(of: ":", with: ".")) \(currentStart.formatted(date: .abbreviated, time: .standard).replacingOccurrences(of: ":", with: "."))"
-        //generate a file url to store the video. some_image.jpg becomes some_image.mov
-        let outputMovieURL = FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(full_title).mov")
+        let outputMovieURL = urlForEpisode(start: currentStart, title: full_title)
+        do {
+            try FileManager.default.createDirectory(at: outputMovieURL.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+        } catch { fatalError("Failed to create dir") }
         //create an assetwriter instance
         do {
-            try assetWriter = AVAssetWriter(outputURL: outputMovieURL!, fileType: .mov)
+            try assetWriter = AVAssetWriter(outputURL: outputMovieURL, fileType: .mov)
         } catch {
             abort()
         }
@@ -302,9 +335,7 @@ class Memory {
         PersistenceController.shared.container.viewContext.delete(delete_episode)
         do {
             try PersistenceController.shared.container.viewContext.save()
-            try FileManager.default.removeItem(at:
-                                            (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(delete_episode.title ?? "").mov"))!
-            )
+            try FileManager.default.removeItem(at: urlForEpisode(start: delete_episode.start, title: delete_episode.title))
         } catch {
         }
     }

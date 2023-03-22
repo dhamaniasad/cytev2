@@ -67,7 +67,7 @@ struct Timeline: View {
                 // placeholder thumb
                 thumbnailImages.append(nil)
             } else {
-                let asset = AVAsset(url: (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!)
+                let asset = AVAsset(url: urlForEpisode(start: active_interval!.start, title: active_interval!.title))
                 
                 let generator = AVAssetImageGenerator(asset: asset)
                 generator.requestedTimeToleranceBefore = CMTime.zero;
@@ -151,7 +151,7 @@ struct Timeline: View {
             return
         }
         // reset the AVPlayer to the new asset
-        player = AVPlayer(url:  (FileManager.default.urls(for: .moviesDirectory, in: .userDomainMask).first?.appendingPathComponent(Bundle.main.bundleIdentifier!).appendingPathComponent("\(active_interval!.title).mov"))!)
+        player = AVPlayer(url: urlForEpisode(start: active_interval!.start, title: active_interval!.title))
         // seek to correct offset
         let center: Date = Date(timeIntervalSinceReferenceDate: displayInterval.0.timeIntervalSinceReferenceDate + (displayInterval.1.timeIntervalSinceReferenceDate - displayInterval.0.timeIntervalSinceReferenceDate) / 2)
         let progress = center.timeIntervalSinceReferenceDate - active_interval!.start.timeIntervalSinceReferenceDate
