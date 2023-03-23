@@ -36,6 +36,7 @@ class LLM {
     }
     
     func embed(input: String) async -> [Float]? {
+        if await isFlagged(input: input) { return nil }
         do {
             let embedding = try await openAIClient!.embeddings.create(input:input)
             var result: [Float]? = nil

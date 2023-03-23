@@ -314,22 +314,26 @@ struct ContentView: View {
                                 .onSubmit {
                                     Task {
                                         if agent.isConnected {
-                                            if agent.chatLog.count == 0 {
-                                                agent.reset()
+                                            Task {
+                                                if agent.chatLog.count == 0 {
+                                                    agent.reset()
+                                                }
+                                                await agent.query(request: self.filter)
+                                                self.filter = ""
                                             }
-                                            agent.query(request: self.filter)
-                                            self.filter = ""
                                         }
                                         refreshData()
                                     }
                                 }
                                 Button(action: {
                                     if agent.isConnected {
-                                        if agent.chatLog.count == 0 {
-                                            agent.reset()
+                                        Task {
+                                            if agent.chatLog.count == 0 {
+                                                agent.reset()
+                                            }
+                                            await agent.query(request: self.filter)
+                                            self.filter = ""
                                         }
-                                        agent.query(request: self.filter)
-                                        self.filter = ""
                                     }
                                 }) {
                                     Image(systemName: "paperplane")
