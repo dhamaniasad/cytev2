@@ -60,22 +60,8 @@ class Analysis {
         let text = recognizedStringsAndRects.reduce("") { (result, adding) in
             return "\(result) \(adding.0)"
         }
-        let tagger = NLTagger(tagSchemes: [.lexicalClass])
-        tagger.string = text
-        let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
-        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
-            if let tag = tag {
-                // if verb or noun
-                if tag.rawValue == "Verb" || tag.rawValue == "Noun" {
-                    let concept = text[tokenRange]
-                    // @todo normalize terms (stem etc.)
-//                    print("\(con cept): \(tag.rawValue)")
-                    Task {
-                        await Memory.shared.observe(what: concept.lowercased())
-                    }
-                }
-            }
-            return true
+        Task {
+            await Memory.shared.observe(what: text)
         }
     }
 }

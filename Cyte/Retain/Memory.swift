@@ -13,6 +13,24 @@ import OSLog
 import Combine
 import SQLite
 
+class CyteInterval: ObservableObject, Identifiable {
+    @Published var from: Date
+    @Published var to: Date
+    @Published var episode: Episode
+    @Published var document: String
+    @Published var embedding: String
+    
+    init(from: Date, to: Date, episode: Episode, document: String, embedding: String) {
+        self.from = from
+        self.to = to
+        self.episode = episode
+        self.document = document
+        self.embedding = embedding
+    }
+    
+    var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
+}
+
 func urlForEpisode(start: Date?, title: String?) -> URL {
     var url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
     let components = Calendar.current.dateComponents([.year, .month, .day], from: start ?? Date())
@@ -21,6 +39,15 @@ func urlForEpisode(start: Date?, title: String?) -> URL {
     url = url.appendingPathComponent("\(components.day ?? 0)")
     url = url.appendingPathComponent("\(title ?? "").mov")
     return url
+}
+
+struct IntervalExpression {
+    public static let id = Expression<Int64>("id")
+    public static let from = Expression<Double>("from")
+    public static let to = Expression<Double>("to")
+    public static let episodeStart = Expression<Double>("episode_start")
+    public static let document = Expression<String>("document")
+    public static let embedding = Expression<String>("embedding")
 }
 
 @MainActor
@@ -33,12 +60,11 @@ class Memory {
     private var frameCount = 0
     private var currentStart: Date = Date()
     private var episode: Episode?
-    private var subscriptions = Set<AnyCancellable>()
-    private var concepts: Set<String> = Set()
-    private var conceptTimes: Dictionary<String, DateInterval> = Dictionary()
     private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
     private var intervalDb: Connection?
-    private var intervalTable: Table = Table("Interval")
+    private var intervalTable: VirtualTable = VirtualTable("Interval")
+    private var lastObservation: String = ""
+    private var differ = DiffMatchPatch()
     
     var currentContext : String = "Startup"
     
@@ -49,18 +75,16 @@ class Memory {
             let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("CyteIntervals.sqlite3"))!
             intervalDb = try Connection(url.path(percentEncoded: false))
             do {
-                let id = Expression<Int64>("id")
-                let from = Expression<Date>("from")
-                let to = Expression<Date>("to")
-                let episodeStart = Expression<Date>("episode_start")
-                let document = Expression<String>("document")
-                try intervalDb!.run(intervalTable.create(ifNotExists: true) { t in
-                    t.column(id, primaryKey: .autoincrement)
-                    t.column(from, unique: true)
-                    t.column(to, unique: true)
-                    t.column(episodeStart)
-                    t.column(document)
-                })
+                let config = FTS4Config()
+                    .column(IntervalExpression.from, [.unindexed])
+                    .column(IntervalExpression.to, [.unindexed])
+                    .column(IntervalExpression.episodeStart, [.unindexed])
+                    .column(IntervalExpression.document)
+                    .column(IntervalExpression.embedding, [.unindexed])
+                    .languageId("lid")
+                    .order(.desc)
+
+                try intervalDb!.run(intervalTable.create(.FTS4(config), ifNotExists: true))
             }
             
             let fetched = try PersistenceController.shared.container.viewContext.fetch(unclosedFetch)
@@ -135,13 +159,6 @@ class Memory {
     //
     func openEpisode(title: String) {
         print("Open \(title)")
-        Timer.publish(every: 2, on: .main, in: .common).autoconnect().sink { [weak self] _ in
-            guard let self = self else { return }
-            Task {
-                self.update()
-            }
-        }
-        .store(in: &subscriptions)
         
         currentStart = Date()
         let full_title = "\(title.replacingOccurrences(of: ":", with: ".")) \(currentStart.formatted(date: .abbreviated, time: .standard).replacingOccurrences(of: ":", with: "."))"
@@ -214,16 +231,10 @@ class Memory {
         if assetWriter == nil {
             return
         }
-        
-        for sub in subscriptions {
-            sub.cancel()
-        }
-        subscriptions.removeAll()
         print("Close \(episode!.title)")
                 
         //close everything
         assetWriterInput!.markAsFinished()
-        self.update(force_close: true)
         
         if frameCount < 7 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
             assetWriter!.cancelWriting()
@@ -260,83 +271,88 @@ class Memory {
             }
         }
     }
-    
-    func getOrCreateConcept(name: String) -> Concept {
-        let conceptFetch : NSFetchRequest<Concept> = Concept.fetchRequest()
-        conceptFetch.predicate = NSPredicate(format: "name == %@", name)
-        do {
-            let fetched = try PersistenceController.shared.container.viewContext.fetch(conceptFetch)
-            if fetched.count > 0 {
-                return fetched.first!
-            }
-        } catch {
-            //failed, fallback to create
-        }
-        let concept = Concept(context: PersistenceController.shared.container.viewContext)
-        concept.name = name
-        do {
-            try PersistenceController.shared.container.viewContext.save()
-        } catch {
-            let nsError = error as NSError
-            fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-        }
-        return concept
-    }
-    
-    func update(force_close: Bool = false) {
-        // debounce concepts with a 5s tail to allow frame-frame overlap, reducing rate of outflow
-        let current_time = Date()
-        var closed_concepts = Set<String>()
-        for concept in concepts {
-            let this_concept_time = conceptTimes[concept]!
-            let diff = current_time.timeIntervalSince(this_concept_time.end)
-            if diff > 5.0 || force_close {
-                // close the concept interval
-                let concept_data = getOrCreateConcept(name: concept)
-                let newItem = Interval(context: PersistenceController.shared.container.viewContext)
-                newItem.from = this_concept_time.start
-                newItem.to = this_concept_time.end
-                newItem.concept = concept_data
-                newItem.episode = episode
-
-                do {
-                    try PersistenceController.shared.container.viewContext.save()
-                } catch {
-                    let nsError = error as NSError
-                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-                }
-                
-                closed_concepts.insert(concept)
-            }
-        }
-        for concept in closed_concepts {
-            conceptTimes.removeValue(forKey: concept)
-            concepts.remove(concept)
-        }
-    }
 
     func observe(what: String) {
-        if !concepts.contains(what) {
-            conceptTimes[what] = DateInterval(start: Date(), end: Date())
-            concepts.insert(what)
-        } else {
-            conceptTimes[what]!.end = Date()
+        let start = Date()
+        // @todo track changes with diff and embed docs
+        let result: NSMutableArray = differ.diff_main(ofOldString: lastObservation, andNewString: what)!
+        differ.diff_cleanupSemantic(result)
+        var edits: [(Int, String)] = []
+        var added: String = ""
+        // if the edit removes the entirety of the lastObservation, then consider it a new context, and embed the current document total
+        var was_closed = false
+        for res in result {
+            let edit: (Int, String) = (Int((res as! Diff).operation.rawValue) - 2,
+                        ((res as! Diff).text ?? ""))
+            edits.append(edit)
+            if edit.0 == 1 {
+                added += edit.1
+            }
+            if edit.0 == -1 && edit.1 == lastObservation {
+                print("Entirety of last state removed - closing and embedding document")
+                embed(document:lastObservation)
+                was_closed = true
+            }
         }
+        
+        let frameLength = 2
+        let newItem = CyteInterval(from: start, to: Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: frameLength, to: start)!, episode: episode!, document: added, embedding: "")
+        insert(interval: newItem)
+        lastObservation = what
+    }
+    
+    func embed(document: String) {
+        // send through openai, then add to coreml embed db, resave
     }
 
     func delete(delete_episode: Episode) {
-        let intervalFetch : NSFetchRequest<Interval> = Interval.fetchRequest()
-        intervalFetch.predicate = NSPredicate(format: "episode == %@", delete_episode)
-        if let result = try? PersistenceController.shared.container.viewContext.fetch(intervalFetch) {
-            for object in result {
-                PersistenceController.shared.container.viewContext.delete(object)
-            }
-        }
+        let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)
         do {
+            try intervalDb!.run(intervals.delete())
             try PersistenceController.shared.container.viewContext.save()
             try FileManager.default.removeItem(at: urlForEpisode(start: delete_episode.start, title: delete_episode.title))
         } catch {
+        }
+    }
+    
+    func search(term: String) -> [CyteInterval] {
+        let intervalMatch: QueryType = intervalTable.match("\(term)*")
+        var result: [CyteInterval] = []
+        do {
+            for interval in try intervalDb!.prepare(intervalMatch) {
+                let epStart: Date = Date(timeIntervalSinceReferenceDate: interval[IntervalExpression.episodeStart])
+                
+                let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+                epFetch.predicate = NSPredicate(format: "start == %@", epStart as CVarArg)
+                var ep: Episode? = nil
+                do {
+                    let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
+                    if fetched.count > 0 {
+                        ep = fetched.first!
+                    }
+                    
+                } catch {
+                    //failed, fallback to create
+                }
+                
+                let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.from]), to: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.to]), episode: ep!, document: interval[IntervalExpression.document], embedding: interval[IntervalExpression.embedding])
+                result.append(inter)
+            }
+        } catch { }
+        return result
+    }
+    
+    func insert(interval: CyteInterval) {
+        do {
+            let rowid = try intervalDb!.run(intervalTable.insert(IntervalExpression.from <- interval.from.timeIntervalSinceReferenceDate,
+                                                                 IntervalExpression.to <- interval.to.timeIntervalSinceReferenceDate,
+                                                                 IntervalExpression.episodeStart <- interval.episode.start!.timeIntervalSinceReferenceDate,
+                                                                 IntervalExpression.document <- interval.document,
+                                                                 IntervalExpression.embedding <- interval.embedding
+                                                                ))
+        } catch {
+            fatalError("insertion failed: \(error)")
         }
     }
     

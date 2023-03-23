@@ -9,14 +9,6 @@
             </uniquenessConstraint>
         </uniquenessConstraints>
     </entity>
-    <entity name="Concept" representedClassName="Concept" syncable="YES" codeGenerationType="class">
-        <attribute name="name" attributeType="String"/>
-        <uniquenessConstraints>
-            <uniquenessConstraint>
-                <constraint value="name"/>
-            </uniquenessConstraint>
-        </uniquenessConstraints>
-    </entity>
     <entity name="Document" representedClassName="Document" syncable="YES" codeGenerationType="class">
         <attribute name="path" attributeType="URI"/>
         <relationship name="episode" maxCount="1" deletionRule="Nullify" destinationEntity="Episode"/>
@@ -31,11 +23,5 @@
         <attribute name="save" optional="YES" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
         <attribute name="start" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="title" attributeType="String"/>
-    </entity>
-    <entity name="Interval" representedClassName="Interval" syncable="YES" codeGenerationType="class">
-        <attribute name="from" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="to" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
-        <relationship name="concept" maxCount="1" deletionRule="No Action" destinationEntity="Concept"/>
-        <relationship name="episode" maxCount="1" deletionRule="Cascade" destinationEntity="Episode"/>
     </entity>
 </model>

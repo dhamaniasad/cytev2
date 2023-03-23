@@ -45,83 +45,13 @@ struct EpisodeView: View {
     @State var player: AVPlayer
     @ObservedObject var episode: Episode
     
-    @State var selection: Int = 0
-    @State var results: [Interval]
-    @State var highlight: [CGRect] = []
     
     // @todo Ideally accept a subview so we don't need this data
     @State var intervals: [AppInterval]
     
     @State private var isHoveringSave: Bool = false
     @State private var isHoveringExpand: Bool = false
-    
-    func generateThumbnail(offset: Double) async {
-        let asset = AVAsset(url: urlForEpisode(start: episode.start, title: episode.title))
-        
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.requestedTimeToleranceBefore = CMTime.zero;
-        generator.requestedTimeToleranceAfter = CMTime.zero;
-        do {
-            let thumbnail_image = try generator.copyCGImage(at: CMTime(seconds: offset, preferredTimescale: 1), actualTime: nil)
-            // Run through vision and store results
-            let requestHandler = VNImageRequestHandler(cgImage: thumbnail_image, orientation: .up)
-            let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
-            if !utsname.isAppleSilicon {
-                // fallback for intel
-                request.recognitionLevel = .fast
-            }
-            do {
-                // Perform the text-recognition request.
-                try requestHandler.perform([request])
-            } catch {
-                print("Unable to perform the requests: \(error).")
-            }
-        } catch {
-            print("Failed to generate thumbnail!")
-        }
-    }
-    
-    func recognizeTextHandler(request: VNRequest, error: Error?) {
-        guard let observations =
-                request.results as? [VNRecognizedTextObservation] else {
-            return
-        }
-        highlight.removeAll()
-        let selected = results[selection]
-        // @todo replace map with loop if observations remain unused
-        let _: [(String, CGRect)] = observations.compactMap { observation in
-            // Find the top observation.
-            guard let candidate = observation.topCandidates(1).first else { return ("", .zero) }
-            
-            // Find the bounding-box observation for the string range.
-            let stringRange = candidate.string.startIndex..<candidate.string.endIndex
-            let boxObservation = try? candidate.boundingBox(for: stringRange)
-            
-            // Get the normalized CGRect value.
-            let boundingBox = boxObservation?.boundingBox ?? .zero
-            
-            if candidate.string.lowercased().contains((selected.concept?.name?.lowercased())!) {
-                highlight.append(boundingBox)
-            }
-            
-            // Convert the rectangle from normalized coordinates to image coordinates.
-            return (candidate.string, VNImageRectForNormalizedRect(boundingBox,
-                                                Int(1920),
-                                                Int(1080)))
-        }
-    }
-    
-    func updateSelection() {
-        if selection < results.count {
-            let selected = results[selection]
-            let target = (selected.from ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
-            Task {
-                await generateThumbnail(offset: target)
-            }
-//            print("Seeking to \(target)")
-            player.seek(to: CMTime(seconds: target, preferredTimescale: 1), toleranceBefore: .zero, toleranceAfter: .zero)
-        }
-    }
+    @State var filter: String
     
     func offsetForEpisode(episode: Episode) -> Double {
         var offset_sum = 0.0
@@ -134,53 +64,8 @@ struct EpisodeView: View {
     
     var playerView: some View {
         VStack {
-            if results.count > 0 {
-                HStack {
-                    Button {
-                        selection = max(0, selection-1)
-                        updateSelection()
-                    } label: {
-                        Text("Previous")
-                    }
-                    Text("\(selection+1) of \(results.count) matches")
-                        .frame(maxWidth: .infinity, alignment: .center)
-                    Button {
-                        selection = max(0, min(results.count-1, selection+1))
-                        updateSelection()
-                    } label: {
-                        Text("Next")
-                    }
-                }
-            }
             ZStack {
-                VideoPlayer(player: player, videoOverlay: {
-                    GeometryReader { metrics in
-                        ZStack {
-                            if highlight.count > 0 {
-                                Color.black
-                                    .opacity(0.5)
-                                    .cutout(
-                                        RoundedRectangle(cornerRadius: 4)
-                                            .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
-                                            .offset(x:-180 + (highlight.first!.midX * 360), y:102 - (highlight.first!.midY * 203))
-                                            
-                                    )
-                            } else {
-                                Color.black
-                                    .opacity(0.0)
-                            }
-                        
-                            ForEach(highlight, id:\.self) { box in
-                                RippleEffectView()
-                                    .foregroundColor(.yellow)
-                                    .frame(width: box.width * metrics.size.width, height: box.height * metrics.size.height)
-                                    .position(x:  (box.midX * metrics.size.width), y: metrics.size.height - (box.midY * metrics.size.height))
-                                    .opacity(0.5)
-                            }
-                        }
-                    }
-
-                })
+                VideoPlayer(player: player)
                 .frame(width: 360, height: 203)
                     .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                         //
@@ -205,7 +90,7 @@ struct EpisodeView: View {
                 HStack {
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: player, intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - player.currentTime().seconds, search: results.count > 0 ? results[selection].concept?.name : nil
+                            EpisodePlaylistView(player: player, intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - player.currentTime().seconds, filter: filter
                             )
                         }
                     } label: {
@@ -245,9 +130,6 @@ struct EpisodeView: View {
             }
         }
         .frame(width: 360, height: 260)
-        .onAppear {
-            updateSelection()
-        }
     }
 
 

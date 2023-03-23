@@ -24,7 +24,7 @@ struct ContentView: View {
     let dateRangeOptions = ["Last 24 hours", "Last 7 days", "Last 14 days", "Last 28 days"]
 
     @State private var episodes: [Episode] = []
-    @State private var intervals: [Interval] = []
+    @State private var intervals: [CyteInterval] = []
     @State private var documentsForBundle: [Document] = []
     
     // The search terms currently active
@@ -103,41 +103,22 @@ struct ContentView: View {
                 
             }
         } else {
-            let concept_strs = self.filter.split(separator: " ")
-            var concepts : [Concept] = []
-            for concept in concept_strs {
-                concepts.append(Memory.shared.getOrCreateConcept(name: concept.lowercased()))
-            }
-            let intervalFetch : NSFetchRequest<Interval> = Interval.fetchRequest()
-            intervalFetch.sortDescriptors = [NSSortDescriptor(key:"episode.start", ascending: false)]
-            
-            var pred = String("episode.start >= %@ AND episode.end <= %@ AND concept IN %@")
-            var args = [startDate as CVarArg, endDate as CVarArg, concepts]
-            if highlightedBundle.count != 0 {
-                pred += String("AND episode.bundle == %@")
-                args.append(highlightedBundle)
-            }
-            if showFaves {
-                pred += String("AND episode.save == true")
-            }
-            
-            intervalFetch.predicate = NSPredicate(format: pred, argumentArray: args)
-            
-            if concepts.count < 5 {
-                do {
-                    let potentials = try viewContext.fetch(intervalFetch)
-                    for interval in potentials {
-                        intervals.append(interval)
-                        let ep_included: Episode? = episodes.first(where: { ep in
-                            return ep.start == interval.episode!.start
-                        })
-                        if ep_included == nil {
-                            episodes.append(interval.episode!)
-                        }
-                    }
-                } catch {
-                    
+            let potentials: [CyteInterval] = Memory.shared.search(term: self.filter)
+            intervals = potentials.filter { (interval: CyteInterval) in
+                if showFaves && interval.episode.save != true {
+                    return false
                 }
+                if highlightedBundle.count != 0  && interval.episode.bundle != highlightedBundle {
+                    return false
+                }
+                let is_within = interval.episode.start ?? Date() >= startDate && interval.episode.end ?? Date() <= endDate
+                let ep_included: Episode? = episodes.first(where: { ep in
+                    return ep.start == interval.episode.start
+                })
+                if ep_included == nil && is_within {
+                    episodes.append(interval.episode)
+                }
+                return is_within
             }
         }
         
@@ -243,15 +224,6 @@ struct ContentView: View {
         }
     }
     
-    func intervalsForEpisode(episode: Episode) -> [Interval] {
-        let ints = intervals.filter { interval in
-            let match = interval.from!.timeIntervalSinceReferenceDate >= episode.start!.timeIntervalSinceReferenceDate &&
-            interval.from!.timeIntervalSinceReferenceDate <= episode.end!.timeIntervalSinceReferenceDate
-            return match
-        }
-        return ints
-    }
-    
     var feed: some View {
         withAnimation {
             ScrollView {
@@ -260,7 +232,7 @@ struct ContentView: View {
                         ForEach(episodes.filter { ep in
                             return (ep.title ?? "").count > 0 && (ep.start != ep.end)
                         }) { episode in
-                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, results: intervalsForEpisode(episode: episode), intervals: appIntervals)
+                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter)
                                 .contextMenu {
                                     Button {
                                         episode.save = !episode.save
@@ -281,11 +253,12 @@ struct ContentView: View {
                                     
                                 }
                         }
-                    } else {
-                        ForEach(intervals.filter { interval in
-                            return interval.episode != nil && (interval.episode!.title ?? "").count > 0
-                        }) { interval in
-                            StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode?.start, title: interval.episode?.title)), episode: interval.episode!, result: interval, intervals: appIntervals)
+                    }
+                    else {
+                        ForEach(intervals.filter { (interval: CyteInterval) in
+                            return (interval.episode.title ?? "").count > 0
+                        }) { (interval : CyteInterval) in
+                            StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals)
                         }
                     }
                 }

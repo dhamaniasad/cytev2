@@ -19,7 +19,8 @@ struct StaticEpisodeView: View {
     @ObservedObject var episode: Episode
     
     @State var selection: Int = 0
-    @ObservedObject var result: Interval
+    @ObservedObject var result: CyteInterval
+    @State var filter: String
     @State var highlight: [CGRect] = []
     @State var thumbnail: CGImage?
     
@@ -62,7 +63,6 @@ struct StaticEpisodeView: View {
             return
         }
         highlight.removeAll()
-        let selected = result
         // @todo replace map with loop if observations remain unused
         let _: [(String, CGRect)] = observations.compactMap { observation in
             // Find the top observation.
@@ -75,7 +75,7 @@ struct StaticEpisodeView: View {
             // Get the normalized CGRect value.
             let boundingBox = boxObservation?.boundingBox ?? .zero
             
-            if candidate.string.lowercased().contains((selected.concept?.name?.lowercased())!) {
+            if candidate.string.lowercased().contains((filter.lowercased())) {
                 highlight.append(boundingBox)
             }
             
@@ -168,7 +168,7 @@ struct StaticEpisodeView: View {
                     }
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), search: result.concept?.name
+                            EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - ((result.from.timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), filter: filter
                             )
                         }
                     } label: {

@@ -25,7 +25,7 @@ struct EpisodePlaylistView: View {
     @State private var lastKnownInteractionPoint: CGPoint = CGPoint()
     @State private var lastX: CGFloat = 0.0
     
-    @State var search: String?
+    @State var filter: String
     @State var highlight: [CGRect] = []
     @State private var genTask: Task<(), Never>? = nil
     
@@ -80,7 +80,7 @@ struct EpisodePlaylistView: View {
                 }
             }
         }
-        if search != nil && thumbnailImages.last! != nil {
+        if thumbnailImages.last! != nil {
             // Run through vision and store results
             let requestHandler = VNImageRequestHandler(cgImage: thumbnailImages.last!!, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
@@ -116,7 +116,7 @@ struct EpisodePlaylistView: View {
             // Get the normalized CGRect value.
             let boundingBox = boxObservation?.boundingBox ?? .zero
             
-            if candidate.string.lowercased().contains((search!.lowercased())) {
+            if candidate.string.lowercased().contains((filter.lowercased())) {
                 highlight.append(boundingBox)
             }
             
