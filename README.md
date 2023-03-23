@@ -42,9 +42,8 @@ Happy to accept PRs related to any of the following
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
 
 ### Feature requests
-
-- Add sqlite FTS
-- Swift Agent
+- Keyboard events
+- Swift ReAct Agent
 - Predefined blacklist
 - Filter incognito and safari private windows from capture
 - Chat to get video results inline

@@ -27,12 +27,30 @@
 		3FAD36A929B1BB9800CCCE82 /* Memory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A829B1BB9800CCCE82 /* Memory.swift */; };
 		3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */; };
 		3FB7F3D829B5BDB0007CBAF9 /* Timeline.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FB7F3D729B5BDB0007CBAF9 /* Timeline.swift */; };
+		3FC6C78029CBBD5A004E19FF /* DiffMatchPatch.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */; };
+		3FC6C78129CBBD5A004E19FF /* DiffMatchPatch.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		3FC6C78429CBD3F1004E19FF /* LLM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC6C78329CBD3F1004E19FF /* LLM.swift */; };
+		3FC6C78729CBD437004E19FF /* OpenAIKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FC6C78629CBD437004E19FF /* OpenAIKit */; };
 		3FCAA20029AC7C0100898995 /* CyteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA1FF29AC7C0100898995 /* CyteApp.swift */; };
 		3FCAA20229AC7C0100898995 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA20129AC7C0100898995 /* Persistence.swift */; };
 		3FCAA20729AC7C0100898995 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA20629AC7C0100898995 /* ContentView.swift */; };
 		3FCAA20929AC7C0400898995 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FCAA20829AC7C0400898995 /* Assets.xcassets */; };
 		3FCAA20D29AC7C0400898995 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3FCAA20C29AC7C0400898995 /* Preview Assets.xcassets */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3FC6C78229CBBD5A004E19FF /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				3FC6C78129CBBD5A004E19FF /* DiffMatchPatch.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3F0B8BFD29B310E40018BD60 /* ScreenRecorder.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ScreenRecorder.swift; sourceTree = "<group>"; };
@@ -58,6 +76,9 @@
 		3FAD36AE29B1C18600CCCE82 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3FAD36B129B1C29300CCCE82 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		3FB7F3D729B5BDB0007CBAF9 /* Timeline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timeline.swift; sourceTree = "<group>"; };
+		3FC6C76929CBBB74004E19FF /* Cyte-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Cyte-Bridging-Header.h"; sourceTree = "<group>"; };
+		3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DiffMatchPatch.framework; sourceTree = "<group>"; };
+		3FC6C78329CBD3F1004E19FF /* LLM.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LLM.swift; sourceTree = "<group>"; };
 		3FCAA1FC29AC7C0100898995 /* Cyte.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Cyte.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3FCAA1FF29AC7C0100898995 /* CyteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CyteApp.swift; sourceTree = "<group>"; };
 		3FCAA20129AC7C0100898995 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
@@ -76,6 +97,8 @@
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
 				3F14BDCA29BCEF6500F12FE7 /* Highlightr in Frameworks */,
 				3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */,
+				3FC6C78029CBBD5A004E19FF /* DiffMatchPatch.framework in Frameworks */,
+				3FC6C78729CBD437004E19FF /* OpenAIKit in Frameworks */,
 				3F9E3DF929B9D87C00FE31CB /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -97,6 +120,7 @@
 			isa = PBXGroup;
 			children = (
 				3F14BDD529C0D4A800F12FE7 /* AVKit.framework */,
+				3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */,
 				3F8F932929B5CF9C00C938DE /* Charts.framework */,
 			);
 			name = Frameworks;
@@ -134,6 +158,7 @@
 			children = (
 				3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */,
 				3FAD36AD29B1BE8700CCCE82 /* README.md */,
+				3FC6C78329CBD3F1004E19FF /* LLM.swift */,
 			);
 			path = Reason;
 			sourceTree = "<group>";
@@ -151,6 +176,14 @@
 				3F14BDD329C0145200F12FE7 /* RippleEffect.swift */,
 			);
 			path = Views;
+			sourceTree = "<group>";
+		};
+		3FC6C76829CBBB1D004E19FF /* Diff */ = {
+			isa = PBXGroup;
+			children = (
+				3FC6C76929CBBB74004E19FF /* Cyte-Bridging-Header.h */,
+			);
+			path = Diff;
 			sourceTree = "<group>";
 		};
 		3FCAA1F329AC7C0100898995 = {
@@ -173,6 +206,7 @@
 		3FCAA1FE29AC7C0100898995 /* Cyte */ = {
 			isa = PBXGroup;
 			children = (
+				3FC6C76829CBBB1D004E19FF /* Diff */,
 				3F9E3DFA29BA157600FE31CB /* Info.plist */,
 				3F0B8C0329B316920018BD60 /* README.md */,
 				3F0B8BFC29B310CB0018BD60 /* Perceive */,
@@ -209,6 +243,7 @@
 				3FCAA1F829AC7C0100898995 /* Sources */,
 				3FCAA1F929AC7C0100898995 /* Frameworks */,
 				3FCAA1FA29AC7C0100898995 /* Resources */,
+				3FC6C78229CBBD5A004E19FF /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -219,6 +254,7 @@
 				3F9E3DF829B9D87C00FE31CB /* Starscream */,
 				3F14BDC929BCEF6500F12FE7 /* Highlightr */,
 				3F6FE08029CAB0170061DBF5 /* SQLite */,
+				3FC6C78629CBD437004E19FF /* OpenAIKit */,
 			);
 			productName = Cyte;
 			productReference = 3FCAA1FC29AC7C0100898995 /* Cyte.app */;
@@ -236,6 +272,7 @@
 				TargetAttributes = {
 					3FCAA1FB29AC7C0100898995 = {
 						CreatedOnToolsVersion = 14.1;
+						LastSwiftMigration = 1420;
 					};
 				};
 			};
@@ -252,6 +289,7 @@
 				3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */,
 				3F14BDC829BCEF6500F12FE7 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				3F6FE07F29CAB0170061DBF5 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
+				3FC6C78529CBD437004E19FF /* XCRemoteSwiftPackageReference "openai-kit" */,
 			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
 			projectDirPath = "";
@@ -287,6 +325,7 @@
 				3F14BDD229BF06F900F12FE7 /* EpisodeView.swift in Sources */,
 				3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */,
 				3F14BDD429C0145200F12FE7 /* RippleEffect.swift in Sources */,
+				3FC6C78429CBD3F1004E19FF /* LLM.swift in Sources */,
 				3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */,
 				3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */,
 				3FCAA20729AC7C0100898995 /* ContentView.swift in Sources */,
@@ -421,6 +460,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Cyte/Cyte.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
@@ -433,6 +473,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Cyte/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cyte;
@@ -459,6 +503,8 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Cyte/Diff/Cyte-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
@@ -468,6 +514,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Cyte/Cyte.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
@@ -480,6 +527,10 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				"ENABLE_HARDENED_RUNTIME[sdk=macosx*]" = YES;
 				ENABLE_PREVIEWS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Cyte/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cyte;
@@ -506,6 +557,7 @@
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "Cyte/Diff/Cyte-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
@@ -558,6 +610,14 @@
 				minimumVersion = 4.0.0;
 			};
 		};
+		3FC6C78529CBD437004E19FF /* XCRemoteSwiftPackageReference "openai-kit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dylanshine/openai-kit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -575,6 +635,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3F9E3DF729B9D87C00FE31CB /* XCRemoteSwiftPackageReference "Starscream" */;
 			productName = Starscream;
+		};
+		3FC6C78629CBD437004E19FF /* OpenAIKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FC6C78529CBD437004E19FF /* XCRemoteSwiftPackageReference "openai-kit" */;
+			productName = OpenAIKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 
