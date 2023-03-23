@@ -14,6 +14,7 @@ struct Settings: View {
             animation: .default)
     private var bundles: FetchedResults<BundleExclusion>
     @State var isShowing = false
+    @State var apiDetails: String = ""
     
     var body: some View {
         VStack {
@@ -35,6 +36,24 @@ struct Settings: View {
                             print(error)
                     }
                 })
+            }
+            .padding(EdgeInsets(top: 10.0, leading: 200.0, bottom: 10.0, trailing: 200.0))
+            
+            HStack {
+                if LLM.shared.isSetup {
+                    Text("OpenAI enabled")
+                    
+                } else {
+                    TextField(
+                        "OpenAI API Key",
+                        text: $apiDetails
+                    )
+                    .onSubmit {
+                        if apiDetails.contains("@") {
+                            LLM.shared.setup(key: apiDetails)
+                        }
+                    }
+                }
             }
             .padding(EdgeInsets(top: 10.0, leading: 200.0, bottom: 10.0, trailing: 200.0))
             List(bundles, id: \.self) { bundle in

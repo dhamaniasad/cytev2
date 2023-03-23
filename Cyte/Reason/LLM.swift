@@ -8,23 +8,39 @@
 import Foundation
 import OpenAIKit
 import AsyncHTTPClient
+import KeychainSwift
 
-class LLM {
+class LLM: ObservableObject {
     static let shared = LLM()
     
     private let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-    private let openAIClient: OpenAIKit.Client?
+    private var openAIClient: OpenAIKit.Client?
+    private let keychain = KeychainSwift()
+    @Published var isSetup: Bool = false
     
     init() {
-        var apiKey: String {
-            ProcessInfo.processInfo.environment["OPENAI_API_KEY"]!
+    }
+    
+    func setup(key: String? = nil) {
+        if key != nil {
+            keychain.set(key!, forKey: "CYTE_OPENAI_KEY")
         }
-
-        var organization: String {
-            ProcessInfo.processInfo.environment["OPENAI_ORGANIZATION"]!
+        let creds = keychain.get("CYTE_OPENAI_KEY")
+        if creds != nil {
+            let details = creds?.split(separator: "@")
+            if (details?.count ?? 0) > 1 {
+                let apiKey: String = String(details![0])
+                let organization: String = String(details![1])
+                if apiKey.count > 0 && organization.count > 0 {
+                    let configuration = Configuration(apiKey: apiKey, organization: organization)
+                    openAIClient = OpenAIKit.Client(httpClient: httpClient, configuration: configuration)
+                    isSetup = true
+                    print("Setup OpenAI")
+                } else {
+                    openAIClient = nil
+                }
+            }
         }
-        let configuration = Configuration(apiKey: apiKey, organization: organization)
-        openAIClient = OpenAIKit.Client(httpClient: httpClient, configuration: configuration)
     }
     
     func isFlagged(input: String) async -> Bool {

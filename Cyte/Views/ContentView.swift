@@ -299,7 +299,7 @@ struct ContentView: View {
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {
                                 TextField(
-                                    "Search \(agent.isConnected ? "or chat " : "")your history",
+                                    "Search \(LLM.shared.isSetup ? "or chat " : "")your history",
                                     text: binding
                                 )
                                 .frame(width: agent.chatLog.count == 0 ? 850 : nil, height: 48)
@@ -313,26 +313,28 @@ struct ContentView: View {
                                 .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
-                                        if agent.isConnected {
+                                        if LLM.shared.isSetup {
                                             Task {
                                                 if agent.chatLog.count == 0 {
                                                     agent.reset()
                                                 }
-                                                await agent.query(request: self.filter)
+                                                let what = self.filter
                                                 self.filter = ""
+                                                await agent.query(request: what)
                                             }
                                         }
                                         refreshData()
                                     }
                                 }
                                 Button(action: {
-                                    if agent.isConnected {
+                                    if LLM.shared.isSetup {
                                         Task {
                                             if agent.chatLog.count == 0 {
                                                 agent.reset()
                                             }
-                                            await agent.query(request: self.filter)
+                                            let what = self.filter
                                             self.filter = ""
+                                            await agent.query(request: what)
                                         }
                                     }
                                 }) {

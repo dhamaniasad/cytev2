@@ -34,6 +34,7 @@ Happy to accept PRs related to any of the following
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 - Scrolling lags while loading videos/processing vision
+- Chatlog updates published var from non main actor context
 
 ### Refactor
 
@@ -43,6 +44,7 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 - Keyboard events
+- Streaming responses from GPT
 - Swift ReAct Agent
 - Predefined blacklist
 - Filter incognito and safari private windows from capture

@@ -309,7 +309,6 @@ class Memory {
                         ((res as! Diff).text ?? ""))
             edits.append(edit)
             if edit.0 == 0 {
-                print(edit.1)
                 total_match += edit.1.count
             }
             if edit.0 == 1 {
@@ -317,8 +316,8 @@ class Memory {
             }
         }
         
-        if (Double(lastObservation.count) / Double(total_match)) < 0.1 {
-            print("Frames share less than 10% text content - closing and embedding document")
+        if total_match < 8 && lastObservation.count > 0 {
+            print("Frames share less than 8chars text content - closing and embedding document")
             let embedding = await LLM.shared.embed(input: lastObservation)
             embed(start: start, document:lastObservation, embedding:embedding!)
         }
