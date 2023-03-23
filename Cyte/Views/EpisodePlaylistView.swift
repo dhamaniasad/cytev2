@@ -12,6 +12,12 @@ import AVKit
 import Combine
 import Vision
 
+extension AVPlayer {
+    var isPlaying: Bool {
+        return rate != 0 && error == nil
+    }
+}
+
 struct EpisodePlaylistView: View {
     
     @State var player: AVPlayer?
@@ -419,6 +425,16 @@ struct EpisodePlaylistView: View {
                     .frame(maxWidth: .infinity, alignment: .trailing)
             }
             .font(Font.caption)
+            Group {
+                Button(action: { secondsOffsetFromLastEpisode += 2.0; updateData(); }) {}
+                    .keyboardShortcut(.leftArrow, modifiers: [])
+                Button(action: { secondsOffsetFromLastEpisode = max(0.0, secondsOffsetFromLastEpisode - 2.0); updateData(); }) {}
+                    .keyboardShortcut(.rightArrow, modifiers: [])
+                Button(action: { secondsOffsetFromLastEpisode = 0; updateData(); }) {}
+                    .keyboardShortcut(.return, modifiers: [])
+                Button(action: { if player == nil { return }; player!.isPlaying ? player!.pause() : player!.play(); }) {}
+                    .keyboardShortcut(.space, modifiers: [])
+            }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

@@ -4,7 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cataddict42.svg?style=social&label=%20%40CatAddict42)](https://twitter.com/cataddict42)
 
-A background screen recorder for easy history search. There is an [optional companion app](https://github.com/shaunnarayan/cytev2-explore), which enables GPT features when running in background.
+A background screen recorder for easy history search. 
+If you choose to supply an OpenAI key, it can act as a knowledge base.
 
 ## Uses
 
@@ -43,8 +44,9 @@ Happy to accept PRs related to any of the following
 - Duplicate code in vision analysis handlers and get active interval (timeline views)
 
 ### Feature requests
-- Keyboard events
+- Keyboard navigation events: Return to open selected episode, escape to pop timeline view
 - Streaming responses from GPT
+- Max limit/debounce on embed rate
 - Swift ReAct Agent
 - Predefined blacklist
 - Filter incognito and safari private windows from capture

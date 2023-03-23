@@ -30,6 +30,7 @@ struct StaticEpisodeView: View {
     @State private var isHoveringSave: Bool = false
     @State private var isHoveringExpand: Bool = false
     @State private var isHoveringNext: Bool = false
+    @State var selected: Bool
     
     @State private var genTask: Task<Sendable, Error>?
     
@@ -135,6 +136,7 @@ struct StaticEpisodeView: View {
                 VStack {
                     Text((episode.title ?? "")!.split(separator: " ").dropLast(6).joined(separator: " "))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .fontWeight(selected ? .bold : .regular)
                     Text((result.from ?? Date()).formatted(date: .abbreviated, time: .standard) )
                         .font(SwiftUI.Font.caption)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,6 +145,10 @@ struct StaticEpisodeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
                     if highlight.count > 1 {
+                        Group {
+                            Button(action: { updateSelection() }) {}
+                                .keyboardShortcut(.space, modifiers: [])
+                        }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
                         HStack {
                             Text("\(selection+1)/\(highlight.count)")
                             Image(systemName: "arrow.forward")

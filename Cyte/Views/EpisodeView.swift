@@ -52,6 +52,7 @@ struct EpisodeView: View {
     @State private var isHoveringSave: Bool = false
     @State private var isHoveringExpand: Bool = false
     @State var filter: String
+    @State var selected: Bool
     
     func offsetForEpisode(episode: Episode) -> Double {
         var offset_sum = 0.0
@@ -81,6 +82,7 @@ struct EpisodeView: View {
                 VStack {
                     Text((episode.title ?? "")!.split(separator: " ").dropLast(6).joined(separator: " "))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .fontWeight(selected ? .bold : .regular)
                     Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
                         .font(SwiftUI.Font.caption)
                         .frame(maxWidth: .infinity, alignment: .leading)

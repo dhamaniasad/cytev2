@@ -16,9 +16,9 @@ import Charts
 import Foundation
 
 struct ContentView: View {
-    @Namespace var mainNamespace
     @Environment(\.managedObjectContext) private var viewContext
     @StateObject private var agent = Agent.shared
+    @FocusState private var searchFocused: Bool
     
     @State private var dateRangeSelection = "Last 7 days"
     let dateRangeOptions = ["Last 24 hours", "Last 7 days", "Last 14 days", "Last 28 days"]
@@ -47,6 +47,7 @@ struct ContentView: View {
     
     @State private var refreshTask: Task<(), Never>? = nil
     @State private var scrollViewID = UUID()
+    @State var selectedIndex = -1
     
     let feedColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -78,6 +79,7 @@ struct ContentView: View {
     // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
     @MainActor func performRefreshData() {
         scrollViewID = UUID()
+        selectedIndex = -1
         let ranges = [1, 7, 14, 28]
         startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -ranges[dateRangeOptions.firstIndex(of: dateRangeSelection)!], to: Date())!
         endDate = Date()
@@ -226,48 +228,61 @@ struct ContentView: View {
     
     var feed: some View {
         withAnimation {
-            ScrollView {
-                LazyVGrid(columns: feedColumnLayout, spacing: 20) {
-                    if intervals.count == 0 {
-                        ForEach(episodes.filter { ep in
-                            return (ep.title ?? "").count > 0 && (ep.start != ep.end)
-                        }) { episode in
-                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter)
-                                .contextMenu {
-                                    Button {
-                                        episode.save = !episode.save
-                                        do {
-                                            try PersistenceController.shared.container.viewContext.save()
-                                            self.refreshData()
-                                        } catch {
+            ScrollViewReader { value in
+                Group {
+                    Button(action: { move(amount:-1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                    Button(action: { move(amount:1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                    Button(action: { searchFocused = true; selectedIndex = -1; }) {}
+                        .keyboardShortcut(.escape, modifiers: [])
+                }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
+                ScrollView {
+                    
+                    LazyVGrid(columns: feedColumnLayout, spacing: 20) {
+                        if intervals.count == 0 {
+                            ForEach(episodes.filter { ep in
+                                return (ep.title ?? "").count > 0 && (ep.start != ep.end)
+                            }) { episode in
+                                EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: selectedIndex >= 0 && episode.start == episodes[selectedIndex].start)
+                                    .contextMenu {
+                                        Button {
+                                            episode.save = !episode.save
+                                            do {
+                                                try PersistenceController.shared.container.viewContext.save()
+                                                self.refreshData()
+                                            } catch {
+                                            }
+                                        } label: {
+                                            Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
                                         }
-                                    } label: {
-                                        Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
+                                        Button {
+                                            Memory.shared.delete(delete_episode: episode)
+                                            self.refreshData()
+                                        } label: {
+                                            Label("Delete", systemImage: "xmark.bin")
+                                        }
+                                        
                                     }
-                                    Button {
-                                        Memory.shared.delete(delete_episode: episode)
-                                        self.refreshData()
-                                    } label: {
-                                        Label("Delete", systemImage: "xmark.bin")
-                                    }
-                                    
-                                }
+                                    .id(episode.start)
+                            }
+                        }
+                        else {
+                            ForEach(intervals.filter { (interval: CyteInterval) in
+                                return (interval.episode.title ?? "").count > 0
+                            }) { (interval : CyteInterval) in
+                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: selectedIndex >= 0 && interval.from == intervals[selectedIndex].from)
+                                .id(interval.from)
+                            }
                         }
                     }
-                    else {
-                        ForEach(intervals.filter { (interval: CyteInterval) in
-                            return (interval.episode.title ?? "").count > 0
-                        }) { (interval : CyteInterval) in
-                            StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals)
-                        }
-                    }
+                    .padding(.all)
                 }
-                .padding(.all)
-            }
-            .id(self.scrollViewID)
-            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    self.refreshData()
+//                .id(self.selectedIndex)
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        self.refreshData()
+                    }
                 }
             }
         }
@@ -279,6 +294,14 @@ struct ContentView: View {
         }
         return (startDate) ... (episodes.first?.end ?? Date())
         
+    }
+    
+    func move(amount: Int) {
+        searchFocused = false
+        let total_displayed = filter.count == 0 ? episodes.count : intervals.count
+        if (selectedIndex + amount) >= 0 && (selectedIndex + amount) < total_displayed {
+            selectedIndex += amount
+        }
     }
 
     var body: some View {
@@ -310,7 +333,8 @@ struct ContentView: View {
                                 .border(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                                 .cornerRadius(6.0)
                                 .font(Font.title)
-                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
+                                .focused($searchFocused)
+//                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
                                         if LLM.shared.isSetup {
@@ -413,8 +437,6 @@ struct ContentView: View {
                                             NSCursor.arrow.set()
                                         }
                                     })
-                                    Spacer()
-                                        .frame(maxWidth: .infinity)
                                     HStack {
                                         let calbinding = Binding<String>(get: {
                                             self.dateRangeSelection
