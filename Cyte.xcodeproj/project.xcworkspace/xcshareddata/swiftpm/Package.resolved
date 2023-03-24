@@ -21,10 +21,10 @@
     {
       "identity" : "openai",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MacPaw/OpenAI",
+      "location" : "https://github.com/shaunnarayan/OpenAI",
       "state" : {
-        "revision" : "57b7af6e3dc6d167c5b483418126c1c873a5a2df",
-        "version" : "0.0.6"
+        "branch" : "main",
+        "revision" : "ba47929423436b11b900a7e992da8339b3638346"
       }
     },
     {

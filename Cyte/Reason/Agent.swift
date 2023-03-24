@@ -9,9 +9,16 @@ import Foundation
 import CoreGraphics
 import Cocoa
 import NaturalLanguage
+import OpenAI
+import KeychainSwift
 
-class Agent : ObservableObject {
+class Agent : ObservableObject, EventSourceDelegate {
     static let shared : Agent = Agent()
+    
+    private var openAIClient: OpenAI?
+    private let keychain = KeychainSwift()
+    @Published var isSetup: Bool = false
+    
     static let promptTemplate = """
     Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
         {context}
@@ -36,7 +43,62 @@ class Agent : ObservableObject {
     @Published public var chatLog : [(String, String, String)] = []
     
     init() {
-        LLM.shared.setup()
+        setup()
+    }
+    
+    func setup(key: String? = nil) {
+        if key != nil {
+            keychain.set(key!, forKey: "CYTE_OPENAI_KEY")
+        }
+        let creds = keychain.get("CYTE_OPENAI_KEY")
+        if creds != nil {
+            let details = creds?.split(separator: "@")
+            if (details?.count ?? 0) > 1 {
+                let apiKey: String = String(details![0])
+                let organization: String = String(details![1])
+                if apiKey.count > 0 && organization.count > 0 {
+                    openAIClient = OpenAI(apiToken: apiKey, callback: self)
+                    isSetup = true
+                    print("Setup OpenAI")
+                } else {
+                    openAIClient = nil
+                }
+            }
+        }
+    }
+    
+    func isFlagged(input: String) async -> Bool {
+        let query = OpenAI.ModerationQuery(input: input, model: .textModerationLatest)
+        var response: Bool = false
+        do {
+            let result = try await openAIClient!.moderations(query: query)
+            response = result.results[0].flagged
+        } catch {}
+        return response
+    }
+    
+    func embed(input: String) async -> [Double]? {
+        if await isFlagged(input: input) { return nil }
+        let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
+        var response: [Double]? = nil
+        do {
+            let result = try await openAIClient!.embeddings(query: query)
+            response = result.data[0].embedding
+        } catch {}
+        return response
+    }
+    
+    func query(input: String) async -> Void {
+        if await isFlagged(input: input) { return }
+        let query = OpenAI.ChatQuery(model: .gpt3_5Turbo, messages: [.init(role: "user", content: input)], stream: true)
+        openAIClient!.chats(query: query)
+    }
+    
+    func onNewToken(token: String) {
+        let chatId = chatLog.lastIndex(where: { log in
+            return log.0 == "bot"
+        })
+        chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
     }
     
     func observe(frame: CapturedFrame) {
@@ -65,9 +127,8 @@ class Agent : ObservableObject {
         
         await MainActor.run {
             chatLog.append(("user", "", request))
-            chatLog.append(("bot", "gpt4", "..."))
+            chatLog.append(("bot", "gpt4", ""))
         }
-        let chatId = chatLog.count - 1
         if false && FileManager.default.fileExists(atPath: embeddingUrl.path(percentEncoded: false)) {
             print("Runiing QA prompt")
             do {
@@ -75,7 +136,7 @@ class Agent : ObservableObject {
                 let jsonData = try Data(contentsOf: embeddingUrl)
                 let cyteEmbeddings = try JSONDecoder().decode(CyteEmbeddings.self, from: jsonData)
                 var context: String = ""
-                let query_embedding: [Double] = await LLM.shared.embed(input: request)!.map { Double($0) }
+                let query_embedding: [Double] = await embed(input: request)!.map { Double($0) }
                 embeddings.enumerateNeighbors(for: query_embedding, maximumCount: 5) { neighbor, distance in
                     print("\(neighbor): \(distance.description)")
                     // neighbor can be used to find the episode from sql, as well as the original text from the json
@@ -87,23 +148,17 @@ class Agent : ObservableObject {
                 let prompt = Agent.promptTemplate.replacing("{context}", with: context).replacing("{question}", with: request)
                 print(prompt)
                 print("Query LLM")
-                let response = await LLM.shared.query(input: prompt)
+                await query(input: prompt)
                 print("Finish LLM")
 //                chatLog.append(("bot", "gpt3", response))
-                await MainActor.run {
-                    chatLog[chatId].2 = response
-                }
             } catch { }
         } else {
             print("Runiing chat prompt")
             let prompt = Agent.chatPromptTemplate.replacing("{history}", with: "").replacing("{question}", with: request)
             print("Query LLM")
-            let response = await LLM.shared.query(input: prompt)
+            await query(input: prompt)
             print("Finish LLM")
 //            chatLog.append(("bot", "gpt3", response))
-            await MainActor.run {
-                chatLog[chatId].2 = response
-            }
         }
     }
 }

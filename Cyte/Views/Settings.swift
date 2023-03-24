@@ -40,7 +40,7 @@ struct Settings: View {
             .padding(EdgeInsets(top: 10.0, leading: 200.0, bottom: 10.0, trailing: 200.0))
             
             HStack {
-                if LLM.shared.isSetup {
+                if Agent.shared.isSetup {
                     Text("OpenAI enabled")
                     
                 } else {
@@ -50,7 +50,7 @@ struct Settings: View {
                     )
                     .onSubmit {
                         if apiDetails.contains("@") {
-                            LLM.shared.setup(key: apiDetails)
+                            Agent.shared.setup(key: apiDetails)
                         }
                     }
                 }

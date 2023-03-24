@@ -322,7 +322,7 @@ struct ContentView: View {
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {
                                 TextField(
-                                    "Search \(LLM.shared.isSetup ? "or chat " : "")your history",
+                                    "Search \(Agent.shared.isSetup ? "or chat " : "")your history",
                                     text: binding
                                 )
                                 .frame(width: agent.chatLog.count == 0 ? 850 : nil, height: 48)
@@ -337,7 +337,7 @@ struct ContentView: View {
 //                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
-                                        if LLM.shared.isSetup {
+                                        if Agent.shared.isSetup {
                                             Task {
                                                 if agent.chatLog.count == 0 {
                                                     agent.reset()
@@ -351,7 +351,7 @@ struct ContentView: View {
                                     }
                                 }
                                 Button(action: {
-                                    if LLM.shared.isSetup {
+                                    if Agent.shared.isSetup {
                                         Task {
                                             if agent.chatLog.count == 0 {
                                                 agent.reset()

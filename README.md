@@ -35,7 +35,6 @@ Happy to accept PRs related to any of the following
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 - Scrolling lags while loading videos/processing vision
-- Chatlog updates published var from non main actor context
 
 ### Refactor
 
@@ -45,16 +44,13 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 - Keyboard navigation events: Return to open selected episode, escape to pop timeline view
-- Streaming responses from GPT
 - Max limit/debounce on embed rate
+- Chat to get video results inline
 - Swift ReAct Agent
 - Predefined blacklist
 - Filter incognito and safari private windows from capture
-- Chat to get video results inline
 - Easily copy code blocks in chat
 - Reduce color space for raw videos
 - Set default playback speed 2.0
 - Fallback to object recognition
 - Encryption e.g. Filevault?
-- Search improvement: term expansion, stemming, local embedding... 
-- Audio support
