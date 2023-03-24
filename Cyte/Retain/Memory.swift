@@ -50,7 +50,7 @@ struct IntervalExpression {
 
 struct FrameEmbedding : Codable {
     let text: String
-    let vec: [Float]
+    let vec: [Double]
 }
 
 struct CyteEmbeddings : Codable {
@@ -316,11 +316,11 @@ class Memory {
             }
         }
         
-        if total_match < 8 && lastObservation.count > 0 {
-            print("Frames share less than 8chars text content - closing and embedding document")
-            let embedding = await LLM.shared.embed(input: lastObservation)
-            embed(start: start, document:lastObservation, embedding:embedding!)
-        }
+//        if total_match < 16 && lastObservation.count > 0 {
+//            print("Frames share less than 8chars text content - closing and embedding document")
+//            let embedding = await LLM.shared.embed(input: lastObservation)
+//            embed(start: start, document:lastObservation, embedding:embedding!)
+//        }
         
         let frameLength = 2
         let newItem = CyteInterval(from: start, to: Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: frameLength, to: start)!, episode: episode!, document: added)
@@ -328,7 +328,7 @@ class Memory {
         lastObservation = what
     }
     
-    func embed(start: Date, document: String, embedding: [Float]) {
+    func embed(start: Date, document: String, embedding: [Double]) {
         // then add to coreml embed db, resave
         embeddings.index["\(start.timeIntervalSinceReferenceDate)"] = FrameEmbedding(text: document, vec: embedding)
         // overwrite on disk, recreate coreml model

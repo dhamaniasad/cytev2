@@ -29,8 +29,8 @@
 		3FC6C78029CBBD5A004E19FF /* DiffMatchPatch.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */; };
 		3FC6C78129CBBD5A004E19FF /* DiffMatchPatch.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		3FC6C78429CBD3F1004E19FF /* LLM.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FC6C78329CBD3F1004E19FF /* LLM.swift */; };
-		3FC6C78729CBD437004E19FF /* OpenAIKit in Frameworks */ = {isa = PBXBuildFile; productRef = 3FC6C78629CBD437004E19FF /* OpenAIKit */; };
 		3FC6C78B29CC2EA2004E19FF /* KeychainSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3FC6C78A29CC2EA2004E19FF /* KeychainSwift */; };
+		3FC6C79329CD22B6004E19FF /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = 3FC6C79229CD22B6004E19FF /* OpenAI */; };
 		3FCAA20029AC7C0100898995 /* CyteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA1FF29AC7C0100898995 /* CyteApp.swift */; };
 		3FCAA20229AC7C0100898995 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA20129AC7C0100898995 /* Persistence.swift */; };
 		3FCAA20729AC7C0100898995 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FCAA20629AC7C0100898995 /* ContentView.swift */; };
@@ -97,9 +97,9 @@
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
 				3F14BDCA29BCEF6500F12FE7 /* Highlightr in Frameworks */,
 				3FC6C78B29CC2EA2004E19FF /* KeychainSwift in Frameworks */,
+				3FC6C79329CD22B6004E19FF /* OpenAI in Frameworks */,
 				3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */,
 				3FC6C78029CBBD5A004E19FF /* DiffMatchPatch.framework in Frameworks */,
-				3FC6C78729CBD437004E19FF /* OpenAIKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,9 +186,17 @@
 			path = Diff;
 			sourceTree = "<group>";
 		};
+		3FC6C78F29CCF773004E19FF /* Packages */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Packages;
+			sourceTree = "<group>";
+		};
 		3FCAA1F329AC7C0100898995 = {
 			isa = PBXGroup;
 			children = (
+				3FC6C78F29CCF773004E19FF /* Packages */,
 				3FCAA1FE29AC7C0100898995 /* Cyte */,
 				3FCAA1FD29AC7C0100898995 /* Products */,
 				3F8F932829B5CF9C00C938DE /* Frameworks */,
@@ -253,8 +261,8 @@
 			packageProductDependencies = (
 				3F14BDC929BCEF6500F12FE7 /* Highlightr */,
 				3F6FE08029CAB0170061DBF5 /* SQLite */,
-				3FC6C78629CBD437004E19FF /* OpenAIKit */,
 				3FC6C78A29CC2EA2004E19FF /* KeychainSwift */,
+				3FC6C79229CD22B6004E19FF /* OpenAI */,
 			);
 			productName = Cyte;
 			productReference = 3FCAA1FC29AC7C0100898995 /* Cyte.app */;
@@ -288,8 +296,8 @@
 			packageReferences = (
 				3F14BDC829BCEF6500F12FE7 /* XCRemoteSwiftPackageReference "Highlightr" */,
 				3F6FE07F29CAB0170061DBF5 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
-				3FC6C78529CBD437004E19FF /* XCRemoteSwiftPackageReference "openai-kit" */,
 				3FC6C78929CC2EA2004E19FF /* XCRemoteSwiftPackageReference "keychain-swift" */,
+				3FC6C79129CD22B6004E19FF /* XCRemoteSwiftPackageReference "OpenAI" */,
 			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
 			projectDirPath = "";
@@ -602,20 +610,20 @@
 				minimumVersion = 0.9.2;
 			};
 		};
-		3FC6C78529CBD437004E19FF /* XCRemoteSwiftPackageReference "openai-kit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/dylanshine/openai-kit";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		3FC6C78929CC2EA2004E19FF /* XCRemoteSwiftPackageReference "keychain-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/evgenyneu/keychain-swift";
 			requirement = {
 				branch = master;
 				kind = branch;
+			};
+		};
+		3FC6C79129CD22B6004E19FF /* XCRemoteSwiftPackageReference "OpenAI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MacPaw/OpenAI";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.6;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -631,15 +639,15 @@
 			package = 3F6FE07F29CAB0170061DBF5 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
 			productName = SQLite;
 		};
-		3FC6C78629CBD437004E19FF /* OpenAIKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3FC6C78529CBD437004E19FF /* XCRemoteSwiftPackageReference "openai-kit" */;
-			productName = OpenAIKit;
-		};
 		3FC6C78A29CC2EA2004E19FF /* KeychainSwift */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 3FC6C78929CC2EA2004E19FF /* XCRemoteSwiftPackageReference "keychain-swift" */;
 			productName = KeychainSwift;
+		};
+		3FC6C79229CD22B6004E19FF /* OpenAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FC6C79129CD22B6004E19FF /* XCRemoteSwiftPackageReference "OpenAI" */;
+			productName = OpenAI;
 		};
 /* End XCSwiftPackageProductDependency section */
 

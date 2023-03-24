@@ -6,15 +6,13 @@
 //
 
 import Foundation
-import OpenAIKit
-import AsyncHTTPClient
 import KeychainSwift
+import OpenAI
 
 class LLM: ObservableObject {
     static let shared = LLM()
     
-    private let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
-    private var openAIClient: OpenAIKit.Client?
+    private var openAIClient: OpenAI?
     private let keychain = KeychainSwift()
     @Published var isSetup: Bool = false
     
@@ -32,8 +30,7 @@ class LLM: ObservableObject {
                 let apiKey: String = String(details![0])
                 let organization: String = String(details![1])
                 if apiKey.count > 0 && organization.count > 0 {
-                    let configuration = Configuration(apiKey: apiKey, organization: organization)
-                    openAIClient = OpenAIKit.Client(httpClient: httpClient, configuration: configuration)
+                    openAIClient = OpenAI(apiToken: apiKey)
                     isSetup = true
                     print("Setup OpenAI")
                 } else {
@@ -44,48 +41,29 @@ class LLM: ObservableObject {
     }
     
     func isFlagged(input: String) async -> Bool {
-        do {
-            let moderation = try await openAIClient!.moderations.createModeration(input: input)
-            return moderation.results[0].flagged
-        } catch {}
-        return true
+        // @todo implement
+        return false
     }
     
-    func embed(input: String) async -> [Float]? {
+    func embed(input: String) async -> [Double]? {
         if await isFlagged(input: input) { return nil }
+        let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
+        var response: [Double]? = nil
         do {
-            let embedding = try await openAIClient!.embeddings.create(input:input)
-            var result: [Float]? = nil
-            for embed in embedding.data {
-                result = embed.embedding
-            }
-            return result
-        } catch {
-            return nil
-        }
+            let result = try await openAIClient!.embeddings(query: query)
+            response = result.data[0].embedding
+        } catch {}
+        return response
     }
     
     func query(input: String) async -> String {
         if await isFlagged(input: input) { return "Bad input" }
+        let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)])
+        var response = "Error"
         do {
-            let completion = try await openAIClient!.chats.create(
-                model: Model.GPT3.gpt3_5Turbo,
-                messages: [
-                    .user(content: input)
-                ]
-            )
-            var result = ""
-            switch completion.choices[0].message {
-                case .assistant(let content):
-                    result = content;
-                case .system(_):
-                    break
-                case .user(_):
-                    break
-            }
-            return result
-        } catch {
-            return ""
-        }
+            let result = try await openAIClient!.chats(query: query)
+            response = result.choices[0].message.content
+        } catch {}
+        return response
     }
 }

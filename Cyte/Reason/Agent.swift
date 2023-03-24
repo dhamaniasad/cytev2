@@ -63,10 +63,12 @@ class Agent : ObservableObject {
         let embeddingUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.json"))!
         let coremlUrl = embeddingUrl.deletingLastPathComponent().appendingPathComponent("Embeddings.coreml")
         
-        chatLog.append(("user", "", request))
-        chatLog.append(("bot", "gpt4", "..."))
+        await MainActor.run {
+            chatLog.append(("user", "", request))
+            chatLog.append(("bot", "gpt4", "..."))
+        }
         let chatId = chatLog.count - 1
-        if FileManager.default.fileExists(atPath: embeddingUrl.path(percentEncoded: false)) {
+        if false && FileManager.default.fileExists(atPath: embeddingUrl.path(percentEncoded: false)) {
             print("Runiing QA prompt")
             do {
                 let embeddings = try NLEmbedding(contentsOf: coremlUrl)
@@ -88,7 +90,9 @@ class Agent : ObservableObject {
                 let response = await LLM.shared.query(input: prompt)
                 print("Finish LLM")
 //                chatLog.append(("bot", "gpt3", response))
-                chatLog[chatId].2 = response
+                await MainActor.run {
+                    chatLog[chatId].2 = response
+                }
             } catch { }
         } else {
             print("Runiing chat prompt")
@@ -97,7 +101,9 @@ class Agent : ObservableObject {
             let response = await LLM.shared.query(input: prompt)
             print("Finish LLM")
 //            chatLog.append(("bot", "gpt3", response))
-            chatLog[chatId].2 = response
+            await MainActor.run {
+                chatLog[chatId].2 = response
+            }
         }
     }
 }
