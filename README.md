@@ -5,7 +5,7 @@
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cataddict42.svg?style=social&label=%20%40CatAddict42)](https://twitter.com/cataddict42)
 
 A background screen recorder for easy history search. 
-If you choose to supply an OpenAI key, it can act as a knowledge base.
+If you choose to supply an OpenAI key, it can act as a knowledge base. Be aware that transcriptions will then be sent to OpenAI when you chat.
 
 ## Uses
 
@@ -36,6 +36,7 @@ Happy to accept PRs related to any of the following
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 - Scrolling lags while loading videos/processing vision
 - If small episodes are removed, it's embeddings are not, which can result in GPT results without a source
+- Build process fails on Github
 
 ### Refactor
 
@@ -54,3 +55,4 @@ Happy to accept PRs related to any of the following
 - Set default playback speed 2.0
 - Fallback to object recognition
 - Encryption e.g. Filevault?
+- Logging to file

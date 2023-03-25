@@ -45,6 +45,18 @@ struct CyteApp: App {
                     self.teardown()
                 }
         }
+        .commands {
+            CommandGroup(replacing: .textEditing) { }
+            CommandGroup(replacing: .pasteboard) { }
+            CommandGroup(replacing: .undoRedo) { }
+            CommandGroup(replacing: .printItem) { }
+            CommandGroup(replacing: .newItem) { }
+            CommandGroup(replacing: .systemServices) { }
+            CommandGroup(replacing: .textFormatting) { }
+            CommandGroup(replacing: .toolbar) { }
+            CommandGroup(replacing: .saveItem) { }
+            CommandGroup(replacing: .sidebar) { }
+        }
         MenuBarExtra(
                     "App Menu Bar Extra", image: "LogoIcon",
                     isInserted: $showMenuBarExtra)
@@ -78,17 +90,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var mainApp: CyteApp?
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        do {
-            // @fixme: remove this block once xib loading in notarized bundle is fixed
-            NSApplication.shared.mainMenu?.removeItem(at: 5)
-            NSApplication.shared.mainMenu?.removeItem(at: 4)
-            NSApplication.shared.mainMenu?.removeItem(at: 3)
-            NSApplication.shared.mainMenu?.removeItem(at: 2)
-            NSApplication.shared.mainMenu?.removeItem(at: 1)
-        }
-        
-        let nib = NSNib(nibNamed: NSNib.Name("MainMenu"), bundle: Bundle.main)
-        nib?.instantiate(withOwner: NSApplication.shared, topLevelObjects: nil)
 
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),
                                                           name: NSWorkspace.willSleepNotification, object: nil)
