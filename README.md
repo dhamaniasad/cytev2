@@ -44,8 +44,6 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 - Keyboard navigation events: Return to open selected episode, escape to pop timeline view
-- Max limit/debounce on embed rate
-- Chat to get video results inline
 - Swift ReAct Agent
 - Predefined blacklist
 - Filter incognito and safari private windows from capture

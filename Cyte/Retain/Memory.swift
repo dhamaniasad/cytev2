@@ -48,13 +48,10 @@ struct IntervalExpression {
     public static let document = Expression<String>("document")
 }
 
-struct FrameEmbedding : Codable {
+struct CyteEmbedding : Codable {
+    let time: Double
     let text: String
     let vec: [Double]
-}
-
-struct CyteEmbeddings : Codable {
-    var index : Dictionary<String, FrameEmbedding> = [:]
 }
 
 @MainActor
@@ -70,9 +67,10 @@ class Memory {
     private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
     private var intervalDb: Connection?
     private var intervalTable: VirtualTable = VirtualTable("Interval")
+    private var embeddingTable: Table = Table("Embedding")
     private var lastObservation: String = ""
     private var differ = DiffMatchPatch()
-    private var embeddings: CyteEmbeddings = CyteEmbeddings()
+    static private var embeddingSize = 1536//openai ada
     
     var currentContext : String = "Startup"
     
@@ -80,35 +78,28 @@ class Memory {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
         unclosedFetch.predicate = NSPredicate(format: "start == end")
         do {
-            let embeddingUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.json"))!
-            let coremlUrl = embeddingUrl.deletingLastPathComponent().appendingPathComponent("Embeddings.coreml")
-            if FileManager.default.fileExists(atPath: embeddingUrl.path(percentEncoded: false)) {
-                do {
-                    let jsonData = try Data(contentsOf: embeddingUrl)
-                    embeddings = try JSONDecoder().decode(CyteEmbeddings.self, from: jsonData)
-                    var nlembedding: [String: [Double]] = [:]
-                    for (start_time, embedding) in embeddings.index {
-                        nlembedding[start_time] = embedding.vec.map { Double($0) }
-                    }
-                    if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
-                        try FileManager.default.removeItem(atPath: coremlUrl.path(percentEncoded: false))
-                    }
-                    try NLEmbedding.write(nlembedding, language: NLLanguage.english, revision: 0, to: embeddingUrl.deletingLastPathComponent().appendingPathComponent("Embeddings.coreml"))
-                } catch { print(error) }
-            }
-            
-            let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("CyteIntervals.sqlite3"))!
+            let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("CyteMemory.sqlite3"))!
             intervalDb = try Connection(url.path(percentEncoded: false))
             do {
                 let config = FTS4Config()
-                    .column(IntervalExpression.from)
-                    .column(IntervalExpression.to)
-                    .column(IntervalExpression.episodeStart)
+                    .column(IntervalExpression.from, [.unindexed])
+                    .column(IntervalExpression.to, [.unindexed])
+                    .column(IntervalExpression.episodeStart, [.unindexed])
                     .column(IntervalExpression.document)
                     .languageId("lid")
                     .order(.desc)
 
                 try intervalDb!.run(intervalTable.create(.FTS4(config), ifNotExists: true))
+            }
+            do {
+                try intervalDb!.run(embeddingTable.create(ifNotExists: true) { t in
+                    for i in 1...Memory.embeddingSize {
+                        let dexp = Expression<Double>("d\(i)")
+                        t.column(dexp)
+                    }
+                    t.column(Expression<Double>("episode_start"))
+                    t.column(Expression<String>("fulltext"))
+                })
             }
             
             let fetched = try PersistenceController.shared.container.viewContext.fetch(unclosedFetch)
@@ -118,6 +109,55 @@ class Memory {
         } catch {
             
         }
+    }
+    
+    func getEmbeddings() -> [CyteEmbedding] {
+        let startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -90, to:Date())!
+        let embeddingMatch: QueryType = embeddingTable.filter(Expression<Double>("episode_start") > startDate.timeIntervalSinceReferenceDate)
+        var result: [CyteEmbedding] = []
+        do {
+            for embedding in try intervalDb!.prepare(embeddingMatch) {
+                var vec: [Double] = []
+                for i in 1...Memory.embeddingSize {
+                    vec.append(embedding[Expression<Double>("d\(i)")])
+                }
+                let embed = CyteEmbedding(time: embedding[Expression<Double>("episode_start")], text: embedding[Expression<String>("fulltext")], vec: vec)
+                result.append(embed)
+                
+            }
+        } catch {}
+        return result
+    }
+    
+    func getEmbedding(when: Double) -> CyteEmbedding? {
+        let embeddingMatch: QueryType = embeddingTable.filter(Expression<Double>("episode_start") == when)
+        do {
+            for embedding in try intervalDb!.prepare(embeddingMatch) {
+                var vec: [Double] = []
+                for i in 1...Memory.embeddingSize {
+                    vec.append(embedding[Expression<Double>("d\(i)")])
+                }
+                let embed = CyteEmbedding(time: embedding[Expression<Double>("episode_start")], text: embedding[Expression<String>("fulltext")], vec: vec)
+                return embed
+                
+            }
+        } catch {}
+        return nil
+    }
+    
+    func rebuildIndex() {
+        let embeddings = getEmbeddings()
+        let coremlUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.coreml"))!
+        do {
+            var nlembedding: [String: [Double]] = [:]
+            for embedding in embeddings {
+                nlembedding["\(embedding.time)"] = embedding.vec
+            }
+            if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
+                try FileManager.default.removeItem(atPath: coremlUrl.path(percentEncoded: false))
+            }
+            try NLEmbedding.write(nlembedding, language: NLLanguage.english, revision: 0, to: coremlUrl)
+        } catch { print(error) }
     }
     
     static func getRecentFiles(earliest: Date) -> [(URL, Date)]? {
@@ -297,9 +337,9 @@ class Memory {
 
     func observe(what: String) async {
         let start = Date()
-        // @todo track changes with diff and embed docs
         let result: NSMutableArray = differ.diff_main(ofOldString: lastObservation, andNewString: what)!
         differ.diff_cleanupSemantic(result)
+        // embed every 12sish
         var edits: [(Int, String)] = []
         var added: String = ""
         // if the edit removes the entirety of the lastObservation, then consider it a new context, and embed the current document total
@@ -316,40 +356,20 @@ class Memory {
             }
         }
         
-//        if total_match < 16 && lastObservation.count > 0 {
-//            print("Frames share less than 8chars text content - closing and embedding document")
-//            let embedding = await LLM.shared.embed(input: lastObservation)
-//            embed(start: start, document:lastObservation, embedding:embedding!)
-//        }
+        if total_match < 64 && lastObservation.count > 0 {
+            print("Frames share little context (\(total_match)) - closing and embedding document")
+            let embedding = await Agent.shared.embed(input: lastObservation)
+            if embedding != nil {
+                insert(embedding:CyteEmbedding(time: start.timeIntervalSinceReferenceDate, text: what, vec: embedding!))
+            }
+        } else {
+            print("Skip high delta \(total_match)")
+        }
         
-        let frameLength = 2
+        let frameLength = utsname.isAppleSilicon ? 2 : 4
         let newItem = CyteInterval(from: start, to: Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: frameLength, to: start)!, episode: episode!, document: added)
         insert(interval: newItem)
         lastObservation = what
-    }
-    
-    func embed(start: Date, document: String, embedding: [Double]) {
-        // then add to coreml embed db, resave
-        embeddings.index["\(start.timeIntervalSinceReferenceDate)"] = FrameEmbedding(text: document, vec: embedding)
-        // overwrite on disk, recreate coreml model
-        let embeddingUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.json"))!
-        let coremlUrl = embeddingUrl.deletingLastPathComponent().appendingPathComponent("Embeddings.coreml")
-        do {
-            if FileManager.default.fileExists(atPath: embeddingUrl.path(percentEncoded: false)) {
-                try FileManager.default.removeItem(atPath: embeddingUrl.path(percentEncoded: false))
-            }
-            let jsonData = try JSONEncoder().encode(embeddings)
-            try jsonData.write(to: embeddingUrl)
-            var nlembedding: [String: [Double]] = [:]
-            for (start_time, embedding) in embeddings.index {
-                nlembedding[start_time] = embedding.vec.map { Double($0) }
-            }
-            if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
-                try FileManager.default.removeItem(atPath: coremlUrl.path(percentEncoded: false))
-            }
-            try NLEmbedding.write(nlembedding, language: NLLanguage.english, revision: 0, to: coremlUrl)
-        } catch { print(error) }
-        
     }
 
     func delete(delete_episode: Episode) {
@@ -397,6 +417,35 @@ class Memory {
                                                                  IntervalExpression.episodeStart <- interval.episode.start!.timeIntervalSinceReferenceDate,
                                                                  IntervalExpression.document <- interval.document
                                                                 ))
+        } catch {
+            fatalError("insertion failed: \(error)")
+        }
+    }
+    
+    func insert(embedding: CyteEmbedding) {
+        do {
+            // Generate an array of tuples with column names and values
+            var columnsAndValues: [(String, Any)] = []
+            for i in 1...Memory.embeddingSize {
+                columnsAndValues.append(("d\(i)", embedding.vec[i-1]))
+            }
+            columnsAndValues.append(("episode_start", embedding.time))
+            columnsAndValues.append(("fulltext", embedding.text))
+            // Create a dictionary of column names and values
+            var columnValues: [String: Any] = [:]
+            for (column, value) in columnsAndValues {
+                columnValues[column] = value
+            }
+            // Convert dictionary keys to expressions
+            let expressions = columnValues.map { (key, value) -> Setter in
+                if key == "fulltext" {
+                    return Expression<String>(key) <- value as! String
+                } else {
+                    return Expression<Double>(key) <- value as! Double
+                }
+            }
+            let insertQuery = embeddingTable.insert(expressions)
+            try intervalDb!.run(insertQuery)
         } catch {
             fatalError("insertion failed: \(error)")
         }

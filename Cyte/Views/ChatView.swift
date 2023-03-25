@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Highlightr
+import AVKit
 
 struct ChatView: View {
     @StateObject private var agent = Agent.shared
@@ -51,16 +52,20 @@ struct ChatView: View {
                         .frame(width: 30, height: 30)
                 }
                 VStack(spacing: 0) {
-//                    if chat.0 != "user" {
-//                        Text(chat.1)
-//                            .font(Font.caption)
-//                    }
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
                     Text(formatString(offset:Int(subindex), message:String(subchat)))
                         .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
                         .textSelection(.enabled)
                         .font(Font.body)
                         .lineLimit(100)
+                    }
+                    if agent.chatSources.count > index && chat.1.count > 0 {
+                        Text("Sources:").font(.title)
+                        HStack {
+                            ForEach(agent.chatSources[index]!) { episode in
+                                EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: [], filter: "", selected: false)
+                            }
+                        }
                     }
                 }
                 

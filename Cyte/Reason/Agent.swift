@@ -20,10 +20,20 @@ class Agent : ObservableObject, EventSourceDelegate {
     @Published var isSetup: Bool = false
     
     static let promptTemplate = """
-    Use the following pieces of context to answer the question at the end. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    Use the following pieces of context to answer the question at the end. The context includes transcriptions of my computer screen from running OCR on screenshots taken for every two seconds of computer activity. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        Current Date/Time:
+        {current}
+        Context:
         {context}
-        Question: {question}
+        Question:
+        {question}
         Helpful Answer:
+    """
+    
+    static let contextTemplate = """
+    Results from OCR on a screenshot taken at {when}:
+    {ocr}
+    
     """
     
     static let chatPromptTemplate = """
@@ -41,6 +51,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     """
     
     @Published public var chatLog : [(String, String, String)] = []
+    @Published public var chatSources : [[Episode]?] = []
     
     init() {
         setup()
@@ -50,20 +61,13 @@ class Agent : ObservableObject, EventSourceDelegate {
         if key != nil {
             keychain.set(key!, forKey: "CYTE_OPENAI_KEY")
         }
-        let creds = keychain.get("CYTE_OPENAI_KEY")
-        if creds != nil {
-            let details = creds?.split(separator: "@")
-            if (details?.count ?? 0) > 1 {
-                let apiKey: String = String(details![0])
-                let organization: String = String(details![1])
-                if apiKey.count > 0 && organization.count > 0 {
-                    openAIClient = OpenAI(apiToken: apiKey, callback: self)
-                    isSetup = true
-                    print("Setup OpenAI")
-                } else {
-                    openAIClient = nil
-                }
-            }
+        let apiKey = keychain.get("CYTE_OPENAI_KEY")
+        if apiKey != nil {
+            openAIClient = OpenAI(apiToken: apiKey!, callback: self)
+            isSetup = true
+            print("Setup OpenAI")
+        } else {
+            openAIClient = nil
         }
     }
     
@@ -90,7 +94,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     
     func query(input: String) async -> Void {
         if await isFlagged(input: input) { return }
-        let query = OpenAI.ChatQuery(model: .gpt3_5Turbo, messages: [.init(role: "user", content: input)], stream: true)
+        let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)], stream: true)
         openAIClient!.chats(query: query)
     }
     
@@ -101,64 +105,74 @@ class Agent : ObservableObject, EventSourceDelegate {
         chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
     }
     
-    func observe(frame: CapturedFrame) {
-        let ciImage = CIImage(cvPixelBuffer: frame.data!)
-        let context = CIContext(options: nil)
-        let width = CVPixelBufferGetWidth(frame.data!)
-        let height = CVPixelBufferGetHeight(frame.data!)
-        
-        let cgImage = context.createCGImage(ciImage, from: CGRect(x: 0, y: 0, width: width, height: height))!
-        
-        let nsImage = NSImage(cgImage: cgImage, size: CGSize(width: width, height: height))
-        let b64 = nsImage.tiffRepresentation?.base64EncodedString()
+    func onStreamDone() {
+        let chatId = chatLog.lastIndex(where: { log in
+            return log.0 == "bot"
+        })
+        chatLog[chatId!].1 = "gpt4"
     }
     
     func index(path: URL) {
-        //
+        // @todo if the file type is supported, decode it and embed
     }
     
     func reset() {
         chatLog.removeAll()
+        chatSources.removeAll()
     }
     
+    @MainActor
     func query(request: String) async {
-        let embeddingUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.json"))!
-        let coremlUrl = embeddingUrl.deletingLastPathComponent().appendingPathComponent("Embeddings.coreml")
+        Memory.shared.rebuildIndex()
+        let coremlUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.coreml"))!
         
-        await MainActor.run {
-            chatLog.append(("user", "", request))
-            chatLog.append(("bot", "gpt4", ""))
-        }
-        if false && FileManager.default.fileExists(atPath: embeddingUrl.path(percentEncoded: false)) {
-            print("Runiing QA prompt")
+        chatLog.append(("user", "", request))
+        chatSources.append([])
+        chatLog.append(("bot", "", ""))
+        chatSources.append([])
+        if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
+            print("Running QA prompt")
             do {
                 let embeddings = try NLEmbedding(contentsOf: coremlUrl)
-                let jsonData = try Data(contentsOf: embeddingUrl)
-                let cyteEmbeddings = try JSONDecoder().decode(CyteEmbeddings.self, from: jsonData)
                 var context: String = ""
-                let query_embedding: [Double] = await embed(input: request)!.map { Double($0) }
+                let maxContextLength = 8000 - Agent.promptTemplate.count
+                let query_embedding: [Double] = await embed(input: request)!
+                var foundEps: [Episode] = []
                 embeddings.enumerateNeighbors(for: query_embedding, maximumCount: 5) { neighbor, distance in
                     print("\(neighbor): \(distance.description)")
                     // neighbor can be used to find the episode from sql, as well as the original text from the json
-                    let original = cyteEmbeddings.index[neighbor]?.text ?? ""
-                    context += original
+                    let embedding = Memory.shared.getEmbedding(when: Double(neighbor)!)
+                    let foundDate = Date(timeIntervalSinceReferenceDate: Double(neighbor)!)
+                    
+                    let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+                    epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
+                    do {
+                        let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
+                        if fetched.count > 0 {
+                            foundEps.append(fetched.first!)
+                        }
+                    } catch {}
+                    
+                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
+                    if context.count + new_context.count < maxContextLength {
+                        context += new_context
+                    }
                     return true
                 }
-                print(context)
-                let prompt = Agent.promptTemplate.replacing("{context}", with: context).replacing("{question}", with: request)
+                let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
                 print(prompt)
-                print("Query LLM")
                 await query(input: prompt)
-                print("Finish LLM")
-//                chatLog.append(("bot", "gpt3", response))
+                
+                let chatId = chatLog.lastIndex(where: { log in
+                    return log.0 == "bot"
+                })
+                chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+                
             } catch { }
         } else {
-            print("Runiing chat prompt")
+            print("Running chat prompt")
             let prompt = Agent.chatPromptTemplate.replacing("{history}", with: "").replacing("{question}", with: request)
-            print("Query LLM")
             await query(input: prompt)
-            print("Finish LLM")
-//            chatLog.append(("bot", "gpt3", response))
         }
     }
 }

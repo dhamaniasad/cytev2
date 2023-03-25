@@ -49,9 +49,7 @@ struct Settings: View {
                         text: $apiDetails
                     )
                     .onSubmit {
-                        if apiDetails.contains("@") {
-                            Agent.shared.setup(key: apiDetails)
-                        }
+                        Agent.shared.setup(key: apiDetails)
                     }
                 }
             }

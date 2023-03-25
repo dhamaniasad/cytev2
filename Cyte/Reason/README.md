@@ -20,3 +20,6 @@ Langchain is built on other tools like Unstructured and Deep Layout, which in tu
 So for now, the functionality will be exposed via websocket server as a research feature 
 Indexing, OpenAI etc can all be handled relatively easily, however file decoding and visual embedding/classification are still a lot of effort. Hopefully turicreate or something else from Apple helps with this.  
 I'm hopeful the community will create a Swift version of langchain, which can just be hooked up here. Or, if GPT4 is multimodal....
+
+## Update 2
+GPT4 is multimodal, plus has large enough context to not need anything but OCR as input, so have implemented the used functionality here in Swift. Had to patch the openai sdk to support streaming and moderation.
