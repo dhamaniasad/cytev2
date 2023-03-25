@@ -59,7 +59,7 @@ struct ChatView: View {
                         .font(Font.body)
                         .lineLimit(100)
                     }
-                    if agent.chatSources.count > index && chat.1.count > 0 {
+                    if agent.chatSources.count > index && chat.1.count > 0 && agent.chatSources[index]!.count > 0 {
                         Text("Sources:").font(.title)
                         HStack {
                             ForEach(agent.chatSources[index]!) { episode in

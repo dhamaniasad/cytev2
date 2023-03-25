@@ -323,6 +323,7 @@ class Memory {
     //
     // Push frame to encoder, run OCR
     //
+    @MainActor
     func addFrame(frame: CapturedFrame, secondLength: Int64) {
         if assetWriter != nil {
             if assetWriterInput!.isReadyForMoreMediaData {
@@ -335,7 +336,11 @@ class Memory {
         }
     }
 
+    @MainActor
     func observe(what: String) async {
+        if episode == nil {
+            fatalError("ERROR: NIL EPISODE")
+        }
         let start = Date()
         let result: NSMutableArray = differ.diff_main(ofOldString: lastObservation, andNewString: what)!
         differ.diff_cleanupSemantic(result)
@@ -348,17 +353,17 @@ class Memory {
             let edit: (Int, String) = (Int((res as! Diff).operation.rawValue) - 2,
                         ((res as! Diff).text ?? ""))
             edits.append(edit)
-            if edit.0 == 0 {
+            if edit.0 == 1 {
                 total_match += edit.1.count
             }
-            if edit.0 == 1 {
+            if edit.0 == 0 {
                 added += edit.1
             }
         }
         
-        if total_match < 64 && lastObservation.count > 0 {
+        if total_match < 100 && lastObservation.count > 0 {
             print("Frames share little context (\(total_match)) - closing and embedding document")
-            let embedding = await Agent.shared.embed(input: lastObservation)
+            let embedding: [Double]? = await Agent.shared.embed(input: lastObservation)
             if embedding != nil {
                 insert(embedding:CyteEmbedding(time: start.timeIntervalSinceReferenceDate, text: what, vec: embedding!))
             }
@@ -375,6 +380,7 @@ class Memory {
     func delete(delete_episode: Episode) {
         let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)
+        // @todo also delete embeddings
         do {
             try intervalDb!.run(intervals.delete())
             try PersistenceController.shared.container.viewContext.save()
