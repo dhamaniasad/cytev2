@@ -94,8 +94,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         let logUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Log").appendingPathComponent("Cyte.log"))!
         do {
-            try FileManager.default.createDirectory(at: logUrl.deletingLastPathComponent(), withIntermediateDirectories: false, attributes: nil)
-        } catch { fatalError("Failed to log dir") }
+            try FileManager.default.createDirectory(at: logUrl.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
+        } catch { fatalError("Failed to create log dir") }
         let fileDest = AutoRotatingFileDestination(writeToFile: logUrl.path(percentEncoded: false))
         
         log.add(destination: fileDest)
