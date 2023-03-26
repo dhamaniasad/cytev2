@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import XCGLogger
 
 @main
 struct CyteApp: App {
@@ -85,12 +86,20 @@ struct CyteApp: App {
     }
 }
 
+let log = XCGLogger.default
 class AppDelegate: NSObject, NSApplicationDelegate {
     
     var mainApp: CyteApp?
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-
+        let logUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Log").appendingPathComponent("Cyte.log"))!
+        do {
+            try FileManager.default.createDirectory(at: logUrl.deletingLastPathComponent(), withIntermediateDirectories: false, attributes: nil)
+        } catch { fatalError("Failed to log dir") }
+        let fileDest = AutoRotatingFileDestination(writeToFile: logUrl.path(percentEncoded: false))
+        
+        log.add(destination: fileDest)
+        log.info("Cyte startup")
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),
                                                           name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),

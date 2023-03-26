@@ -11,6 +11,7 @@ import Cocoa
 import NaturalLanguage
 import OpenAI
 import KeychainSwift
+import XCGLogger
 
 class Agent : ObservableObject, EventSourceDelegate {
     static let shared : Agent = Agent()
@@ -121,51 +122,6 @@ class Agent : ObservableObject, EventSourceDelegate {
         chatSources.removeAll()
     }
     
-    @MainActor
-    func query(request: String) async {
-        Memory.shared.rebuildIndex()
-        let coremlUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.coreml"))!
-        
-        chatLog.append(("user", "", request))
-        chatSources.append([])
-        chatLog.append(("bot", "", ""))
-        chatSources.append([])
-        if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
-            print("Running QA prompt")
-            do {
-                var context: String = ""
-                let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
-                var foundEps: [Episode] = []
-                var concepts: [String] = []
-                
-                let tagger = NLTagger(tagSchemes: [.lexicalClass])
-                tagger.string = request
-                let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
-                tagger.enumerateTags(in: request.startIndex..<request.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
-                    if let tag = tag {
-                        // if verb or noun
-                        if tag.rawValue == "Noun" {
-                            let concept = request[tokenRange]
-                            concepts.append(String(concept))
-                        }
-                    }
-                    return true
-                }
-                if concepts.count == 0 { concepts.append(request) }
-                var intervals = Memory.shared.search(term: concepts.joined(separator: " AND "))
-                if intervals.count == 0 {
-                    print("Fallback to full search")
-                    intervals = Memory.shared.search(term: "")
-                }
-                for interval in intervals {
-                    if interval.document.count > 100 {
-                        foundEps.append(interval.episode)
-                        let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
-                        if context.count + new_context.count < maxContextLength {
-                            context += new_context
-                        }
-                    }
-                }
 //                // @fixme currently returns unrelated docs with exact same distances
 //                let embeddings = try NLEmbedding(contentsOf: coremlUrl)
 //                let query_embedding: [Double] = await embed(input: request)!
@@ -190,21 +146,58 @@ class Agent : ObservableObject, EventSourceDelegate {
 //                    }
 //                    return true
 //                }
-                let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
-                print(prompt)
-                await query(input: prompt)
-                
-                let chatId = chatLog.lastIndex(where: { log in
-                    return log.0 == "bot"
-                })
-                chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
-                
-                let userChatId = chatLog.lastIndex(where: { log in
-                    return log.0 == "user"
-                })
-                chatLog[userChatId!].2 = prompt
-                
-            } catch { }
+    
+    @MainActor
+    func query(request: String) async {
+//        Memory.shared.rebuildIndex()
+        chatLog.append(("user", "", request))
+        chatSources.append([])
+        chatLog.append(("bot", "", ""))
+        chatSources.append([])
+        
+        var context: String = ""
+        let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
+        var foundEps: [Episode] = []
+        var concepts: [String] = []
+        
+        let tagger = NLTagger(tagSchemes: [.lexicalClass])
+        tagger.string = request
+        let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
+        tagger.enumerateTags(in: request.startIndex..<request.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
+            if let tag = tag {
+                // if verb or noun
+                if tag.rawValue == "Noun" {
+                    let concept = request[tokenRange]
+                    concepts.append(String(concept))
+                }
+            }
+            return true
+        }
+        if concepts.count == 0 { concepts.append(request) }
+        var intervals = Memory.shared.search(term: concepts.joined(separator: " AND "))
+        if intervals.count == 0 {
+            print("Fallback to full search")
+            intervals = Memory.shared.search(term: "")
+        }
+        if intervals.count > 0 {
+            for interval in intervals {
+                if interval.document.count > 100 {
+                    foundEps.append(interval.episode)
+                    let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
+                    if context.count + new_context.count < maxContextLength {
+                        context += new_context
+                    }
+                }
+            }
+            let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
+            print(prompt)
+            log.info(prompt)
+            await query(input: prompt)
+            
+            let chatId = chatLog.lastIndex(where: { log in
+                return log.0 == "bot"
+            })
+            chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
         } else {
             print("Running chat prompt")
             let prompt = Agent.chatPromptTemplate.replacing("{history}", with: "").replacing("{question}", with: request)

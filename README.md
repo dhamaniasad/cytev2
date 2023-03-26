@@ -48,6 +48,8 @@ Happy to accept PRs related to any of the following
 - Keyboard navigation events: Return to open selected episode, escape to pop timeline view
 - Remove close matches from prompt context stuffer
 - Incremental index building on embedding store instead of full recompile at query time
+    * Ideally, wrap FAISS for swift
+- Wrap tiktoken in Swift for more accurate context stuffing
 - Swift ReAct Agent
 - Filter incognito and safari private windows from capture
 - Easily copy code blocks in chat

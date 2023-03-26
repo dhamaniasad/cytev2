@@ -363,7 +363,7 @@ class Memory {
         
         if total_match < 100 && lastObservation.count > 0 {
             print("Frames share little context (\(total_match)) - closing and embedding document")
-            let embedding: [Double]? = await Agent.shared.embed(input: lastObservation)
+            let embedding: [Double]? = nil//await Agent.shared.embed(input: lastObservation)
             if embedding != nil {
                 insert(embedding:CyteEmbedding(time: start.timeIntervalSinceReferenceDate, text: what, vec: embedding!))
             }
