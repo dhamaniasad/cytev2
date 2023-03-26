@@ -133,32 +133,63 @@ class Agent : ObservableObject, EventSourceDelegate {
         if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
             print("Running QA prompt")
             do {
-                let embeddings = try NLEmbedding(contentsOf: coremlUrl)
                 var context: String = ""
-                let maxContextLength = 8000 - Agent.promptTemplate.count
-                let query_embedding: [Double] = await embed(input: request)!
+                let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
                 var foundEps: [Episode] = []
-                embeddings.enumerateNeighbors(for: query_embedding, maximumCount: 5) { neighbor, distance in
-                    print("\(neighbor): \(distance.description)")
-                    // neighbor can be used to find the episode from sql, as well as the original text from the json
-                    let embedding = Memory.shared.getEmbedding(when: Double(neighbor)!)
-                    let foundDate = Date(timeIntervalSinceReferenceDate: Double(neighbor)!)
-                    
-                    let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
-                    epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
-                    do {
-                        let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
-                        if fetched.count > 0 {
-                            foundEps.append(fetched.first!)
+                var concepts: [String] = []
+                
+                let tagger = NLTagger(tagSchemes: [.lexicalClass])
+                tagger.string = request
+                let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
+                tagger.enumerateTags(in: request.startIndex..<request.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
+                    if let tag = tag {
+                        // if verb or noun
+                        if tag.rawValue == "Noun" {
+                            let concept = request[tokenRange]
+                            concepts.append(String(concept))
                         }
-                    } catch {}
-                    
-                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
-                    if context.count + new_context.count < maxContextLength {
-                        context += new_context
                     }
                     return true
                 }
+                if concepts.count == 0 { concepts.append(request) }
+                var intervals = Memory.shared.search(term: concepts.joined(separator: " AND "))
+                if intervals.count == 0 {
+                    print("Fallback to full search")
+                    intervals = Memory.shared.search(term: "")
+                }
+                for interval in intervals {
+                    if interval.document.count > 100 {
+                        foundEps.append(interval.episode)
+                        let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
+                        if context.count + new_context.count < maxContextLength {
+                            context += new_context
+                        }
+                    }
+                }
+//                // @fixme currently returns unrelated docs with exact same distances
+//                let embeddings = try NLEmbedding(contentsOf: coremlUrl)
+//                let query_embedding: [Double] = await embed(input: request)!
+//                embeddings.enumerateNeighbors(for: query_embedding, maximumCount: 3) { neighbor, distance in
+//                    print("\(neighbor): \(distance)")
+//                    // neighbor can be used to find the episode from sql, as well as the original text from the json
+//                    let embedding = Memory.shared.getEmbedding(when: Double(neighbor)!)
+//                    let foundDate = Date(timeIntervalSinceReferenceDate: Double(neighbor)!)
+//
+//                    let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+//                    epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
+//                    do {
+//                        let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
+//                        if fetched.count > 0 {
+//                            foundEps.append(fetched.first!)
+//                        }
+//                    } catch {}
+//
+//                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
+//                    if context.count + new_context.count < maxContextLength {
+//                        context += new_context
+//                    }
+//                    return true
+//                }
                 let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
                 print(prompt)
                 await query(input: prompt)
@@ -167,6 +198,11 @@ class Agent : ObservableObject, EventSourceDelegate {
                     return log.0 == "bot"
                 })
                 chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+                
+                let userChatId = chatLog.lastIndex(where: { log in
+                    return log.0 == "user"
+                })
+                chatLog[userChatId!].2 = prompt
                 
             } catch { }
         } else {

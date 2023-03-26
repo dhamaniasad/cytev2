@@ -53,18 +53,16 @@ struct ChatView: View {
                 }
                 VStack(spacing: 0) {
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
-                    Text(formatString(offset:Int(subindex), message:String(subchat)))
-                        .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
-                        .textSelection(.enabled)
-                        .font(Font.body)
-                        .lineLimit(100)
+                        Text(formatString(offset:Int(subindex), message:String(subchat)))
+                            .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                            .textSelection(.enabled)
+                            .font(Font.body)
+                            .lineLimit(100)
                     }
                     if agent.chatSources.count > index && chat.1.count > 0 && agent.chatSources[index]!.count > 0 {
-                        Text("Sources:").font(.title)
-                        HStack {
-                            ForEach(agent.chatSources[index]!) { episode in
-                                EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: [], filter: "", selected: false)
-                            }
+                        Text("Sources:").font(.caption)
+                        ForEach(agent.chatSources[index]!) { episode in
+                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: [], filter: "", selected: false)
                         }
                     }
                 }

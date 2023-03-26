@@ -390,7 +390,7 @@ class Memory {
     }
     
     func search(term: String) -> [CyteInterval] {
-        let intervalMatch: QueryType = intervalTable.match("\(term)*")
+        let intervalMatch: QueryType = term.count > 0 ? intervalTable.match("\(term)*").order(IntervalExpression.from).limit(100) : intervalTable.order(IntervalExpression.from).limit(100)
         var result: [CyteInterval] = []
         do {
             for interval in try intervalDb!.prepare(intervalMatch) {
