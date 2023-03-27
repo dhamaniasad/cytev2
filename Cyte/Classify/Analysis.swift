@@ -11,11 +11,19 @@ import NaturalLanguage
 
 class Analysis {
     static let shared = Analysis()
+    private var pendingRequest: Bool = false
+    private var dropouts: Int64 = 0
     
     //
     // Runs a chain of vision analysis (OCR then NLP) on the provided frame
     //
     func runOnFrame(frame: CapturedFrame) {
+        if pendingRequest {
+            dropouts += 1
+            print("Drop frame due to overrun in process: \(dropouts)")
+            return
+        }
+        pendingRequest = true
         // do analysis
         let requestHandler = VNImageRequestHandler(cvPixelBuffer: frame.data!, orientation: .up)
         let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
@@ -62,6 +70,7 @@ class Analysis {
         }
         Task {
             await Memory.shared.observe(what: text)
+            pendingRequest = false
         }
     }
 }

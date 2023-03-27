@@ -1,11 +1,9 @@
-//
-//  Memory.swift
-//  Cyte
-//
-//  Tracks active application context (driven by external caller)
-//
-//  Created by Shaun Narayan on 3/03/23.
-//
+///
+///  Memory.swift
+///  Cyte
+///
+///  Created by Shaun Narayan on 3/03/23.
+///
 
 import Foundation
 import AVKit
@@ -14,6 +12,9 @@ import Combine
 import SQLite
 import NaturalLanguage
 
+///
+/// CoreData style wrapper for Intervals so it is observable in the UI
+///
 class CyteInterval: ObservableObject, Identifiable {
     @Published var from: Date
     @Published var to: Date
@@ -30,6 +31,9 @@ class CyteInterval: ObservableObject, Identifiable {
     var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
 }
 
+///
+/// Format the title for an episode given its start time and unformatted title
+///
 func urlForEpisode(start: Date?, title: String?) -> URL {
     var url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
     let components = Calendar.current.dateComponents([.year, .month, .day], from: start ?? Date())
@@ -40,6 +44,9 @@ func urlForEpisode(start: Date?, title: String?) -> URL {
     return url
 }
 
+///
+/// Helper struct for accessing Interval fields from result sets
+///
 struct IntervalExpression {
     public static let id = Expression<Int64>("id")
     public static let from = Expression<Double>("from")
@@ -48,32 +55,50 @@ struct IntervalExpression {
     public static let document = Expression<String>("document")
 }
 
+///
+/// Wrapper for DB embeddings
+///
 struct CyteEmbedding : Codable {
     let time: Double
     let text: String
     let vec: [Double]
 }
 
+///
+///  Tracks active application context (driven by external caller)
+///  Opens, encodes and closes the video stream, triggers analysis on frames
+///  and indexes the resultant information for search
+///
 @MainActor
 class Memory {
     static let shared = Memory()
     
+    /// Intra-episode/context processing
     private var assetWriter : AVAssetWriter? = nil
     private var assetWriterInput : AVAssetWriterInput? = nil
     private var assetWriterAdaptor : AVAssetWriterInputPixelBufferAdaptor? = nil
     private var frameCount = 0
     private var currentStart: Date = Date()
     private var episode: Episode?
-    private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
     private var intervalDb: Connection?
     private var intervalTable: VirtualTable = VirtualTable("Interval")
+    
+    /// Context change tracking/indexing
     private var embeddingTable: Table = Table("Embedding")
     private var lastObservation: String = ""
     private var differ = DiffMatchPatch()
     static private var embeddingSize = 1536//openai ada
     
+    /// Intel fallbacks - due to lack of hardware acelleration for video encoding and frame analysis, tradeoffs must be made
+    private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
+    static let secondsBetweenFrames : Int = utsname.isAppleSilicon ? 2 : 4
+    
     var currentContext : String = "Startup"
     
+    ///
+    /// Close any in-progress episodes (in case Cyte was not properly shut down)
+    /// Set up the aux database for FTS and embeddings
+    ///
     init() {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
         unclosedFetch.predicate = NSPredicate(format: "start == end")
@@ -160,6 +185,15 @@ class Memory {
         } catch { print(error) }
     }
     
+    ///
+    /// Enumerates target directories and filters by last edit time.
+    /// This is imperfect for a number of reasons, it is very low granularity for long episodes
+    /// it is extremely processor intensive and slow
+    ///
+    /// Don't think Apple allows file change tracking via callback at such a detailed level,
+    /// however surely there is some way to make use of Spotlight cache info on recently edited files
+    /// which is a tab in Finder to avoid enumeration?
+    ///
     static func getRecentFiles(earliest: Date) -> [(URL, Date)]? {
         let fileManager = FileManager.default
         let homeUrl = fileManager.homeDirectoryForCurrentUser
@@ -195,10 +229,12 @@ class Memory {
         return recentFiles
     }
     
-    //
-    // Check the currently active app, if different since last check
-    // then close the current episode and start a new one
-    //
+    ///
+    /// Check the currently active app, if different since last check
+    /// then close the current episode and start a new one
+    /// Ignores the main bundle (Cyte) - creates sometimes undiscernable
+    /// memories with many layers of picture in picture
+    ///
     func updateActiveContext(windowTitles: Dictionary<String, String>) {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
         let context = front.bundleIdentifier ?? "Unnamed"
@@ -217,9 +253,9 @@ class Memory {
         }
     }
     
-    //
-    // Sets up a stream to disk
-    //
+    ///
+    /// Sets up an MPEG4 stream to disk, HD resolution
+    ///
     func openEpisode(title: String) {
         print("Open \(title)")
         
@@ -260,6 +296,10 @@ class Memory {
         }
     }
     
+    ///
+    /// Saves all files edited within the episodes interval (as per last edit time)
+    /// to the index for querying
+    ///
     func trackFileChanges(ep: Episode) {
         if shouldTrackFileChanges {
             // Make this follow a user preference, since it chews cpu
@@ -279,7 +319,10 @@ class Memory {
         }
     }
     
-    func reset()  {
+    ///
+    /// Helper function for closeEpisode, clear values
+    ///
+    private func reset()  {
         self.assetWriterInput = nil
         self.assetWriter = nil
         self.assetWriterAdaptor = nil
@@ -287,9 +330,12 @@ class Memory {
         self.episode = nil
     }
     
-    //
-    // Save out the current file, create a DB entry and reset streams
-    //
+    ///
+    /// Save out the current file, create a DB entry and reset streams.
+    /// Frames less than 15s are not recorded, to allow for post-episode
+    /// index operations. The heaviest being file tracking, without which
+    /// episodes as small as 5s could be tracked
+    ///
     func closeEpisode() {
         if assetWriter == nil {
             return
@@ -298,8 +344,7 @@ class Memory {
                 
         //close everything
         assetWriterInput!.markAsFinished()
-        
-        if frameCount < 7 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
+        if (frameCount * Memory.secondsBetweenFrames) < 15 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
             assetWriter!.cancelWriting()
             delete(delete_episode: episode!)
             Logger().info("Supressed small episode for \(self.currentContext)")
@@ -320,9 +365,9 @@ class Memory {
         self.reset()
     }
     
-    //
-    // Push frame to encoder, run OCR
-    //
+    ///
+    /// Push frame to encoder, run analysis (which will call us back with results for observation)
+    ///
     @MainActor
     func addFrame(frame: CapturedFrame, secondLength: Int64) {
         if assetWriter != nil {
@@ -336,6 +381,13 @@ class Memory {
         }
     }
 
+    ///
+    ///  Given a string representing visual observations for an instant,
+    ///  diff against the last observations and when the change seems
+    ///  non-additive, trigger a full text index with optional embedding.
+    ///  When additive, save the delta only to save space and simplify search
+    ///  duplication resolution
+    ///
     @MainActor
     func observe(what: String) async {
         if episode == nil {
@@ -362,7 +414,9 @@ class Memory {
         }
         
         if total_match < 100 && lastObservation.count > 0 {
+            // Delta must be non-zero to account for system wide text, e.g. date/time, battery percent
             print("Frames share little context (\(total_match)) - closing and embedding document")
+            // Disable embedding until FAISS is integrated
             let embedding: [Double]? = nil//await Agent.shared.embed(input: lastObservation)
             if embedding != nil {
                 insert(embedding:CyteEmbedding(time: start.timeIntervalSinceReferenceDate, text: what, vec: embedding!))
@@ -371,12 +425,14 @@ class Memory {
             print("Skip high delta \(total_match)")
         }
         
-        let frameLength = utsname.isAppleSilicon ? 2 : 4
-        let newItem = CyteInterval(from: start, to: Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: frameLength, to: start)!, episode: episode!, document: added)
+        let newItem = CyteInterval(from: start, to: Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: Memory.secondsBetweenFrames, to: start)!, episode: episode!, document: added)
         insert(interval: newItem)
         lastObservation = what
     }
 
+    ///
+    /// Deletes the provided episode including the underlying video file, and indexed interval data
+    ///
     func delete(delete_episode: Episode) {
         let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)

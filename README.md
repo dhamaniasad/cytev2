@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) 
 [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/cataddict42.svg?style=social&label=%20%40CatAddict42)](https://twitter.com/cataddict42)
 
+🚧 Work in progress - this is beta software, use with care
+
 A background screen recorder for easy history search. 
 If you choose to supply an OpenAI key, it can act as a knowledge base. Be aware that transcriptions will then be sent to OpenAI when you chat.
 
@@ -36,7 +38,7 @@ Happy to accept PRs related to any of the following
 - Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
 - Scrolling lags while loading videos/processing vision
 - If small episodes are removed, it's embeddings are not, which can result in GPT results without a source
-- Build process fails on Github
+- Build process fails on Github (perhaps during signing of DiffMatchPatch)
 
 ### Refactor
 
@@ -57,4 +59,24 @@ Happy to accept PRs related to any of the following
 - Set default playback speed 2.0
 - Fallback to object recognition
 - Encryption e.g. Filevault?
-- Logging to file
+
+
+## Release Notes
+### Version 0.1 (beta)
+- While the application is running (but not while it is active), it records the users screen
+- Recordings are labelled according to the first window bought into focus for a given app
+- Save recordings as favorites and easily view them from the home screen
+- Show usage statistics by application for shown recordings
+- Select applications to blacklist which will prevent the application from being recorded
+- Search the full text content of screenshots by keywords
+- View any instant in time on a sequential timeline showing back to back recordings
+- View thumbnails for moments around the current instant in timeline view
+- Delete individual episodes through a context menu
+- Filter search results by preset time ranges
+- User supplied OpenAI key with GPT4 access allows user to ask questions in natural language
+- When GPT responds, the source information provided is displayed under the response
+- Use arrow keys to navigate recordings
+- While Cyte is minimised, pressing Command + Period will bring Cyte into focus
+- Pause/resume recording at any time using the Menu Bar icon
+- Show files that have been edited with click to reopen
+- Intel support with frames every 4 seconds, fast OCR path with no corrections and disabled file tracking

@@ -36,6 +36,7 @@ struct EpisodePlaylistView: View {
     @State private var genTask: Task<(), Never>? = nil
     
     private let timelineSize: CGFloat = 16
+    private let playerWidth = NSScreen.main!.frame.width * 0.57
     
     func updateIntervals() {
         var offset = 0.0
@@ -330,7 +331,6 @@ struct EpisodePlaylistView: View {
             VStack {
                 ZStack(alignment: .topLeading) {
                         VideoPlayer(player: player, videoOverlay: {
-
                                 if highlight.count > 0 {
                                     Color.black
                                         .opacity(0.5)
@@ -348,6 +348,7 @@ struct EpisodePlaylistView: View {
 
                         })
                             .frame(width: 710, height: 400)
+                            .frame(width: playerWidth, height: playerWidth / 16.0 * 9)
                             .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                                 if (player!.error != nil) {
                                     return

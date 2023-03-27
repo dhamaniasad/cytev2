@@ -20,9 +20,6 @@ struct ContentView: View {
     @StateObject private var agent = Agent.shared
     @FocusState private var searchFocused: Bool
     
-    @State private var dateRangeSelection = "Last 7 days"
-    let dateRangeOptions = ["Last 24 hours", "Last 7 days", "Last 14 days", "Last 28 days"]
-
     @State private var episodes: [Episode] = []
     @State private var intervals: [CyteInterval] = []
     @State private var documentsForBundle: [Document] = []
@@ -62,6 +59,7 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60)
     ]
+    private let playerWidth = NSScreen.main!.frame.width * 0.28
     
     @MainActor func refreshData() {
         if refreshTask != nil && !refreshTask!.isCancelled {
@@ -80,9 +78,6 @@ struct ContentView: View {
     @MainActor func performRefreshData() {
         scrollViewID = UUID()
         selectedIndex = -1
-        let ranges = [1, 7, 14, 28]
-        startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -ranges[dateRangeOptions.firstIndex(of: dateRangeSelection)!], to: Date())!
-        endDate = Date()
         episodes.removeAll()
         intervals.removeAll()
         if self.filter.count < 3 || self.filter.split(separator: " ").count > 5 {
@@ -171,15 +166,31 @@ struct ContentView: View {
     var usage: some View {
         withAnimation {
             VStack {
+                HStack(alignment: .center) {
+                    DatePicker(
+                        "",
+                        selection: $startDate,
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    .frame(width: 200, alignment: .leading)
+                    DatePicker(
+                        " - ",
+                        selection: $endDate,
+                        displayedComponents: [.date, .hourAndMinute]
+                    )
+                    .frame(width: 200, alignment: .leading)
+                    Spacer()
+                }
+                
                 Chart {
                     ForEach(episodes.sorted {
                         return $0.bundle!.compare($1.bundle!).rawValue == 1
                     }) { shape in
                         BarMark(
-                            x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start!)),
-                            y: .value("Total Count", shape.end!.timeIntervalSince(shape.start!))
+                            x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start ?? Date())),
+                            y: .value("Total Count", (shape.end ?? Date()).timeIntervalSince(shape.start ?? Date()))
                         )
-                        .foregroundStyle(bundleColors[shape.bundle!] ?? .gray)
+                        .foregroundStyle(bundleColors[shape.bundle ?? ""] ?? .gray)
                     }
                 }
                 .frame(height: 100)
@@ -229,6 +240,7 @@ struct ContentView: View {
     var feed: some View {
         withAnimation {
             ScrollViewReader { value in
+                
                 Group {
                     Button(action: { move(amount:-1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
                         .keyboardShortcut(.leftArrow, modifiers: [])
@@ -265,6 +277,7 @@ struct ContentView: View {
                                         
                                     }
                                     .id(episode.start)
+                                    .frame(width: NSScreen.main!.frame.width * 0.28 , height: (NSScreen.main!.frame.width * 0.28) / 16.0 * 9 + 60)
                             }
                         }
                         else {
@@ -272,13 +285,14 @@ struct ContentView: View {
                                 return (interval.episode.title ?? "").count > 0
                             }) { (interval : CyteInterval) in
                                 StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: selectedIndex >= 0 && interval.from == intervals[selectedIndex].from)
-                                .id(interval.from)
+                                    .id(interval.from)
+                                    .frame(width: playerWidth , height: playerWidth / 16.0 * 9 + 60)
                             }
                         }
                     }
                     .padding(.all)
                 }
-//                .id(self.selectedIndex)
+                //                .id(self.selectedIndex)
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                         self.refreshData()
@@ -311,7 +325,7 @@ struct ContentView: View {
                     ChatView()
                 }
                 VStack(alignment: .leading) {
-                    ZStack {
+                    ZStack(alignment: .leading) {
                         let binding = Binding<String>(get: {
                             self.filter
                         }, set: {
@@ -325,14 +339,15 @@ struct ContentView: View {
                                     "Search \(Agent.shared.isSetup ? "or chat " : "")your history",
                                     text: binding
                                 )
-                                .frame(width: agent.chatLog.count == 0 ? 850 : nil, height: 48)
+                                .frame(width: agent.chatLog.count == 0 ? 650 : nil, height: 48)
                                 .cornerRadius(5)
                                 .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
                                 .textFieldStyle(.plain)
                                 .background(.white)
-                                .border(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
-                                .cornerRadius(6.0)
+//                                .border(Color(red: 208.0 / 255.0, green: 213.0 / 255.0, blue: 221.0 / 255.0))
+                                .cornerRadius(10.0)
                                 .font(Font.title)
+                                .foregroundColor(Color(red: 107.0 / 255.0, green: 107.0 / 255.0, blue: 107.0 / 255.0))
                                 .focused($searchFocused)
 //                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
@@ -373,11 +388,12 @@ struct ContentView: View {
                                         })
                                         .foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                                 }
-                                .frame(width: 40, height: 40)
+                                .frame(width: 60, height: 60)
                                 .buttonStyle(.plain)
                                 .opacity(self.isHoveringSearch ? 0.8 : 1.0)
                                 .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 10))
                             }
+                            .frame(alignment: .leading)
                             
                             HStack {
                                 if agent.chatLog.count == 0 {
@@ -386,7 +402,7 @@ struct ContentView: View {
                                         showUsage = !showUsage
                                         self.refreshData()
                                     }) {
-                                        Image(systemName: "tray.and.arrow.down")
+                                        Image(systemName: "square.and.arrow.down")
                                     }
                                     .padding()
                                     .opacity(0.8)
@@ -424,7 +440,7 @@ struct ContentView: View {
                                     NavigationLink {
                                         Settings()
                                     } label: {
-                                        Image(systemName: "folder.badge.gearshape")
+                                        Image(systemName: "gearshape")
                                     }
                                     .padding()
                                     .opacity(isHoveringSettings ? 0.8 : 1.0)
@@ -437,27 +453,6 @@ struct ContentView: View {
                                             NSCursor.arrow.set()
                                         }
                                     })
-                                    HStack {
-                                        let calbinding = Binding<String>(get: {
-                                            self.dateRangeSelection
-                                        }, set: {
-                                            self.dateRangeSelection = $0
-                                            self.refreshData()
-                                        })
-                                        Image(systemName: "calendar")
-                                        Picker("", selection: calbinding) {
-                                            ForEach(dateRangeOptions, id: \.self) {
-                                                Text($0)
-                                            }
-                                        }
-                                        .pickerStyle(.menu)
-                                    }
-                                    .padding()
-                                    .foregroundColor(.gray)
-                                    .background(.white)
-                                    .border(.gray)
-                                    .cornerRadius(4.0)
-                                    .frame(width:190)
                                 }
                                 if agent.chatLog.count == 0 {
                                     Spacer()

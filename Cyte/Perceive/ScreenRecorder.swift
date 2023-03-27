@@ -62,7 +62,6 @@ class ScreenRecorder: ObservableObject {
         }
     }
     @Published var isAppAudioExcluded = false { didSet { updateEngine() } }
-    @Published var secondsBetweenFrames : Int64 = utsname.isAppleSilicon ? 2 : 4 { didSet { updateEngine() } }
 
     // A value that specifies how often to retrieve calculated audio levels.
     private let audioLevelRefreshRate: TimeInterval = 0.1
@@ -135,7 +134,7 @@ class ScreenRecorder: ObservableObject {
             // Start the stream and await new video frames.
             for try await frame in captureEngine.startCapture(configuration: config, filter: filter) {
                 Memory.shared.updateActiveContext(windowTitles: Dictionary(self.availableWindows.map{ ($0.owningApplication!.bundleIdentifier, $0.title ?? "") }, uniquingKeysWith: { (first, _) in first }))
-                Memory.shared.addFrame(frame: frame, secondLength: secondsBetweenFrames)
+                Memory.shared.addFrame(frame: frame, secondLength: Int64(Memory.secondsBetweenFrames))
                 
                 if contentSize != frame.size {
                     // Update the content size if it changed.
@@ -222,7 +221,7 @@ class ScreenRecorder: ObservableObject {
         }
         
         // Set the capture interval at 0.5 fps.
-        streamConfig.minimumFrameInterval = CMTime(value: secondsBetweenFrames, timescale: 1)
+        streamConfig.minimumFrameInterval = CMTime(value: CMTimeValue(Memory.secondsBetweenFrames), timescale: 1)
 
         return streamConfig
     }

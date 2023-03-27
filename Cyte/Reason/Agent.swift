@@ -53,6 +53,8 @@ class Agent : ObservableObject, EventSourceDelegate {
     
     @Published public var chatLog : [(String, String, String)] = []
     @Published public var chatSources : [[Episode]?] = []
+    /// Set this to bypass QA system and chat with GPT4 out of context
+    private static var chatMode: Bool = true
     
     init() {
         setup()
@@ -179,7 +181,7 @@ class Agent : ObservableObject, EventSourceDelegate {
             print("Fallback to full search")
             intervals = Memory.shared.search(term: "")
         }
-        if intervals.count > 0 {
+        if intervals.count > 0 && !Agent.chatMode {
             for interval in intervals {
                 if interval.document.count > 100 {
                     foundEps.append(interval.episode)
