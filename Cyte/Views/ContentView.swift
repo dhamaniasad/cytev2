@@ -75,16 +75,22 @@ struct ContentView: View {
         if refreshTask != nil && !refreshTask!.isCancelled {
             refreshTask!.cancel()
         }
-        refreshTask = Task {
-            // debounce to 600ms
-            do {
-                try await Task.sleep(nanoseconds: 600_000_000)
-                self.performRefreshData()
-            } catch { }
+        if refreshTask == nil || refreshTask!.isCancelled {
+            refreshTask = Task {
+                // debounce to 400ms
+                do {
+                    try await Task.sleep(nanoseconds: 400_000_000)
+                    self.performRefreshData()
+                } catch { }
+            }
         }
     }
     
-    // This is only because I'm not familiar with how Inverse relations work in CoreData, otherwise FetchRequest would automatically update the view. Please update if you can
+    ///
+    /// Runs queries according to updated UI selections
+    /// This is only because I'm not familiar with how Inverse relations work in CoreData,
+    /// otherwise FetchRequest would automatically update the view. Please update if you can
+    ///
     @MainActor func performRefreshData() {
         scrollViewID = UUID()
         selectedIndex = -1

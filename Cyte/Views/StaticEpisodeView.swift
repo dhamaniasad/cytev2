@@ -32,7 +32,7 @@ struct StaticEpisodeView: View {
     @State private var isHoveringNext: Bool = false
     @State var selected: Bool
     
-    @State private var genTask: Task<Sendable, Error>?
+    @State private var genTask: Task<(), Never>?
     
     func generateThumbnail(offset: Double) async {
         let generator = AVAssetImageGenerator(asset: asset)
@@ -216,7 +216,10 @@ struct StaticEpisodeView: View {
         .frame(width: 360, height: 260)
         .onAppear {
             genTask = Task {
-                await generateThumbnail(offset: (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate))
+                do {
+                    try await Task.sleep(nanoseconds: 400_000_000)
+                    await generateThumbnail(offset: (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate))
+                } catch { }
             }
         }
         .onDisappear {

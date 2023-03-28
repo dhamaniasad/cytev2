@@ -349,7 +349,6 @@ struct EpisodePlaylistView: View {
                         })
                         .frame(width: metrics.size.width > 1500 ? 1065 : 710, height: metrics.size.width > 1500 ? 600 : 400)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                            print(metrics.size)
                             if (player!.error != nil) {
                                 return
                             }
