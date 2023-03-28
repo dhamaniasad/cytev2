@@ -438,9 +438,10 @@ class Memory {
     ///
     func delete(delete_episode: Episode) {
         let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
+        let embeddings = embeddingTable.filter(Expression<Double>("episode_start") == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)
-        // @todo also delete embeddings
         do {
+            try intervalDb!.run(embeddings.delete())
             try intervalDb!.run(intervals.delete())
             try PersistenceController.shared.container.viewContext.save()
             try FileManager.default.removeItem(at: urlForEpisode(start: delete_episode.start, title: delete_episode.title))

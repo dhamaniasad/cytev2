@@ -32,13 +32,9 @@ Happy to accept PRs related to any of the following
 
 ### Issues
 
-- Searching results in some episodes without interval highlighting (Pretty sure this was due to low confidence tags being saved; pending validation)
 - App sandbox is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
-- Thumbnails flash when regenerated (update pixel buffer only instead of tearing down each time)
-- Scrolling lags while loading videos/processing vision
-- If small episodes are removed, it's embeddings are not, which can result in GPT results without a source
-- Build process fails on Github (perhaps during signing of DiffMatchPatch)
+- Build process fails on Github (Needs signing cert installed to sign embedded content)
 
 ### Refactor
 
@@ -55,14 +51,12 @@ Happy to accept PRs related to any of the following
 - Swift ReAct Agent
 - Filter incognito and safari private windows from capture
 - Easily copy code blocks in chat
-- Reduce color space for raw videos
-- Set default playback speed 2.0
 - Fallback to object recognition
 - Encryption e.g. Filevault?
 
 
 ## Release Notes
-### Version 0.1 (beta)
+### Version 0.2 (beta)
 - While the application is running (but not while it is active), it records the users screen
 - Recordings are labelled according to the first window bought into focus for a given app
 - Save recordings as favorites and easily view them from the home screen
