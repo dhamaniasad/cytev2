@@ -46,9 +46,9 @@
             filePath = "Cyte/Views/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "498"
-            endingLineNumber = "498"
-            landmarkName = "body"
+            startingLineNumber = "501"
+            endingLineNumber = "501"
+            landmarkName = "feed"
             landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>

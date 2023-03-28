@@ -21,7 +21,7 @@ A lot of research involves collating information from multiple sources; internal
 
 ## Features
 
-> - Completely private, data is stored on disk only, no outside connections are made
+> - When no OpenAI key is supplied, Cyte is completely private, data is stored on disk only, no outside connections are made
 > - Pause/Restart recording easily
 > - Set applications that are not to be recorded (while taking keystrokes)
 > - Chat your data; ask questions about work you've done

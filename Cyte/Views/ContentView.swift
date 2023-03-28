@@ -321,6 +321,9 @@ struct ContentView: View {
                     //                .id(self.selectedIndex)
                     .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            if !self.showUsage {
+                                endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
+                            }
                             self.refreshData()
                         }
                     }

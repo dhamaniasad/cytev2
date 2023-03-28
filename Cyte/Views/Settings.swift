@@ -77,7 +77,7 @@ struct Settings: View {
             VStack(alignment: .leading) {
                 Text("Settings").font(.title)
                     .padding()
-                Text("To enable GPT enter your API key").font(.title2)
+                Text("To enable GPT4 enter your API key").font(.title2)
                     .padding()
                 HStack {
                     if Agent.shared.isSetup {
