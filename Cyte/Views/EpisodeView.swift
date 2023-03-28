@@ -132,7 +132,7 @@ struct EpisodeView: View {
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }
         }
-        .frame(width: 360, height: 260)
+//        .frame(width: 360, height: 260)
     }
 
 

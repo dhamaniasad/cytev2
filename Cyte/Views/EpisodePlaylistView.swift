@@ -18,6 +18,25 @@ extension AVPlayer {
     }
 }
 
+func secondsToReadable(seconds: Double) -> String {
+    var (hr,  minf) = modf(seconds / 3600)
+    let (min, secf) = modf(60 * minf)
+    let days = Int(hr / 24)
+    hr -= (Double(days) * 24.0)
+    var res = ""
+    if days > 0 {
+        res += "\(days) days, "
+    }
+    if hr > 0 {
+        res += "\(Int(hr)) hours, "
+    }
+    if min > 0 {
+        res += "\(Int(min)) minutes, "
+    }
+    res += "\(Int(60 * secf)) seconds"
+    return res
+}
+
 struct EpisodePlaylistView: View {
     
     @State var player: AVPlayer?
@@ -49,7 +68,7 @@ struct EpisodePlaylistView: View {
         }
     }
     
-    func generateThumbnails(numThumbs: Int = 4) async {
+    func generateThumbnails(numThumbs: Int = 1) async {
         if intervals.count == 0 { return }
         highlight.removeAll()
         let start: Double = secondsOffsetFromLastEpisode
@@ -264,22 +283,7 @@ struct EpisodePlaylistView: View {
         let progress = offset_sum - secondsOffsetFromLastEpisode
         let anchor = Date().timeIntervalSinceReferenceDate - ((active_interval ?? intervals.last)!.end.timeIntervalSinceReferenceDate)
         let seconds = anchor - progress
-        var (hr,  minf) = modf(seconds / 3600)
-        let (min, secf) = modf(60 * minf)
-        let days = Int(hr / 24)
-        hr -= (Double(days) * 24.0)
-        var res = ""
-        if days > 0 {
-            res += "\(days) days, "
-        }
-        if hr > 0 {
-            res += "\(Int(hr)) hours, "
-        }
-        if min > 0 {
-            res += "\(Int(min)) minutes, "
-        }
-        res += "\(Int(60 * secf)) seconds ago"
-        return res
+        return "\(secondsToReadable(seconds: seconds)) ago"
     }
     
     
@@ -330,6 +334,8 @@ struct EpisodePlaylistView: View {
             VStack {
                 VStack {
                     ZStack(alignment: .topLeading) {
+                        let width = (metrics.size.height - 100.0) / 9.0 * 16.0
+                        let height = metrics.size.height - 100.0
                         VideoPlayer(player: player, videoOverlay: {
                             if highlight.count > 0 {
                                 Color.black
@@ -337,7 +343,7 @@ struct EpisodePlaylistView: View {
                                     .cutout(
                                         RoundedRectangle(cornerRadius: 4)
                                             .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
-                                            .offset(x:-355 + (highlight.first!.midX * 710), y:200 - (highlight.first!.midY * 400))
+                                            .offset(x:-(width/2) + (highlight.first!.midX * width), y:(height/2) - (highlight.first!.midY * height))
                                         
                                     )
                             } else {
@@ -347,7 +353,7 @@ struct EpisodePlaylistView: View {
                             
                             
                         })
-                        .frame(width: metrics.size.width > 1500 ? 1065 : 710, height: metrics.size.width > 1500 ? 600 : 400)
+                        .frame(width: width, height: height)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                             if (player!.error != nil) {
                                 return

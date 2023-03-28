@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var episodes: [Episode] = []
     @State private var intervals: [CyteInterval] = []
     @State private var documentsForBundle: [Document] = []
+    @State private var episodesLengthSum: Double = 0.0
     
     // The search terms currently active
     @State private var filter = ""
@@ -63,12 +64,12 @@ struct ContentView: View {
         GridItem(.fixed(360), spacing: 50)
     ]
     let documentsColumnLayout = [
-        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
-        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
-        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
-        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
-        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
-        GridItem(.fixed(200), spacing: 60, alignment: .topLeading)
+        GridItem(.fixed(190), spacing: 10, alignment: .topLeading),
+        GridItem(.fixed(190), spacing: 10, alignment: .topLeading),
+        GridItem(.fixed(190), spacing: 10, alignment: .topLeading),
+        GridItem(.fixed(190), spacing: 10, alignment: .topLeading),
+        GridItem(.fixed(190), spacing: 10, alignment: .topLeading),
+        GridItem(.fixed(190), spacing: 10, alignment: .topLeading)
     ]
     
     @MainActor func refreshData() {
@@ -134,9 +135,16 @@ struct ContentView: View {
                 return is_within
             }
         }
+//        if episodes.count > 0 {
+//            agent.chatLog.append(("user", "", "hi"))
+//            agent.chatLog.append(("bot", "gpt4", "hello"))
+//            agent.chatSources.append([])
+//            agent.chatSources.append(episodes)
+//        }
         
         refreshIcons()
         appIntervals = episodes.enumerated().map { (index, episode) in
+            episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
             return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
         }
         // now that we have episodes, if a bundle is highlighted get the documents too
@@ -196,6 +204,7 @@ struct ContentView: View {
                     )
                     .frame(width: 200, alignment: .leading)
                     Spacer()
+                    Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
                 }
                 
                 Chart {
@@ -274,6 +283,7 @@ struct ContentView: View {
                                     return (ep.title ?? "").count > 0 && (ep.start != ep.end)
                                 }) { episode in
                                     EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: selectedIndex >= 0 && episode.start == episodes[selectedIndex].start)
+                                        .frame(width: 360, height: 260)
                                         .contextMenu {
                                             Button {
                                                 episode.save = !episode.save
@@ -360,17 +370,18 @@ struct ContentView: View {
                                 .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
                                 .textFieldStyle(.plain)
                                 .background(.white)
-//                                .border(Color(red: 208.0 / 255.0, green: 213.0 / 255.0, blue: 221.0 / 255.0))
                                 .cornerRadius(10.0)
                                 .font(Font.title)
                                 .foregroundColor(Color(red: 107.0 / 255.0, green: 107.0 / 255.0, blue: 107.0 / 255.0))
                                 .focused($searchFocused)
-//                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
                                         if Agent.shared.isSetup && self.filter.hasSuffix("?") {
                                             Task {
-                                                if agent.chatLog.count == 0 {
+                                                if refreshTask != nil && !refreshTask!.isCancelled {
+                                                    refreshTask!.cancel()
+                                                }
+                                                if !self.filter.hasPrefix("chat ") {
                                                     agent.reset()
                                                 }
                                                 let what = self.filter
@@ -384,7 +395,10 @@ struct ContentView: View {
                                 Button(action: {
                                     if Agent.shared.isSetup && self.filter.hasSuffix("?") {
                                         Task {
-                                            if agent.chatLog.count == 0 {
+                                            if refreshTask != nil && !refreshTask!.isCancelled {
+                                                refreshTask!.cancel()
+                                            }
+                                            if !self.filter.hasPrefix("chat ") {
                                                 agent.reset()
                                             }
                                             let what = self.filter

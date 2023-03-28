@@ -37,7 +37,7 @@ struct ChatView: View {
     
     var messages: some View {
         ForEach(Array(agent.chatLog.enumerated()), id: \.offset) { index, chat in
-            HStack {
+            HStack(alignment: .top) {
                 if chat.0 == "user" {
                     Image(systemName: "person")
                         .frame(width: 30, height: 30)
@@ -53,6 +53,7 @@ struct ChatView: View {
                         .frame(width: 30, height: 30)
                 }
                 VStack(alignment:.leading, spacing: 0) {
+                    Spacer().frame(height: 10)
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
                         Text(formatString(offset:Int(subindex), message:String(subchat)))
                             .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
@@ -63,12 +64,11 @@ struct ChatView: View {
                     if agent.chatSources.count > index && chat.1.count > 0 && agent.chatSources[index]!.count > 0 {
                         Text("Sources:")
                             .padding()
-//                            .multilineTextAlignment(.left)
                             .fontWeight(.bold)
                             .font(.caption)
                         ForEach(agent.chatSources[index]!.prefix(upTo: 6)) { episode in
                             EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: intervals, filter: "", selected: false)
-                                .frame(width: 600, alignment: .leading)
+                                .frame(width: 700, height: 700 / 16.0 * 10.5)
                         }
                     }
                 }

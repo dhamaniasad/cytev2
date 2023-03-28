@@ -66,7 +66,7 @@ class Agent : ObservableObject, EventSourceDelegate {
         if apiKey != nil {
             openAIClient = OpenAI(apiToken: apiKey!, callback: self)
             isSetup = true
-            print("Setup OpenAI")
+            log.info("Setup OpenAI")
         } else {
             openAIClient = nil
         }
@@ -206,7 +206,15 @@ class Agent : ObservableObject, EventSourceDelegate {
             })
             chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
         } else {
-            let prompt = Agent.chatPromptTemplate.replacing("{history}", with: "").replacing("{question}", with: cleanRequest)
+            var history: String = ""
+            for chat in chatLog {
+                history = """
+                    \(history)
+                    \(chat.0 == "bot" ? "Assistant: " : "Human: ")\(chat.2)
+                """
+            }
+            let prompt = Agent.chatPromptTemplate.replacing("{history}", with: history).replacing("{question}", with: cleanRequest)
+            log.info(prompt)
             await query(input: prompt)
         }
     }

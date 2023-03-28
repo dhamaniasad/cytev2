@@ -108,7 +108,7 @@ struct Settings: View {
                         }
                     }
                 }
-                .padding(EdgeInsets(top: 0.0, leading: 10.0, bottom: 5.0, trailing: 0.0))
+                .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
                 VStack(alignment: .leading) {
                     HStack {
