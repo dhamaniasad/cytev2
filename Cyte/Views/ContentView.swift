@@ -143,6 +143,7 @@ struct ContentView: View {
 //        }
         
         refreshIcons()
+        episodesLengthSum = 0.0
         appIntervals = episodes.enumerated().map { (index, episode) in
             episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
             return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )

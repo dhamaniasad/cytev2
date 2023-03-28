@@ -60,8 +60,6 @@ Happy to accept PRs related to any of the following
 - Fallback to object recognition
 - Encryption e.g. Filevault?
 
-Total time displayed, export gif
-
 
 ## Release Notes
 ### Version 0.1 (beta)
