@@ -12,6 +12,7 @@ import AVKit
 
 struct ChatView: View {
     @StateObject private var agent = Agent.shared
+    @State var intervals: [AppInterval]
     
     @State private var isHoveringReturn: Bool = false
     
@@ -51,7 +52,7 @@ struct ChatView: View {
                         .cornerRadius(15.0)
                         .frame(width: 30, height: 30)
                 }
-                VStack(spacing: 0) {
+                VStack(alignment:.leading, spacing: 0) {
                     ForEach(Array(toArray(chat:chat)), id: \.offset) { subindex, subchat in
                         Text(formatString(offset:Int(subindex), message:String(subchat)))
                             .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
@@ -60,9 +61,14 @@ struct ChatView: View {
                             .lineLimit(100)
                     }
                     if agent.chatSources.count > index && chat.1.count > 0 && agent.chatSources[index]!.count > 0 {
-                        Text("Sources:").font(.caption)
-                        ForEach(agent.chatSources[index]!) { episode in
-                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: [], filter: "", selected: false)
+                        Text("Sources:")
+                            .padding()
+//                            .multilineTextAlignment(.left)
+                            .fontWeight(.bold)
+                            .font(.caption)
+                        ForEach(agent.chatSources[index]!.prefix(upTo: 6)) { episode in
+                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: intervals, filter: "", selected: false)
+                                .frame(width: 600, alignment: .leading)
                         }
                     }
                 }
@@ -72,47 +78,50 @@ struct ChatView: View {
             .frame(maxWidth: .infinity, alignment: Alignment.leading)
             .background(
                 RoundedRectangle(cornerRadius: String(chat.0) == "bot" ? 0 : 17)
-                    .foregroundColor(String(chat.0) == "bot" ? .clear : Color(red: 190.0/255.0, green: 190.0/255.0, blue: 190.0/255.0)))
+                    .foregroundColor(String(chat.0) == "bot" ? .clear : Color(red: 255.0/255.0, green: 255.0/255.0, blue: 255.0/255.0)))
         }
     }
     
     var body: some View {
         withAnimation {
-            HStack(alignment: .top ) {
-                VStack(alignment:.leading) {
-                    Spacer().frame(height:10)
-                    Button {
-                        agent.reset()
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.backward")
-                                .foregroundColor(.white)
-                            Text("Return")
-                                .foregroundColor(.white)
+            VStack {
+                Spacer().frame(height:40)
+                HStack(alignment: .top ) {
+                    VStack(alignment:.leading) {
+                        Spacer().frame(height:10)
+                        Button {
+                            agent.reset()
+                        } label: {
+                            HStack {
+                                Image(systemName: "arrow.backward")
+                                    .foregroundColor(.white)
+                                Text("Return")
+                                    .foregroundColor(.white)
+                            }
                         }
+                        .padding()
+                        .buttonStyle(.plain)
+                        .background(RoundedRectangle(cornerRadius: 4.0).foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0)))
+                        .onHover(perform: { hovering in
+                            self.isHoveringReturn = hovering
+                            if hovering {
+                                NSCursor.pointingHand.set()
+                            } else {
+                                NSCursor.arrow.set()
+                            }
+                        })
+                        Spacer()
                     }
-                    .padding()
-                    .buttonStyle(.plain)
-                    .background(RoundedRectangle(cornerRadius: 4.0).foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0)))
-                    .onHover(perform: { hovering in
-                        self.isHoveringReturn = hovering
-                        if hovering {
-                            NSCursor.pointingHand.set()
-                        } else {
-                            NSCursor.arrow.set()
+                    .frame(minWidth: 200, maxHeight: .infinity, alignment: .leading)
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            messages
                         }
-                    })
-                    Spacer()
-                }
-                .frame(minWidth: 200, maxHeight: .infinity, alignment: .leading)
-                ScrollView {
-                    VStack(spacing: 0) {
-                        messages
+                        .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 210))
                     }
-                    .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 210))
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

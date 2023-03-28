@@ -63,12 +63,12 @@ struct ContentView: View {
         GridItem(.fixed(360), spacing: 50)
     ]
     let documentsColumnLayout = [
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60)
+        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
+        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
+        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
+        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
+        GridItem(.fixed(200), spacing: 60, alignment: .topLeading),
+        GridItem(.fixed(200), spacing: 60, alignment: .topLeading)
     ]
     
     @MainActor func refreshData() {
@@ -338,7 +338,7 @@ struct ContentView: View {
         NavigationStack {
             VStack {
                 if agent.chatLog.count > 0 {
-                    ChatView()
+                    ChatView(intervals: appIntervals)
                 }
                 VStack(alignment: .leading) {
                     ZStack(alignment: .leading) {
@@ -418,7 +418,7 @@ struct ContentView: View {
                                         showUsage = !showUsage
                                         self.refreshData()
                                     }) {
-                                        Image(systemName: "square.and.arrow.down")
+                                        Image(systemName: showUsage ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                                     }
                                     .padding()
                                     .opacity(0.8)
@@ -438,7 +438,7 @@ struct ContentView: View {
                                         showFaves = !showFaves
                                         self.refreshData()
                                     }) {
-                                        Image(systemName: "star")
+                                        Image(systemName: showFaves ? "star.fill": "star")
                                     }
                                     .opacity(0.8)
                                     .buttonStyle(.plain)
@@ -491,7 +491,7 @@ struct ContentView: View {
         }
         .padding(EdgeInsets(top: 0.0, leading: 30.0, bottom: 0.0, trailing: 30.0))
         .background(
-            Rectangle().foregroundColor(Color(red: 250.0 / 255.0, green: 250.0 / 255.0, blue: 250.0 / 255.0 ))
+            Rectangle().foregroundColor(Color(red: 240.0 / 255.0, green: 240.0 / 255.0, blue: 240.0 / 255.0 ))
         )
     }
 }

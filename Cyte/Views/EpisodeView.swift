@@ -67,7 +67,7 @@ struct EpisodeView: View {
         VStack {
             ZStack {
                 VideoPlayer(player: player)
-                .frame(width: 360, height: 203)
+//                .frame(width: 360, height: 203)
                     .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
                         //
                     }
@@ -83,6 +83,7 @@ struct EpisodeView: View {
                     Text((episode.title ?? "")!.split(separator: " ").dropLast(6).joined(separator: " "))
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .fontWeight(selected ? .bold : .regular)
+                        .lineLimit(1)
                     Text((episode.start ?? Date()).formatted(date: .abbreviated, time: .standard) )
                         .font(SwiftUI.Font.caption)
                         .frame(maxWidth: .infinity, alignment: .leading)

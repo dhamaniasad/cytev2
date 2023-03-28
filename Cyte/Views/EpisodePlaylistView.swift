@@ -296,7 +296,7 @@ struct EpisodePlaylistView: View {
                     height: MarkDimension(floatLiteral: timelineSize * 2)
                 )
                 .foregroundStyle(interval.color)
-                .cornerRadius(9.0)
+                .cornerRadius(40.0)
             }
         }
         .frame(height: timelineSize * 4)
@@ -380,20 +380,20 @@ struct EpisodePlaylistView: View {
                     //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 VStack {
-                    HStack(spacing: 0) {
-                        ForEach(thumbnailImages, id: \.self) { image in
-                            if image != nil {
-                                Image(image!, scale: 1.0, label: Text(""))
-                                    .resizable()
-                                    .frame(width: 300, height: 170)
-                            } else {
-                                Rectangle()
-                                    .fill(.white)
-                                    .frame(width: 300, height: 170)
-                            }
-                        }
-                    }
-                    .frame(height: 170)
+//                    HStack(spacing: 0) {
+//                        ForEach(thumbnailImages, id: \.self) { image in
+//                            if image != nil {
+//                                Image(image!, scale: 1.0, label: Text(""))
+//                                    .resizable()
+//                                    .frame(width: 300, height: 170)
+//                            } else {
+//                                Rectangle()
+//                                    .fill(.white)
+//                                    .frame(width: 300, height: 170)
+//                            }
+//                        }
+//                    }
+//                    .frame(height: 170)
                     ZStack {
                         chart
                         ZStack {

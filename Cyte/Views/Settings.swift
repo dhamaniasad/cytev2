@@ -77,7 +77,7 @@ struct Settings: View {
             VStack(alignment: .leading) {
                 Text("Settings").font(.title)
                     .padding()
-                Text("To enable GPT enter your API key").font(.subheadline)
+                Text("To enable GPT enter your API key").font(.title2)
                     .padding()
                 HStack {
                     if Agent.shared.isSetup {
@@ -86,8 +86,7 @@ struct Settings: View {
                             .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                         Button(action: {
                             let keys = KeychainSwift()
-                            let res = keys.delete("CYTE_OPENAI_KEY")
-                            print(res)
+                            let _ = keys.delete("CYTE_OPENAI_KEY")
                             Agent.shared.isSetup = false
                         }) {
                             Image(systemName: "multiply")
@@ -98,18 +97,23 @@ struct Settings: View {
                             "OpenAI API Key",
                             text: $apiDetails
                         )
+                        .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
+                        .textFieldStyle(.plain)
+                        .background(.white)
+                        .font(.title)
+                        .frame(width: 1000)
                         .onSubmit {
                             Agent.shared.setup(key: apiDetails)
                             apiDetails = ""
                         }
                     }
                 }
-                .padding()
+                .padding(EdgeInsets(top: 0.0, leading: 10.0, bottom: 5.0, trailing: 0.0))
                 
                 VStack(alignment: .leading) {
                     HStack {
                         Text("Select applications you wish to disable recording for")
-                            .font(Font.subheadline)
+                            .font(Font.title2)
                             .frame(maxWidth: .infinity, alignment: .topLeading)
                     }
                     Button(action: {
@@ -122,6 +126,10 @@ struct Settings: View {
                         .cornerRadius(10.0)
                         .foregroundColor(.gray)
                     }
+                    .padding()
+                    .buttonStyle(.plain)
+                    .background(.white)
+                    
                     .fileImporter(isPresented: $isShowing, allowedContentTypes: [.application], onCompletion: { result in
                         switch result {
                         case .success(let Fileurl):
