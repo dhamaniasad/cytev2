@@ -245,7 +245,10 @@ class Memory {
             currentContext = context
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
             if  assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
-                let title = windowTitles[currentContext] ?? front.localizedName ?? currentContext
+                var title: String = windowTitles[currentContext] ?? ""
+                if title.trimmingCharacters(in: .whitespacesAndNewlines).count == 0 {
+                    title = front.localizedName ?? currentContext
+                }
                 openEpisode(title: title)
             } else {
                 print("Bypass exclusion context \(currentContext)")

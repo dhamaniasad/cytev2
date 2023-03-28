@@ -53,8 +53,6 @@ class Agent : ObservableObject, EventSourceDelegate {
     
     @Published public var chatLog : [(String, String, String)] = []
     @Published public var chatSources : [[Episode]?] = []
-    /// Set this to bypass QA system and chat with GPT4 out of context
-    private static var chatMode: Bool = true
     
     init() {
         setup()
@@ -120,6 +118,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     }
     
     func reset() {
+        openAIClient!.stop()
         chatLog.removeAll()
         chatSources.removeAll()
     }
@@ -152,7 +151,13 @@ class Agent : ObservableObject, EventSourceDelegate {
     @MainActor
     func query(request: String) async {
 //        Memory.shared.rebuildIndex()
-        chatLog.append(("user", "", request))
+        var cleanRequest = request
+        var force_chat = false
+        if request.starts(with: "chat ") {
+            force_chat = true
+            cleanRequest = String(request.dropFirst("chat ".count))
+        }
+        chatLog.append(("user", "", cleanRequest))
         chatSources.append([])
         chatLog.append(("bot", "", ""))
         chatSources.append([])
@@ -181,7 +186,7 @@ class Agent : ObservableObject, EventSourceDelegate {
             print("Fallback to full search")
             intervals = Memory.shared.search(term: "")
         }
-        if intervals.count > 0 && !Agent.chatMode {
+        if intervals.count > 0 && !force_chat {
             for interval in intervals {
                 if interval.document.count > 100 {
                     foundEps.append(interval.episode)
@@ -201,8 +206,7 @@ class Agent : ObservableObject, EventSourceDelegate {
             })
             chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
         } else {
-            print("Running chat prompt")
-            let prompt = Agent.chatPromptTemplate.replacing("{history}", with: "").replacing("{question}", with: request)
+            let prompt = Agent.chatPromptTemplate.replacing("{history}", with: "").replacing("{question}", with: cleanRequest)
             await query(input: prompt)
         }
     }

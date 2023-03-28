@@ -38,7 +38,6 @@ struct CyteApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
-                .contentShape(Rectangle())
                 .onAppear {
                     self.setup()
                 }
@@ -47,9 +46,6 @@ struct CyteApp: App {
                 }
         }
         .commands {
-            CommandGroup(replacing: .textEditing) { }
-            CommandGroup(replacing: .pasteboard) { }
-            CommandGroup(replacing: .undoRedo) { }
             CommandGroup(replacing: .printItem) { }
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .systemServices) { }
@@ -100,6 +96,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         log.add(destination: fileDest)
         log.info("Cyte startup")
+        NSWindow.allowsAutomaticWindowTabbing = false
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),
                                                           name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),

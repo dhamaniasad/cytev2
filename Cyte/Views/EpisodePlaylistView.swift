@@ -36,7 +36,6 @@ struct EpisodePlaylistView: View {
     @State private var genTask: Task<(), Never>? = nil
     
     private let timelineSize: CGFloat = 16
-    private let playerWidth = NSScreen.main!.frame.width * 0.57
     
     func updateIntervals() {
         var offset = 0.0
@@ -327,116 +326,118 @@ struct EpisodePlaylistView: View {
     }
     
     var body: some View {
-        VStack {
+        GeometryReader { metrics in
             VStack {
-                ZStack(alignment: .topLeading) {
+                VStack {
+                    ZStack(alignment: .topLeading) {
                         VideoPlayer(player: player, videoOverlay: {
-                                if highlight.count > 0 {
-                                    Color.black
-                                        .opacity(0.5)
-                                        .cutout(
-                                            RoundedRectangle(cornerRadius: 4)
-                                                .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
-                                                .offset(x:-355 + (highlight.first!.midX * 710), y:200 - (highlight.first!.midY * 400))
-                                            
-                                        )
-                                } else {
-                                    Color.black
-                                        .opacity(0.0)
-                                }
+                            if highlight.count > 0 {
+                                Color.black
+                                    .opacity(0.5)
+                                    .cutout(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
+                                            .offset(x:-355 + (highlight.first!.midX * 710), y:200 - (highlight.first!.midY * 400))
                                         
-
+                                    )
+                            } else {
+                                Color.black
+                                    .opacity(0.0)
+                            }
+                            
+                            
                         })
-                            .frame(width: 710, height: 400)
-                            .frame(width: playerWidth, height: playerWidth / 16.0 * 9)
-                            .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                                if (player!.error != nil) {
-                                    return
-                                }
-                                var offset_sum = 0.0
-                                let active_interval: AppInterval? = intervals.first { interval in
-                                    let window_center = secondsOffsetFromLastEpisode
-                                    let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-                                    let is_within = offset_sum <= window_center && next_offset >= window_center
-                                    offset_sum = next_offset
-                                    return is_within
-                                }
-                                let url = urlForEpisode(start: active_interval?.start, title: active_interval?.title)
-                                if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
-                                    // @todo hack to get around some form of off by one issue in the overall logic
-                                    // Active interval comes out as the next episode when the playhead is at the end of the video
-                                    secondsOffsetFromLastEpisode += 0.1
-                                } else {
-                                    secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
-                                }
-                                updateData()
+                        .frame(width: metrics.size.width > 1500 ? 1065 : 710, height: metrics.size.width > 1500 ? 600 : 400)
+                        .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
+                            print(metrics.size)
+                            if (player!.error != nil) {
+                                return
                             }
-                            .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
-//                                playerEnded()
-                                player!.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+                            var offset_sum = 0.0
+                            let active_interval: AppInterval? = intervals.first { interval in
+                                let window_center = secondsOffsetFromLastEpisode
+                                let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+                                let is_within = offset_sum <= window_center && next_offset >= window_center
+                                offset_sum = next_offset
+                                return is_within
                             }
-                    
+                            let url = urlForEpisode(start: active_interval?.start, title: active_interval?.title)
+                            if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
+                                // @todo hack to get around some form of off by one issue in the overall logic
+                                // Active interval comes out as the next episode when the playhead is at the end of the video
+                                secondsOffsetFromLastEpisode += 0.1
+                            } else {
+                                secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
+                            }
+                            updateData()
+                        }
+                        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
+                            //                                playerEnded()
+                            player!.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
+                        }
+                        
                         
                     }
-//                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            VStack {
-                HStack(spacing: 0) {
-                    ForEach(thumbnailImages, id: \.self) { image in
-                        if image != nil {
-                            Image(image!, scale: 1.0, label: Text(""))
-                                .resizable()
-                                .frame(width: 300, height: 170)
-                        } else {
-                            Rectangle()
-                                .fill(.white)
-                                .frame(width: 300, height: 170)
-                        }
-                    }
+                    //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(height: 170)
-                ZStack {
-                    chart
-                    ZStack {
-                        ForEach(intervals.filter { interval in
-                            return startTimeForEpisode(interval: interval) <= Double(EpisodePlaylistView.windowLengthInSeconds) &&
-                                endTimeForEpisode(interval: interval) >= 0
-                        }) { interval in
-                            
-                            GeometryReader { metrics in
-                                HStack {
-                                    if interval.bundleId.count > 0 {
-                                        Image(nsImage: getIcon(bundleID: interval.bundleId)!)
-                                            .resizable()
-                                            .frame(width: timelineSize * 2, height: timelineSize * 2)
-                                    }
-                                }
-                                .offset(CGSize(width: (windowOffsetToCenter(of:interval) * metrics.size.width) - timelineSize, height: timelineSize))
+                VStack {
+                    HStack(spacing: 0) {
+                        ForEach(thumbnailImages, id: \.self) { image in
+                            if image != nil {
+                                Image(image!, scale: 1.0, label: Text(""))
+                                    .resizable()
+                                    .frame(width: 300, height: 170)
+                            } else {
+                                Rectangle()
+                                    .fill(.white)
+                                    .frame(width: 300, height: 170)
                             }
                         }
                     }
-                    .frame(height: timelineSize * 4)
-                    .allowsHitTesting(false)
+                    .frame(height: 170)
+                    ZStack {
+                        chart
+                        ZStack {
+                            ForEach(intervals.filter { interval in
+                                return startTimeForEpisode(interval: interval) <= Double(EpisodePlaylistView.windowLengthInSeconds) &&
+                                endTimeForEpisode(interval: interval) >= 0
+                            }) { interval in
+                                
+                                GeometryReader { metrics in
+                                    HStack {
+                                        if interval.bundleId.count > 0 {
+                                            Image(nsImage: getIcon(bundleID: interval.bundleId)!)
+                                                .resizable()
+                                                .frame(width: timelineSize * 2, height: timelineSize * 2)
+                                        }
+                                    }
+                                    .offset(CGSize(width: (windowOffsetToCenter(of:interval) * metrics.size.width) - timelineSize, height: timelineSize))
+                                }
+                            }
+                        }
+                        .frame(height: timelineSize * 4)
+                        .allowsHitTesting(false)
+                    }
+                    
                 }
-                
+                HStack(alignment: .top) {
+                    Text(activeTime())
+                    Text(humanReadableOffset())
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .font(Font.caption)
+                Group {
+                    Button(action: { secondsOffsetFromLastEpisode += 2.0; updateData(); }) {}
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                    Button(action: { secondsOffsetFromLastEpisode = max(0.0, secondsOffsetFromLastEpisode - 2.0); updateData(); }) {}
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                    Button(action: { secondsOffsetFromLastEpisode = 0; updateData(); }) {}
+                        .keyboardShortcut(.return, modifiers: [])
+                    Button(action: { if player == nil { return }; player!.isPlaying ? player!.pause() : player!.play(); }) {}
+                        .keyboardShortcut(.space, modifiers: [])
+                }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
             }
-            HStack(alignment: .top) {
-                Text(activeTime())
-                Text(humanReadableOffset())
-                    .frame(maxWidth: .infinity, alignment: .trailing)
-            }
-            .font(Font.caption)
-            Group {
-                Button(action: { secondsOffsetFromLastEpisode += 2.0; updateData(); }) {}
-                    .keyboardShortcut(.leftArrow, modifiers: [])
-                Button(action: { secondsOffsetFromLastEpisode = max(0.0, secondsOffsetFromLastEpisode - 2.0); updateData(); }) {}
-                    .keyboardShortcut(.rightArrow, modifiers: [])
-                Button(action: { secondsOffsetFromLastEpisode = 0; updateData(); }) {}
-                    .keyboardShortcut(.return, modifiers: [])
-                Button(action: { if player == nil { return }; player!.isPlaying ? player!.pause() : player!.play(); }) {}
-                    .keyboardShortcut(.space, modifiers: [])
-            }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }

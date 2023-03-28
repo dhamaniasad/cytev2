@@ -9,6 +9,61 @@ import Foundation
 import SwiftUI
 import KeychainSwift
 
+struct BundleView: View {
+    
+    @State var bundle: BundleExclusion
+    
+    var body: some View {
+        HStack {
+            let binding = Binding<Bool>(get: {
+                return bundle.excluded
+            }, set: {
+                if $0 {
+                    bundle.excluded = true
+                    do {
+                        try PersistenceController.shared.container.viewContext.save()
+                        // batch delete all episodes for bundle
+                        let intervalFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Interval")
+                        intervalFetchRequest.predicate = NSPredicate(format: "episode.bundle == %@", bundle.bundle!)
+                        let deleteRequest = NSBatchDeleteRequest(fetchRequest: intervalFetchRequest)
+                        
+                        do {
+                            try PersistenceController.shared.container.viewContext.execute(deleteRequest)
+                        } catch {
+                        }
+                        
+                        let episodeFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Episode")
+                        episodeFetchRequest.predicate = NSPredicate(format: "bundle == %@", bundle.bundle!)
+                        let episodeDeleteRequest = NSBatchDeleteRequest(fetchRequest: episodeFetchRequest)
+                        
+                        do {
+                            try PersistenceController.shared.container.viewContext.execute(episodeDeleteRequest)
+                        } catch {
+                        }
+                    } catch {
+                    }
+                } else {
+                    bundle.excluded = false
+                    do {
+                        try PersistenceController.shared.container.viewContext.save()
+                    } catch {
+                        
+                    }
+                }
+                print($0)
+            })
+            Image(nsImage: getIcon(bundleID: bundle.bundle!)!)
+            Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!)!)
+                .foregroundColor(.black)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            Toggle(isOn: binding) {
+                
+            }
+        }
+    }
+    
+}
+
 struct Settings: View {
     @FetchRequest(
             sortDescriptors: [NSSortDescriptor(keyPath: \BundleExclusion.bundle, ascending: true)],
@@ -29,7 +84,6 @@ struct Settings: View {
                         Text("OpenAI enabled")
                             .frame(width: 1000, height: 50)
                             .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
-                            .padding()
                         Button(action: {
                             let keys = KeychainSwift()
                             let res = keys.delete("CYTE_OPENAI_KEY")
@@ -46,6 +100,7 @@ struct Settings: View {
                         )
                         .onSubmit {
                             Agent.shared.setup(key: apiDetails)
+                            apiDetails = ""
                         }
                     }
                 }
@@ -82,113 +137,21 @@ struct Settings: View {
                 HStack {
                     List(Array(bundles.enumerated()), id: \.offset) { index, bundle in
                         if bundle.bundle != Bundle.main.bundleIdentifier && index % 2 == 0 {
-                            HStack {
-                                let binding = Binding<Bool>(get: {
-                                    return bundle.excluded
-                                }, set: {
-                                    if $0 {
-                                        bundle.excluded = true
-                                        do {
-                                            try PersistenceController.shared.container.viewContext.save()
-                                            // batch delete all episodes for bundle
-                                            let intervalFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Interval")
-                                            intervalFetchRequest.predicate = NSPredicate(format: "episode.bundle == %@", bundle.bundle!)
-                                            let deleteRequest = NSBatchDeleteRequest(fetchRequest: intervalFetchRequest)
-                                            
-                                            do {
-                                                try PersistenceController.shared.container.viewContext.execute(deleteRequest)
-                                            } catch {
-                                            }
-                                            
-                                            let episodeFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Episode")
-                                            episodeFetchRequest.predicate = NSPredicate(format: "bundle == %@", bundle.bundle!)
-                                            let episodeDeleteRequest = NSBatchDeleteRequest(fetchRequest: episodeFetchRequest)
-                                            
-                                            do {
-                                                try PersistenceController.shared.container.viewContext.execute(episodeDeleteRequest)
-                                            } catch {
-                                            }
-                                        } catch {
-                                        }
-                                    } else {
-                                        bundle.excluded = false
-                                        do {
-                                            try PersistenceController.shared.container.viewContext.save()
-                                        } catch {
-                                            
-                                        }
-                                    }
-                                    print($0)
-                                })
-                                Image(nsImage: getIcon(bundleID: bundle.bundle!)!)
-                                Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!)!)
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Toggle(isOn: binding) {
-                                    
-                                }
-                            }
+                            BundleView(bundle: bundle)
                         }
                     }
                     .scrollContentBackground(.hidden)
                     .frame(width: 400)
                     List(Array(bundles.enumerated()), id: \.offset) { index, bundle in
                         if bundle.bundle != Bundle.main.bundleIdentifier && index % 2 == 1 {
-                            HStack {
-                                let binding = Binding<Bool>(get: {
-                                    return bundle.excluded
-                                }, set: {
-                                    if $0 {
-                                        bundle.excluded = true
-                                        do {
-                                            try PersistenceController.shared.container.viewContext.save()
-                                            // batch delete all episodes for bundle
-                                            let intervalFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Interval")
-                                            intervalFetchRequest.predicate = NSPredicate(format: "episode.bundle == %@", bundle.bundle!)
-                                            let deleteRequest = NSBatchDeleteRequest(fetchRequest: intervalFetchRequest)
-                                            
-                                            do {
-                                                try PersistenceController.shared.container.viewContext.execute(deleteRequest)
-                                            } catch {
-                                            }
-                                            
-                                            let episodeFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Episode")
-                                            episodeFetchRequest.predicate = NSPredicate(format: "bundle == %@", bundle.bundle!)
-                                            let episodeDeleteRequest = NSBatchDeleteRequest(fetchRequest: episodeFetchRequest)
-                                            
-                                            do {
-                                                try PersistenceController.shared.container.viewContext.execute(episodeDeleteRequest)
-                                            } catch {
-                                            }
-                                        } catch {
-                                        }
-                                    } else {
-                                        bundle.excluded = false
-                                        do {
-                                            try PersistenceController.shared.container.viewContext.save()
-                                        } catch {
-                                            
-                                        }
-                                    }
-                                    print($0)
-                                })
-                                Image(nsImage: getIcon(bundleID: bundle.bundle!)!)
-                                Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!)!)
-                                    .foregroundColor(.black)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Toggle(isOn: binding) {
-                                    
-                                }
-                            }
+                            BundleView(bundle: bundle)
                         }
                     }
                     .scrollContentBackground(.hidden)
                     .frame(width: 400)
                 }
-                .frame(height: 600)
-                .padding()
+                .frame(height: ceil(CGFloat(bundles.count) / 2.0) * 40.0)
             }
-            
         }
     }
 }

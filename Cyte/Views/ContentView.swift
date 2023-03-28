@@ -46,10 +46,21 @@ struct ContentView: View {
     @State private var scrollViewID = UUID()
     @State var selectedIndex = -1
     
+    let feedColumnLayoutSmall = [
+        GridItem(.fixed(360), spacing: 50),
+        GridItem(.fixed(360), spacing: 50)
+    ]
+    
     let feedColumnLayout = [
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60),
-        GridItem(.flexible(), spacing: 60)
+        GridItem(.fixed(360), spacing: 50),
+        GridItem(.fixed(360), spacing: 50),
+        GridItem(.fixed(360), spacing: 50)
+    ]
+    let feedColumnLayoutLarge = [
+        GridItem(.fixed(360), spacing: 50),
+        GridItem(.fixed(360), spacing: 50),
+        GridItem(.fixed(360), spacing: 50),
+        GridItem(.fixed(360), spacing: 50)
     ]
     let documentsColumnLayout = [
         GridItem(.flexible(), spacing: 60),
@@ -59,7 +70,6 @@ struct ContentView: View {
         GridItem(.flexible(), spacing: 60),
         GridItem(.flexible(), spacing: 60)
     ]
-    private let playerWidth = NSScreen.main!.frame.width * 0.28
     
     @MainActor func refreshData() {
         if refreshTask != nil && !refreshTask!.isCancelled {
@@ -238,64 +248,64 @@ struct ContentView: View {
     }
     
     var feed: some View {
-        withAnimation {
-            ScrollViewReader { value in
-                
-                Group {
-                    Button(action: { move(amount:-1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
-                        .keyboardShortcut(.leftArrow, modifiers: [])
-                    Button(action: { move(amount:1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
-                        .keyboardShortcut(.rightArrow, modifiers: [])
-                    Button(action: { searchFocused = true; selectedIndex = -1; }) {}
-                        .keyboardShortcut(.escape, modifiers: [])
-                }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
-                ScrollView {
+        GeometryReader { metrics in
+            withAnimation {
+                ScrollViewReader { value in
                     
-                    LazyVGrid(columns: feedColumnLayout, spacing: 20) {
-                        if intervals.count == 0 {
-                            ForEach(episodes.filter { ep in
-                                return (ep.title ?? "").count > 0 && (ep.start != ep.end)
-                            }) { episode in
-                                EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: selectedIndex >= 0 && episode.start == episodes[selectedIndex].start)
-                                    .contextMenu {
-                                        Button {
-                                            episode.save = !episode.save
-                                            do {
-                                                try PersistenceController.shared.container.viewContext.save()
-                                                self.refreshData()
-                                            } catch {
+                    Group {
+                        Button(action: { move(amount:-1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
+                            .keyboardShortcut(.leftArrow, modifiers: [])
+                        Button(action: { move(amount:1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
+                            .keyboardShortcut(.rightArrow, modifiers: [])
+                        Button(action: { searchFocused = true; selectedIndex = -1; print(metrics.size); }) {}
+                            .keyboardShortcut(.escape, modifiers: [])
+                    }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
+                    ScrollView {
+                        
+                        LazyVGrid(columns: metrics.size.width > 1500 ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
+                            if intervals.count == 0 {
+                                ForEach(episodes.filter { ep in
+                                    return (ep.title ?? "").count > 0 && (ep.start != ep.end)
+                                }) { episode in
+                                    EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: selectedIndex >= 0 && episode.start == episodes[selectedIndex].start)
+                                        .contextMenu {
+                                            Button {
+                                                episode.save = !episode.save
+                                                do {
+                                                    try PersistenceController.shared.container.viewContext.save()
+                                                    self.refreshData()
+                                                } catch {
+                                                }
+                                            } label: {
+                                                Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
                                             }
-                                        } label: {
-                                            Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
+                                            Button {
+                                                Memory.shared.delete(delete_episode: episode)
+                                                self.refreshData()
+                                            } label: {
+                                                Label("Delete", systemImage: "xmark.bin")
+                                            }
+                                            
                                         }
-                                        Button {
-                                            Memory.shared.delete(delete_episode: episode)
-                                            self.refreshData()
-                                        } label: {
-                                            Label("Delete", systemImage: "xmark.bin")
-                                        }
-                                        
-                                    }
-                                    .id(episode.start)
-                                    .frame(width: NSScreen.main!.frame.width * 0.28 , height: (NSScreen.main!.frame.width * 0.28) / 16.0 * 9 + 60)
+                                        .id(episode.start)
+                                }
+                            }
+                            else {
+                                ForEach(intervals.filter { (interval: CyteInterval) in
+                                    return (interval.episode.title ?? "").count > 0
+                                }) { (interval : CyteInterval) in
+                                    StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: selectedIndex >= 0 && interval.from == intervals[selectedIndex].from)
+                                        .id(interval.from)
+                                }
                             }
                         }
-                        else {
-                            ForEach(intervals.filter { (interval: CyteInterval) in
-                                return (interval.episode.title ?? "").count > 0
-                            }) { (interval : CyteInterval) in
-                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: selectedIndex >= 0 && interval.from == intervals[selectedIndex].from)
-                                    .id(interval.from)
-                                    .frame(width: playerWidth , height: playerWidth / 16.0 * 9 + 60)
-                            }
-                        }
+                        .padding(.all)
                     }
-                    .padding(.all)
-                }
-                //                .id(self.selectedIndex)
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        self.refreshData()
+                    //                .id(self.selectedIndex)
+                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.refreshData()
+                        }
                     }
                 }
             }
@@ -352,7 +362,7 @@ struct ContentView: View {
 //                                .prefersDefaultFocus(in: mainNamespace) // @fixme Causing AttributeGraph cycles
                                 .onSubmit {
                                     Task {
-                                        if Agent.shared.isSetup {
+                                        if Agent.shared.isSetup && self.filter.hasSuffix("?") {
                                             Task {
                                                 if agent.chatLog.count == 0 {
                                                     agent.reset()
@@ -366,7 +376,7 @@ struct ContentView: View {
                                     }
                                 }
                                 Button(action: {
-                                    if Agent.shared.isSetup {
+                                    if Agent.shared.isSetup && self.filter.hasSuffix("?") {
                                         Task {
                                             if agent.chatLog.count == 0 {
                                                 agent.reset()
@@ -480,8 +490,3 @@ struct ContentView: View {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView().environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
-    }
-}
