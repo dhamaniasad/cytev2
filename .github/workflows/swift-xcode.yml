@@ -16,4 +16,4 @@ jobs:
         uses: actions/checkout@v3
       - name: Build
         run: |
-          xcodebuild -project Cyte.xcodeproj -scheme Cyte  -configuration Release clean build | xcpretty && exit ${PIPESTATUS[0]}
+          xcodebuild -project Cyte.xcodeproj -scheme Cyte  -configuration Release clean build analyze | xcpretty && exit ${PIPESTATUS[0]}
