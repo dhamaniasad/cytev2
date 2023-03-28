@@ -210,7 +210,7 @@ struct ContentView: View {
                 
                 Chart {
                     ForEach(episodes.sorted {
-                        return $0.bundle!.compare($1.bundle!).rawValue == 1
+                        return ($0.bundle ?? "").compare($1.bundle ?? "").rawValue == 1
                     }) { shape in
                         BarMark(
                             x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start ?? Date())),
@@ -227,7 +227,7 @@ struct ContentView: View {
                         ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
                             HStack {
                                 Image(nsImage: getIcon(bundleID: bundle)!)
-                                Text(getApplicationNameFromBundleID(bundleID: bundle)!)
+                                Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
                                     .foregroundColor(.black)
                             }
                             .contentShape(Rectangle())
