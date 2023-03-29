@@ -82,6 +82,7 @@ struct Settings: View {
                 HStack {
                     Text("Saving memories in: \(homeDirectory().path(percentEncoded: false))")
                         .font(.title2)
+                        .frame(width: 1000, height: 50, alignment: .leading)
                     Button(action: {
                         isShowingHomeSelection.toggle()
                     }) {
@@ -114,6 +115,7 @@ struct Settings: View {
                                 .tag(index * 30)
                         }
                     }
+                    .font(.title2)
                     .frame(width: 300)
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))

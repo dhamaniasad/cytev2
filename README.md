@@ -34,7 +34,7 @@ Happy to accept PRs related to any of the following
 
 - App sandbox is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
-- Build process fails on Github (Needs signing cert installed to sign embedded content)
+- Build process fails on Github (Needs signing cert installed to sign embedded content?)
 
 ### Refactor
 

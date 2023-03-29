@@ -42,6 +42,7 @@ struct ContentView: View {
     @State private var isHoveringUsage: Bool = false
     @State private var isHoveringSettings: Bool = false
     @State private var isHoveringFaves: Bool = false
+    @State private var isHoveringFilter: Bool = false
     
     @State private var refreshTask: Task<(), Never>? = nil
     @State private var scrollViewID = UUID()
@@ -231,6 +232,14 @@ struct ContentView: View {
                                     .foregroundColor(.black)
                             }
                             .contentShape(Rectangle())
+                            .onHover(perform: { hovering in
+                                self.isHoveringFilter = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
+                            })
                             .onTapGesture { gesture in
                                 if highlightedBundle.count == 0 {
                                     highlightedBundle = bundle
@@ -250,6 +259,14 @@ struct ContentView: View {
                                 Text(doc.path!.lastPathComponent)
                                     .foregroundColor(.black)
                             }
+                            .onHover(perform: { hovering in
+                                self.isHoveringFilter = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
+                            })
                             .onTapGesture { gesture in
                                 // @todo should really open with currently highlighted bundle
                                 NSWorkspace.shared.open(doc.path!)
@@ -335,7 +352,7 @@ struct ContentView: View {
                         }
                         .padding(.all)
                     }
-                    //                .id(self.selectedIndex)
+                    .id(self.scrollViewID)
                     .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             if !self.showUsage {
@@ -369,7 +386,9 @@ struct ContentView: View {
         NavigationStack {
             VStack {
                 if agent.chatLog.count > 0 {
-                    ChatView(intervals: appIntervals)
+                    GeometryReader { metrics in
+                        ChatView(intervals: appIntervals, displaySize: metrics.size)
+                    }
                 }
                 VStack(alignment: .leading) {
                     ZStack(alignment: .leading) {

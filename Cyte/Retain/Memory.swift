@@ -105,7 +105,7 @@ class Memory {
     static private var embeddingSize = 1536//openai ada
     
     /// Intel fallbacks - due to lack of hardware acelleration for video encoding and frame analysis, tradeoffs must be made
-    private var shouldTrackFileChanges: Bool = utsname.isAppleSilicon ? true : false
+    private var shouldTrackFileChanges: Bool = true
     static let secondsBetweenFrames : Int = utsname.isAppleSilicon ? 2 : 4
     
     var currentContext : String = "Startup"
@@ -350,9 +350,6 @@ class Memory {
     
     ///
     /// Save out the current file, create a DB entry and reset streams.
-    /// Frames less than 15s are not recorded, to allow for post-episode
-    /// index operations. The heaviest being file tracking, without which
-    /// episodes as small as 5s could be tracked
     ///
     func closeEpisode() {
         if assetWriter == nil {
@@ -361,14 +358,18 @@ class Memory {
                 
         //close everything
         assetWriterInput!.markAsFinished()
-        if (frameCount * Memory.secondsBetweenFrames) < 15 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
+        if frameCount < 2 || currentContext.starts(with:Bundle.main.bundleIdentifier!) {
             assetWriter!.cancelWriting()
             delete(delete_episode: episode!)
-            Logger().info("Supressed small episode for \(self.currentContext)")
+            log.info("Supressed small episode for \(self.currentContext)")
         } else {
             let ep = self.episode!
             assetWriter!.finishWriting {
-                self.trackFileChanges(ep:ep)
+                if (self.frameCount * Memory.secondsBetweenFrames) > 90 {
+                    self.trackFileChanges(ep:ep)
+                } else {
+                    print("Skip file tracking for small episode")
+                }
             }
             
             self.episode!.end = Date()

@@ -17,6 +17,7 @@ struct ChatView: View {
     @State private var isHoveringReturn: Bool = false
     
     private let highlightr = Highlightr()
+    @State var displaySize: CGSize
     
     private func getUserInitials() -> String {
         let formatter = PersonNameComponentsFormatter()
@@ -68,7 +69,7 @@ struct ChatView: View {
                             .font(.caption)
                         ForEach(agent.chatSources[index]!.prefix(upTo: 6)) { episode in
                             EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: intervals, filter: "", selected: false)
-                                .frame(width: 700, height: 700 / 16.0 * 10.5)
+                                .frame(width: (displaySize.width-505.0), height: (displaySize.width-505.0) / 16.0 * 10.5)
                         }
                     }
                 }
@@ -117,7 +118,7 @@ struct ChatView: View {
                         VStack(spacing: 0) {
                             messages
                         }
-                        .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 210))
+                        .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 245))
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
