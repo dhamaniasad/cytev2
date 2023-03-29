@@ -72,6 +72,9 @@ struct Settings: View {
     @State var isShowing = false
     @State var isShowingHomeSelection = false
     @State var apiDetails: String = ""
+    private let defaults = UserDefaults.standard
+    @State var isHovering: Bool = false
+    @State var currentRetention: Int = 0
     
     var body: some View {
         ScrollView {
@@ -101,22 +104,30 @@ struct Settings: View {
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
-                HStack {
-                    let binding = Binding<Int>(get: {
-                        let defaults = UserDefaults.standard
-                        return defaults.integer(forKey: "CYTE_RETENTION")
-                    }, set: {
-                        let defaults = UserDefaults.standard
-                        defaults.set($0, forKey: "CYTE_RETENTION")
-                    })
-                    Picker("Save recordings for", selection: binding) {
-                        ForEach(Array(["Forever", "30 Days", "60 Days", "90 Days"].enumerated()), id: \.offset) { index, retain in
-                            Text(retain)
-                                .tag(index * 30)
-                        }
+                Text("Save recordings for").font(.title2)
+                    .padding()
+                    .onAppear {
+                        currentRetention = defaults.integer(forKey: "CYTE_RETENTION")
                     }
-                    .font(.title2)
-                    .frame(width: 300)
+                HStack {
+                    ForEach(Array(["Forever", "30 Days", "60 Days", "90 Days"].enumerated()), id: \.offset) { index, retain in
+                        Text(retain)
+                            .frame(width: 250, height: 50)
+                            .background(currentRetention == (index * 30) ? Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0) : .white)
+                            .foregroundColor(currentRetention == (index * 30) ? .black : .gray)
+                            .onHover(perform: { hovering in
+                                self.isHovering = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
+                            })
+                            .onTapGesture {
+                                defaults.set(index * 30, forKey: "CYTE_RETENTION")
+                                currentRetention = index * 30
+                            }
+                    }
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 

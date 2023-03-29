@@ -477,6 +477,10 @@ class Memory {
     /// Deletes the provided episode including the underlying video file, and indexed interval data
     ///
     func delete(delete_episode: Episode) {
+        if delete_episode.save {
+            log.info("Saved episode from deletion")
+            return
+        }
         let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
         let embeddings = embeddingTable.filter(Expression<Double>("episode_start") == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)
