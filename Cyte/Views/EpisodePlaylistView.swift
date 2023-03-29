@@ -355,7 +355,7 @@ struct EpisodePlaylistView: View {
                         })
                         .frame(width: width, height: height)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                            if (player!.error != nil) {
+                            if (player != nil && player!.error != nil) {
                                 return
                             }
                             var offset_sum = 0.0
