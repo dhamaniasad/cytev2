@@ -70,6 +70,7 @@ struct Settings: View {
             animation: .default)
     private var bundles: FetchedResults<BundleExclusion>
     @State var isShowing = false
+    @State var isShowingHomeSelection = false
     @State var apiDetails: String = ""
     
     var body: some View {
@@ -77,6 +78,46 @@ struct Settings: View {
             VStack(alignment: .leading) {
                 Text("Settings").font(.title)
                     .padding()
+                
+                HStack {
+                    Text("Saving memories in: \(homeDirectory().path(percentEncoded: false))")
+                        .font(.title2)
+                    Button(action: {
+                        isShowingHomeSelection.toggle()
+                    }) {
+                        Image(systemName: "folder")
+                    }
+                    .fileImporter(isPresented: $isShowingHomeSelection, allowedContentTypes: [.directory], onCompletion: { result in
+                        switch result {
+                        case .success(let Fileurl):
+                            let defaults = UserDefaults.standard
+                            defaults.set(Fileurl.path(percentEncoded: false), forKey: "CYTE_HOME")
+                            break
+                        case .failure(let error):
+                            print(error)
+                        }
+                    })
+                }
+                .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                
+                HStack {
+                    let binding = Binding<Int>(get: {
+                        let defaults = UserDefaults.standard
+                        return defaults.integer(forKey: "CYTE_RETENTION")
+                    }, set: {
+                        let defaults = UserDefaults.standard
+                        defaults.set($0, forKey: "CYTE_RETENTION")
+                    })
+                    Picker("Save recordings for", selection: binding) {
+                        ForEach(Array(["Forever", "30 Days", "60 Days", "90 Days"].enumerated()), id: \.offset) { index, retain in
+                            Text(retain)
+                                .tag(index * 30)
+                        }
+                    }
+                    .frame(width: 300)
+                }
+                .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                
                 Text("To enable GPT4 enter your API key").font(.title2)
                     .padding()
                 HStack {
@@ -129,7 +170,6 @@ struct Settings: View {
                     .padding()
                     .buttonStyle(.plain)
                     .background(.white)
-                    
                     .fileImporter(isPresented: $isShowing, allowedContentTypes: [.application], onCompletion: { result in
                         switch result {
                         case .success(let Fileurl):
@@ -158,7 +198,7 @@ struct Settings: View {
                     .scrollContentBackground(.hidden)
                     .frame(width: 400)
                 }
-                .frame(height: ceil(CGFloat(bundles.count) / 2.0) * 40.0)
+                .frame(height: ceil(CGFloat(bundles.count) / 2.0) * 42.0)
             }
         }
     }

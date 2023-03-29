@@ -31,17 +31,33 @@ class CyteInterval: ObservableObject, Identifiable {
     var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
 }
 
+func homeDirectory() -> URL {
+    let defaults = UserDefaults.standard
+    let home = defaults.string(forKey: "CYTE_HOME")
+    if home != nil {
+        return URL(filePath: home!)
+    }
+    // check DB for user override
+    let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
+    return url
+}
+
 ///
 /// Format the title for an episode given its start time and unformatted title
 ///
 func urlForEpisode(start: Date?, title: String?) -> URL {
-    var url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
+    var url: URL = homeDirectory()
     let components = Calendar.current.dateComponents([.year, .month, .day], from: start ?? Date())
     url = url.appendingPathComponent("\(components.year ?? 0)")
     url = url.appendingPathComponent("\(components.month ?? 0)")
     url = url.appendingPathComponent("\(components.day ?? 0)")
     url = url.appendingPathComponent("\(title ?? "").mov")
     return url
+}
+
+func revealEpisode(episode: Episode) {
+    let url = urlForEpisode(start: episode.start, title: episode.title)
+    NSWorkspace.shared.activateFileViewerSelecting([url])
 }
 
 ///
@@ -103,7 +119,7 @@ class Memory {
         let unclosedFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
         unclosedFetch.predicate = NSPredicate(format: "start == end")
         do {
-            let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("CyteMemory.sqlite3"))!
+            let url: URL = homeDirectory().appendingPathComponent("CyteMemory.sqlite3")
             intervalDb = try Connection(url.path(percentEncoded: false))
             do {
                 let config = FTS4Config()
@@ -172,7 +188,7 @@ class Memory {
     
     func rebuildIndex() {
         let embeddings = getEmbeddings()
-        let coremlUrl: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte").appendingPathComponent("Embeddings.coreml"))!
+        let coremlUrl: URL = homeDirectory().appendingPathComponent("Embeddings.coreml")
         do {
             var nlembedding: [String: [Double]] = [:]
             for embedding in embeddings {
@@ -343,7 +359,6 @@ class Memory {
         if assetWriter == nil {
             return
         }
-        print("Close \(episode!.title)")
                 
         //close everything
         assetWriterInput!.markAsFinished()
@@ -366,6 +381,31 @@ class Memory {
             }
         }
         self.reset()
+        self.runRetention()
+    }
+    
+    private func runRetention() {
+        // delete any episodes outside retention period
+        let defaults = UserDefaults.standard
+        let retention = defaults.integer(forKey: "CYTE_RETENTION")
+        if retention == 0 {
+            // retain forever
+            log.info("Retain forever")
+            return
+        }
+        let cutoff = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -(retention), to: Date())!
+        log.info("Culling memories older than \(cutoff.formatted())")
+        let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+        episodeFetch.predicate = NSPredicate(format: "start < %@", cutoff as CVarArg)
+        do {
+            let episodes = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
+            for i in 0...episodes.count {
+                log.info("Purging old episode: \(episodes[i].start?.formatted())")
+                delete(delete_episode: episodes[i])
+            }
+        } catch {
+            log.error("Failed to fetch episodes in retention")
+        }
     }
     
     ///

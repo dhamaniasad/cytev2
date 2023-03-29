@@ -14,6 +14,13 @@ struct PersistenceController {
 
     init(inMemory: Bool = false) {
         container = NSPersistentContainer(name: "Cyte")
+        let storeDirectory = homeDirectory()
+
+        let url = storeDirectory.appendingPathComponent("Cyte.sqlite")
+        let description = NSPersistentStoreDescription(url: url)
+        description.shouldInferMappingModelAutomatically = true
+        description.shouldMigrateStoreAutomatically = true
+        container.persistentStoreDescriptions = [description]
 
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")

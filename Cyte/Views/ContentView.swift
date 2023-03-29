@@ -302,7 +302,24 @@ struct ContentView: View {
                                             } label: {
                                                 Label("Delete", systemImage: "xmark.bin")
                                             }
-                                            
+                                            Button {
+                                                revealEpisode(episode: episode)
+                                            } label: {
+                                                Label("Reveal in Finder", systemImage: "questionmark.folder")
+                                            }
+                                            Button {
+                                                let _ = makeTimelapse(episodes: episodes)
+                                            } label: {
+                                                Label("Export results as timelaspse", systemImage: "timelapse")
+                                            }
+                                            Button {
+                                                for i in 0...episodes.count {
+                                                    Memory.shared.delete(delete_episode: episodes[i])
+                                                }
+                                                refreshData()
+                                            } label: {
+                                                Label("DELETE ALL DISPLAYED RESULTS", systemImage: "exclamationmark.triangle")
+                                            }
                                         }
                                         .id(episode.start)
                                 }

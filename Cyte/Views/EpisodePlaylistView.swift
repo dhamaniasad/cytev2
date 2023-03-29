@@ -385,6 +385,22 @@ struct EpisodePlaylistView: View {
                     }
                     //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .contextMenu {
+                    Button {
+                        var offset_sum = 0.0
+                        let active_interval: AppInterval? = intervals.first { interval in
+                            let window_center = secondsOffsetFromLastEpisode
+                            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+                            let is_within = offset_sum <= window_center && next_offset >= window_center
+                            offset_sum = next_offset
+                            return is_within
+                        }
+                        let url = urlForEpisode(start: active_interval?.start, title: active_interval?.title).deletingLastPathComponent()
+                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: url.path(percentEncoded: false))
+                    } label: {
+                        Label("Reveal in Finder", systemImage: "questionmark.folder")
+                    }
+                }
                 VStack {
 //                    HStack(spacing: 0) {
 //                        ForEach(thumbnailImages, id: \.self) { image in

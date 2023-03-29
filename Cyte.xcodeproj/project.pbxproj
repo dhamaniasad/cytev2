@@ -36,6 +36,7 @@
 		3FDBE5B529CD7BAC00A4C6C0 /* OpenAI in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5B429CD7BAC00A4C6C0 /* OpenAI */; };
 		3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BA29D0029800A4C6C0 /* ObjcExceptionBridging */; };
 		3FDBE5BD29D0029800A4C6C0 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BC29D0029800A4C6C0 /* XCGLogger */; };
+		3FDBE5C429D4704300A4C6C0 /* Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C329D4704300A4C6C0 /* Export.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -84,6 +85,7 @@
 		3FCAA20829AC7C0400898995 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		3FCAA20A29AC7C0400898995 /* Cyte.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Cyte.entitlements; sourceTree = "<group>"; };
 		3FCAA20C29AC7C0400898995 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		3FDBE5C329D4704300A4C6C0 /* Export.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -139,6 +141,7 @@
 			isa = PBXGroup;
 			children = (
 				3F58AE2529B18344007E7703 /* Events.swift */,
+				3FDBE5C329D4704300A4C6C0 /* Export.swift */,
 			);
 			path = Support;
 			sourceTree = "<group>";
@@ -343,6 +346,7 @@
 				3FAD36A929B1BB9800CCCE82 /* Memory.swift in Sources */,
 				3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */,
 				3FCAA20229AC7C0100898995 /* Persistence.swift in Sources */,
+				3FDBE5C429D4704300A4C6C0 /* Export.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -473,7 +477,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Cyte/Preview Content\"";
 				DEVELOPMENT_TEAM = 794T33TWQW;
@@ -501,7 +505,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -527,7 +531,7 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 5;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_ASSET_PATHS = "\"Cyte/Preview Content\"";
 				DEVELOPMENT_TEAM = 794T33TWQW;
@@ -555,7 +559,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";

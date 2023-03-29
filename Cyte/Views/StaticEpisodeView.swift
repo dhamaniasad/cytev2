@@ -219,7 +219,7 @@ struct StaticEpisodeView: View {
             genTask = Task {
                 do {
                     try await Task.sleep(nanoseconds: 400_000_000)
-                    await generateThumbnail(offset: (((result.from ?? Date()).timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate))
+                    await generateThumbnail(offset: ((result.from.timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate))
                 } catch { }
             }
         }
