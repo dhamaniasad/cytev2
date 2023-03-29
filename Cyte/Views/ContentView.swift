@@ -136,12 +136,6 @@ struct ContentView: View {
                 return is_within
             }
         }
-//        if episodes.count > 0 {
-//            agent.chatLog.append(("user", "", "hi"))
-//            agent.chatLog.append(("bot", "gpt4", "hello"))
-//            agent.chatSources.append([])
-//            agent.chatSources.append(episodes)
-//        }
         
         refreshIcons()
         episodesLengthSum = 0.0
