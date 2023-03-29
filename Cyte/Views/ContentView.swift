@@ -278,7 +278,7 @@ struct ContentView: View {
                     }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
                     ScrollView {
                         
-                        LazyVGrid(columns: metrics.size.width > 1500 ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
+                        LazyVGrid(columns: (metrics.size.width > 1500 && utsname.isAppleSilicon) ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
                             if intervals.count == 0 {
                                 ForEach(episodes.filter { ep in
                                     return (ep.title ?? "").count > 0 && (ep.start != ep.end)
