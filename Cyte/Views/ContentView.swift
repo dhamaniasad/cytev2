@@ -324,8 +324,8 @@ struct ContentView: View {
                                                 Label("Export results as timelaspse", systemImage: "timelapse")
                                             }
                                             Button {
-                                                for i in 0...episodes.count {
-                                                    Memory.shared.delete(delete_episode: episodes[i])
+                                                for episode in episodes {
+                                                    Memory.shared.delete(delete_episode: episode)
                                                 }
                                                 refreshData()
                                             } label: {

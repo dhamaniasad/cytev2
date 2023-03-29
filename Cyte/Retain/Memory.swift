@@ -399,9 +399,9 @@ class Memory {
         episodeFetch.predicate = NSPredicate(format: "start < %@", cutoff as CVarArg)
         do {
             let episodes = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
-            for i in 0...episodes.count {
-                log.info("Purging old episode: \(episodes[i].start?.formatted())")
-                delete(delete_episode: episodes[i])
+            for episode in episodes {
+                log.info("Purging old episode: \(episode.start?.formatted())")
+                delete(delete_episode: episode)
             }
         } catch {
             log.error("Failed to fetch episodes in retention")
