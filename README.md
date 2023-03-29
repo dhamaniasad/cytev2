@@ -74,3 +74,8 @@ Happy to accept PRs related to any of the following
 - Pause/resume recording at any time using the Menu Bar icon
 - Show files that have been edited with click to reopen
 - Intel support with frames every 4 seconds, fast OCR path with no corrections and disabled file tracking
+- Right click to reveal recordings in finder
+- Right click on feed to batch delete memories
+- Right click on feed to export results as timelapse
+- Allow user-specified storage directory
+- Automatically delete memories older than user specified length

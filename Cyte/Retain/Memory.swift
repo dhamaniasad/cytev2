@@ -34,10 +34,9 @@ class CyteInterval: ObservableObject, Identifiable {
 func homeDirectory() -> URL {
     let defaults = UserDefaults.standard
     let home = defaults.string(forKey: "CYTE_HOME")
-    if home != nil {
+    if home != nil && FileManager.default.fileExists(atPath: home!) {
         return URL(filePath: home!)
     }
-    // check DB for user override
     let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
     return url
 }
