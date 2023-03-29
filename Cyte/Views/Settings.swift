@@ -52,8 +52,8 @@ struct BundleView: View {
                 }
                 print($0)
             })
-            Image(nsImage: getIcon(bundleID: bundle.bundle!)!)
-            Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!)!)
+            Image(nsImage: getIcon(bundleID: bundle.bundle!) ?? getIcon(bundleID: "com.apple.loginwindow")!)
+            Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!) ?? bundle.bundle!)
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Toggle(isOn: binding) {
