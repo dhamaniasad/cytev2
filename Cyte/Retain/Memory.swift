@@ -250,6 +250,7 @@ class Memory {
     /// Ignores the main bundle (Cyte) - creates sometimes undiscernable
     /// memories with many layers of picture in picture
     ///
+    @MainActor
     func updateActiveContext(windowTitles: Dictionary<String, String>) {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
         let context = front.bundleIdentifier ?? "Unnamed"
