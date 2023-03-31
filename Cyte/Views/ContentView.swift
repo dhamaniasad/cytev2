@@ -38,6 +38,7 @@ struct ContentView: View {
     @State private var appIntervals : [AppInterval] = []
     
     // Hover states
+    @State private var isHovering: Bool = false
     @State private var isHoveringSearch: Bool = false
     @State private var isHoveringUsage: Bool = false
     @State private var isHoveringSettings: Bool = false
@@ -162,6 +163,16 @@ struct ContentView: View {
                 
             }
         }
+    }
+    
+    func resetFilters() {
+        filter = ""
+        highlightedBundle = ""
+        showUsage = false
+        showFaves = false
+        
+        startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!
+        endDate = Date()
     }
     
     func refreshIcons() {
@@ -511,6 +522,25 @@ struct ContentView: View {
                                     .buttonStyle(.plain)
                                     .onHover(perform: { hovering in
                                         self.isHoveringSettings = hovering
+                                        if hovering {
+                                            NSCursor.pointingHand.set()
+                                        } else {
+                                            NSCursor.arrow.set()
+                                        }
+                                    })
+                                    
+                                    Button(action: {
+                                        resetFilters()
+                                        self.refreshData()
+                                    }) {
+                                        Image(systemName: "arrow.clockwise")
+                                    }
+                                    .opacity(0.8)
+                                    .buttonStyle(.plain)
+                                    .padding(EdgeInsets(top: 0.0, leading: 0.0, bottom: 0.0, trailing: 0.0))
+                                    .opacity(isHovering ? 0.8 : 1.0)
+                                    .onHover(perform: { hovering in
+                                        self.isHovering = hovering
                                         if hovering {
                                             NSCursor.pointingHand.set()
                                         } else {
