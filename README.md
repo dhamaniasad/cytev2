@@ -9,6 +9,8 @@
 A background screen recorder for easy history search. 
 If you choose to supply an OpenAI key, it can act as a knowledge base. Be aware that transcriptions will then be sent to OpenAI when you chat.
 
+![Cyte Screenshot](assets/images/screenshot.png)
+
 ## Uses
 
 ### 🧠 Train-of-thought recovery
