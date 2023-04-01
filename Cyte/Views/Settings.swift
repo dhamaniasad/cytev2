@@ -75,6 +75,7 @@ struct Settings: View {
     private let defaults = UserDefaults.standard
     @State var isHovering: Bool = false
     @State var currentRetention: Int = 0
+    @State var isSemantic: Bool = UserDefaults.standard.bool(forKey: "CYTE_SEMANTIC")
     
     var body: some View {
         ScrollView {
@@ -132,6 +133,22 @@ struct Settings: View {
                     }
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                
+                HStack {
+                    let binding = Binding<Bool>(get: {
+                        return isSemantic
+                    }, set: {
+                        defaults.set($0, forKey: "CYTE_SEMANTIC")
+                        isSemantic = $0
+                    })
+                    Text("Enable semantic search")
+                        .frame(width: 1000, height: 50, alignment: .leading)
+                        .padding()
+                        .font(.title2)
+                    Toggle(isOn: binding) {
+                        
+                    }
+                }
                 
                 Text("To enable GPT4 enter your API key").font(.title2)
                     .padding()

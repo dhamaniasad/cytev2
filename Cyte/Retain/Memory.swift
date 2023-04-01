@@ -472,11 +472,10 @@ class Memory {
             }
         }
         
-        if total_match < 100 && lastObservation.count > 0 {
+        if total_match < 100 && lastObservation.count > 0 && UserDefaults.standard.bool(forKey: "CYTE_SEMANTIC") {
             // Delta must be non-zero to account for system wide text, e.g. date/time, battery percent
             print("Frames share little context (\(total_match)) - closing and embedding document")
-            // Disable embedding until FAISS is integrated
-            let embedding: [Double]? = nil//await Agent.shared.embed(input: lastObservation)
+            let embedding: [Double]? = await Agent.shared.embed(input: lastObservation)
             if embedding != nil {
                 insert(embedding:CyteEmbedding(time: start.timeIntervalSinceReferenceDate, text: what, vec: embedding!))
             }
