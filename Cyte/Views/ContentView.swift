@@ -188,14 +188,6 @@ struct ContentView: View {
         }
     }
     
-    func intervalForEpisode(episode: Episode) -> (Date, Date) {
-        // @fixme Adding a small offset to ensure interval matching passes
-        return (
-            Date(timeIntervalSinceReferenceDate: (episode.start ?? Date()).timeIntervalSinceReferenceDate + 0.01-(Double(Timeline.windowLengthInSeconds)/2.0)),
-            Date(timeIntervalSinceReferenceDate: (episode.start ?? Date()).timeIntervalSinceReferenceDate + 0.01+(Double(Timeline.windowLengthInSeconds)/2.0))
-        )
-    }
-    
     var usage: some View {
         withAnimation {
             VStack {

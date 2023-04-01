@@ -114,7 +114,7 @@ struct Settings: View {
                 HStack {
                     ForEach(Array(["Forever", "30 Days", "60 Days", "90 Days"].enumerated()), id: \.offset) { index, retain in
                         Text(retain)
-                            .frame(width: 243, height: 50)
+                            .frame(width: 244, height: 50)
                             .background(currentRetention == (index * 30) ? Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0) : .white)
                             .foregroundColor(currentRetention == (index * 30) ? .black : .gray)
                             .onHover(perform: { hovering in
