@@ -8,7 +8,7 @@
 import Foundation
 import AVKit
 
-func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal: Bool = true) -> URL {
+func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal: Bool = true) -> AVAssetExportSession {
     let movie = AVMutableComposition()
     let videoTrack = movie.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
 //    let audioTrack = movie.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
@@ -87,12 +87,14 @@ func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal:
                 print("failed \(error.localizedDescription)")
             } else {
                 if reveal {
-                    NSWorkspace.shared.activateFileViewerSelecting([outputMovieURL])
+                    if FileManager.default.fileExists(atPath: outputMovieURL.path(percentEncoded: false)) {
+                        NSWorkspace.shared.activateFileViewerSelecting([outputMovieURL])
+                        print("movie has been exported to \(outputMovieURL)")
+                    }
                 }
-                print("movie has been exported to \(outputMovieURL)")
             }
         }
     })
     
-    return outputMovieURL
+    return exporter!
 }

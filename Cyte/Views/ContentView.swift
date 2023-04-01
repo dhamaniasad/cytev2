@@ -48,6 +48,8 @@ struct ContentView: View {
     @State private var refreshTask: Task<(), Never>? = nil
     @State private var scrollViewID = UUID()
     @State var selectedIndex = -1
+    @State private var isPresentingConfirm: Bool = false
+    @State private var currentExport: AVAssetExportSession?
     
     let feedColumnLayoutSmall = [
         GridItem(.fixed(360), spacing: 50),
@@ -218,6 +220,47 @@ struct ContentView: View {
                     .frame(width: 200, alignment: .leading)
                     Spacer()
                     Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
+                    Button(action: {
+                        if currentExport == nil || currentExport!.progress >= 1.0 {
+                            currentExport = makeTimelapse(episodes: episodes.reversed())
+                        } else {
+                            log.error("Cannot export: export already in progress")
+                        }
+                    }) {
+                        Image(systemName: "timelapse")
+                    }
+                    .buttonStyle(.plain)
+                    .onHover(perform: { hovering in
+                        self.isHovering = hovering
+                        if hovering {
+                            NSCursor.pointingHand.set()
+                        } else {
+                            NSCursor.arrow.set()
+                        }
+                    })
+                    Button(action: {
+                        isPresentingConfirm = true
+                    }) {
+                        Image(systemName: "folder.badge.minus")
+                    }
+                    .buttonStyle(.plain)
+                    .onHover(perform: { hovering in
+                        self.isHovering = hovering
+                        if hovering {
+                            NSCursor.pointingHand.set()
+                        } else {
+                            NSCursor.arrow.set()
+                        }
+                    })
+                    .confirmationDialog("This action cannot be undone. Are you sure?",
+                     isPresented: $isPresentingConfirm) {
+                        Button("Delete all results", role: .destructive) {
+                             for episode in episodes {
+                                 Memory.shared.delete(delete_episode: episode)
+                             }
+                             refreshData()
+                        }
+                    }
                 }
                 
                 Chart {
@@ -315,16 +358,6 @@ struct ContentView: View {
                                         .frame(width: 360, height: 260)
                                         .contextMenu {
                                             Button {
-                                                episode.save = !episode.save
-                                                do {
-                                                    try PersistenceController.shared.container.viewContext.save()
-                                                    self.refreshData()
-                                                } catch {
-                                                }
-                                            } label: {
-                                                Label(episode.save ? "Remove from Favorites" : "Add to Favorites", systemImage: "heart")
-                                            }
-                                            Button {
                                                 Memory.shared.delete(delete_episode: episode)
                                                 self.refreshData()
                                             } label: {
@@ -334,19 +367,6 @@ struct ContentView: View {
                                                 revealEpisode(episode: episode)
                                             } label: {
                                                 Label("Reveal in Finder", systemImage: "questionmark.folder")
-                                            }
-                                            Button {
-                                                let _ = makeTimelapse(episodes: episodes.reversed())
-                                            } label: {
-                                                Label("Export results as timelaspse", systemImage: "timelapse")
-                                            }
-                                            Button {
-                                                for episode in episodes {
-                                                    Memory.shared.delete(delete_episode: episode)
-                                                }
-                                                refreshData()
-                                            } label: {
-                                                Label("DELETE ALL DISPLAYED RESULTS", systemImage: "exclamationmark.triangle")
                                             }
                                         }
                                         .id(episode.start)
@@ -542,7 +562,7 @@ struct ContentView: View {
                                     }) {
                                         Image(systemName: "arrow.clockwise")
                                     }
-                                    .opacity(0.8)
+                                    .rotationEffect(Angle.degrees(180))
                                     .buttonStyle(.plain)
                                     .padding(EdgeInsets(top: 0.0, leading: 0.0, bottom: 0.0, trailing: 0.0))
                                     .opacity(isHovering ? 0.8 : 1.0)
@@ -554,9 +574,28 @@ struct ContentView: View {
                                             NSCursor.arrow.set()
                                         }
                                     })
-                                }
-                                if agent.chatLog.count == 0 {
                                     Spacer()
+                                    if currentExport != nil && currentExport!.progress < 1.0 {
+                                        HStack {
+                                            ProgressView("Exporting…", value: currentExport!.progress, total: 1.0)
+                                                .frame(width: 250)
+                                            Button(action: {
+                                                currentExport?.cancelExport()
+                                                currentExport = nil
+                                            }) {
+                                                Image(systemName: "stop.circle")
+                                            }
+                                            .buttonStyle(.plain)
+                                            .onHover(perform: { hovering in
+                                                self.isHovering = hovering
+                                                if hovering {
+                                                    NSCursor.pointingHand.set()
+                                                } else {
+                                                    NSCursor.arrow.set()
+                                                }
+                                            })
+                                        }
+                                    }
                                 }
                             }
                         }
