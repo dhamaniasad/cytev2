@@ -78,7 +78,7 @@ struct CyteApp: App {
                             .keyboardShortcut("R")
                         }
                         Divider()
-                        Button("Quit") { NSApplication.shared.terminate(nil) }
+                        Button("Quit") { self.teardown(); NSApplication.shared.terminate(nil); }
                             .keyboardShortcut("Q")
                     }
                     .frame(width: 200)

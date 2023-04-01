@@ -104,15 +104,17 @@ struct Settings: View {
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
-                Text("Save recordings for").font(.title2)
+                Text("Save recordings for (will use approximately 1GB for every four hours: this can vary greatly depending on amount of context switching)").font(.title2)
                     .padding()
                     .onAppear {
                         currentRetention = defaults.integer(forKey: "CYTE_RETENTION")
-                    }
+                }
+                
+                
                 HStack {
                     ForEach(Array(["Forever", "30 Days", "60 Days", "90 Days"].enumerated()), id: \.offset) { index, retain in
                         Text(retain)
-                            .frame(width: 250, height: 50)
+                            .frame(width: 243, height: 50)
                             .background(currentRetention == (index * 30) ? Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0) : .white)
                             .foregroundColor(currentRetention == (index * 30) ? .black : .gray)
                             .onHover(perform: { hovering in
@@ -159,6 +161,12 @@ struct Settings: View {
                         .onSubmit {
                             Agent.shared.setup(key: apiDetails)
                             apiDetails = ""
+                        }
+                        Button(action: {
+                            Agent.shared.setup(key: apiDetails)
+                            apiDetails = ""
+                        }) {
+                            Image(systemName: "checkmark.icloud")
                         }
                     }
                 }

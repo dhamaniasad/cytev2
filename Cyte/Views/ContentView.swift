@@ -203,12 +203,18 @@ struct ContentView: View {
                         selection: $startDate,
                         displayedComponents: [.date, .hourAndMinute]
                     )
+                    .onChange(of: startDate, perform: { value in
+                        refreshData()
+                    })
                     .frame(width: 200, alignment: .leading)
                     DatePicker(
                         " - ",
                         selection: $endDate,
                         displayedComponents: [.date, .hourAndMinute]
                     )
+                    .onChange(of: endDate, perform: { value in
+                        refreshData()
+                    })
                     .frame(width: 200, alignment: .leading)
                     Spacer()
                     Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
@@ -330,7 +336,7 @@ struct ContentView: View {
                                                 Label("Reveal in Finder", systemImage: "questionmark.folder")
                                             }
                                             Button {
-                                                let _ = makeTimelapse(episodes: episodes)
+                                                let _ = makeTimelapse(episodes: episodes.reversed())
                                             } label: {
                                                 Label("Export results as timelaspse", systemImage: "timelapse")
                                             }
@@ -473,8 +479,9 @@ struct ContentView: View {
                             HStack {
                                 if agent.chatLog.count == 0 {
                                     Button(action: {
-                                        highlightedBundle = ""
-                                        showUsage = !showUsage
+                                        let showing = self.showUsage
+                                        self.resetFilters()
+                                        self.showUsage = !showing
                                         self.refreshData()
                                     }) {
                                         Image(systemName: showUsage ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")

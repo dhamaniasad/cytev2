@@ -381,8 +381,8 @@ class Memory {
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
         }
-        self.reset()
         self.runRetention()
+        self.reset()
     }
     
     private func runRetention() {
