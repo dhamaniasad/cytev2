@@ -146,9 +146,8 @@ class Memory {
             for unclosed in fetched {
                 PersistenceController.shared.container.viewContext.delete(unclosed)
             }
-        } catch {
-            
-        }
+        } catch { }
+        rebuildIndex()
     }
     
     func getEmbeddings() -> [CyteEmbedding] {
@@ -185,7 +184,14 @@ class Memory {
         return nil
     }
     
-    func rebuildIndex() {
+    func lookupEmbedding(index: idx_t) -> CyteEmbedding? {
+        if embeddingIndexToEpisodeTime[index] != nil {
+            return getEmbedding(when: embeddingIndexToEpisodeTime[index]!)
+        }
+        return nil
+    }
+    
+    func rebuildIndex1() {
         let embeddings = getEmbeddings()
         let coremlUrl: URL = homeDirectory().appendingPathComponent("Embeddings.coreml")
         do {
@@ -198,6 +204,15 @@ class Memory {
             }
             try NLEmbedding.write(nlembedding, language: NLLanguage.english, revision: 0, to: coremlUrl)
         } catch { print(error) }
+    }
+    
+    private var embeddingIndexToEpisodeTime: Dictionary<idx_t, Double> = [:]
+    func rebuildIndex() {
+        let embeddings = getEmbeddings()
+        for embedding in embeddings {
+            let idx = FAISS.shared.insert(embedding: embedding.vec.map { Float($0) } )
+            embeddingIndexToEpisodeTime[idx] = embedding.time
+        }
     }
     
     ///
@@ -557,6 +572,8 @@ class Memory {
             }
             let insertQuery = embeddingTable.insert(expressions)
             try intervalDb!.run(insertQuery)
+            let idx = FAISS.shared.insert(embedding: embedding.vec.map { Float($0) } )
+            embeddingIndexToEpisodeTime[idx] = embedding.time
         } catch {
             fatalError("insertion failed: \(error)")
         }

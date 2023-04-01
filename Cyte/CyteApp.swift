@@ -36,6 +36,7 @@ struct CyteApp: App {
                 await screenRecorder.stop()
             }
         }
+        FAISS.shared.teardown()
     }
 
     var body: some Scene {

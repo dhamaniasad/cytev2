@@ -123,34 +123,8 @@ class Agent : ObservableObject, EventSourceDelegate {
         chatSources.removeAll()
     }
     
-//                // @fixme currently returns unrelated docs with exact same distances
-//                let embeddings = try NLEmbedding(contentsOf: coremlUrl)
-//                let query_embedding: [Double] = await embed(input: request)!
-//                embeddings.enumerateNeighbors(for: query_embedding, maximumCount: 3) { neighbor, distance in
-//                    print("\(neighbor): \(distance)")
-//                    // neighbor can be used to find the episode from sql, as well as the original text from the json
-//                    let embedding = Memory.shared.getEmbedding(when: Double(neighbor)!)
-//                    let foundDate = Date(timeIntervalSinceReferenceDate: Double(neighbor)!)
-//
-//                    let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
-//                    epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
-//                    do {
-//                        let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
-//                        if fetched.count > 0 {
-//                            foundEps.append(fetched.first!)
-//                        }
-//                    } catch {}
-//
-//                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
-//                    if context.count + new_context.count < maxContextLength {
-//                        context += new_context
-//                    }
-//                    return true
-//                }
-    
     @MainActor
     func query(request: String) async {
-//        Memory.shared.rebuildIndex()
         var cleanRequest = request
         var force_chat = false
         if request.starts(with: "chat ") {
@@ -186,16 +160,38 @@ class Agent : ObservableObject, EventSourceDelegate {
             print("Fallback to full search")
             intervals = Memory.shared.search(term: "")
         }
-        if intervals.count > 0 && !force_chat {
+        if !force_chat {
+            // semantic search
+            let query_embedding: [Double] = await embed(input: request)!
+            let results: ([idx_t], [Float]) = FAISS.shared.search(by: query_embedding.map{Float($0)}, k: 8)
+            for idx in results.0 {
+                let embedding = Memory.shared.lookupEmbedding(index: idx)
+                let foundDate = Date(timeIntervalSinceReferenceDate: embedding!.time)
+                let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+                epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
+                do {
+                    let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
+                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
+                    if context.count + new_context.count < maxContextLength {
+                        context += new_context
+                        if fetched.count > 0 {
+                            foundEps.append(fetched.first!)
+                        }
+                    }
+                } catch {}
+            }
+            
+            // syntactic search
             for interval in intervals {
                 if interval.document.count > 100 {
-                    foundEps.append(interval.episode)
                     let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
                     if context.count + new_context.count < maxContextLength {
                         context += new_context
+                        foundEps.append(interval.episode)
                     }
                 }
             }
+            
             let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
             print(prompt)
             log.info(prompt)

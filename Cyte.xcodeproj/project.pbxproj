@@ -37,6 +37,8 @@
 		3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BA29D0029800A4C6C0 /* ObjcExceptionBridging */; };
 		3FDBE5BD29D0029800A4C6C0 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BC29D0029800A4C6C0 /* XCGLogger */; };
 		3FDBE5C429D4704300A4C6C0 /* Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C329D4704300A4C6C0 /* Export.swift */; };
+		3FDBE5C629D53D2000A4C6C0 /* libfaiss_c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FDBE5C529D53CD000A4C6C0 /* libfaiss_c.a */; };
+		3FDBE5C829D5440900A4C6C0 /* Faiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C729D5440900A4C6C0 /* Faiss.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -86,6 +88,8 @@
 		3FCAA20A29AC7C0400898995 /* Cyte.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Cyte.entitlements; sourceTree = "<group>"; };
 		3FCAA20C29AC7C0400898995 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		3FDBE5C329D4704300A4C6C0 /* Export.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Export.swift; sourceTree = "<group>"; };
+		3FDBE5C529D53CD000A4C6C0 /* libfaiss_c.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libfaiss_c.a; path = ../lib/libfaiss_c.a; sourceTree = "<group>"; };
+		3FDBE5C729D5440900A4C6C0 /* Faiss.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Faiss.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,6 +97,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FDBE5C629D53D2000A4C6C0 /* libfaiss_c.a in Frameworks */,
 				3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */,
 				3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */,
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
@@ -121,6 +126,7 @@
 		3F8F932829B5CF9C00C938DE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3FDBE5C529D53CD000A4C6C0 /* libfaiss_c.a */,
 				3F14BDD529C0D4A800F12FE7 /* AVKit.framework */,
 				3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */,
 				3F8F932929B5CF9C00C938DE /* Charts.framework */,
@@ -161,6 +167,7 @@
 			children = (
 				3FAD36AB29B1BD1A00CCCE82 /* Agent.swift */,
 				3FAD36AD29B1BE8700CCCE82 /* README.md */,
+				3FDBE5C729D5440900A4C6C0 /* Faiss.swift */,
 			);
 			path = Reason;
 			sourceTree = "<group>";
@@ -335,6 +342,7 @@
 				3FCAA20029AC7C0100898995 /* CyteApp.swift in Sources */,
 				3F14BDD229BF06F900F12FE7 /* EpisodeView.swift in Sources */,
 				3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */,
+				3FDBE5C829D5440900A4C6C0 /* Faiss.swift in Sources */,
 				3F14BDD429C0145200F12FE7 /* RippleEffect.swift in Sources */,
 				3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */,
 				3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */,
@@ -489,6 +497,7 @@
 					"$(PROJECT_DIR)",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib/faiss;
 				INFOPLIST_FILE = Cyte/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cyte;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -505,8 +514,10 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib;
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MARKETING_VERSION = 0.3;
+				OTHER_LDFLAGS = "-lfaiss_c";
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -543,6 +554,7 @@
 					"$(PROJECT_DIR)",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib/faiss;
 				INFOPLIST_FILE = Cyte/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cyte;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -559,8 +571,10 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib;
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MARKETING_VERSION = 0.3;
+				OTHER_LDFLAGS = "-lfaiss_c";
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
