@@ -58,6 +58,10 @@ class Agent : ObservableObject, EventSourceDelegate {
         setup()
     }
     
+    ///
+    /// Creates a openai api wrapper client with the given key, updating
+    /// a user preference at the same time
+    ///
     func setup(key: String? = nil) {
         if key != nil {
             keychain.set(key!, forKey: "CYTE_OPENAI_KEY")
@@ -72,6 +76,10 @@ class Agent : ObservableObject, EventSourceDelegate {
         }
     }
     
+    ///
+    /// Check the supplied text against the free moderation endpoint before sending to
+    /// a charging endpoint
+    ///
     func isFlagged(input: String) async -> Bool {
         let query = OpenAI.ModerationQuery(input: input, model: .textModerationLatest)
         var response: Bool = false
@@ -82,6 +90,9 @@ class Agent : ObservableObject, EventSourceDelegate {
         return response
     }
     
+    ///
+    /// Embeds the given string
+    ///
     func embed(input: String) async -> [Double]? {
         if await isFlagged(input: input) { return nil }
         let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
@@ -93,12 +104,18 @@ class Agent : ObservableObject, EventSourceDelegate {
         return response
     }
     
+    ///
+    /// Requests a streaming completion for the fully formatted prompt
+    ///
     func query(input: String) async -> Void {
         if await isFlagged(input: input) { return }
         let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)], stream: true)
         openAIClient!.chats(query: query)
     }
     
+    ///
+    /// Called for every new token in a completion
+    ///
     func onNewToken(token: String) {
         let chatId = chatLog.lastIndex(where: { log in
             return log.0 == "bot"
@@ -117,40 +134,21 @@ class Agent : ObservableObject, EventSourceDelegate {
         // @todo if the file type is supported, decode it and embed
     }
     
+    ///
+    /// Stop any pending requests and clear state
+    ///
     func reset() {
         openAIClient!.stop()
         chatLog.removeAll()
         chatSources.removeAll()
     }
     
-//                // @fixme currently returns unrelated docs with exact same distances
-//                let embeddings = try NLEmbedding(contentsOf: coremlUrl)
-//                let query_embedding: [Double] = await embed(input: request)!
-//                embeddings.enumerateNeighbors(for: query_embedding, maximumCount: 3) { neighbor, distance in
-//                    print("\(neighbor): \(distance)")
-//                    // neighbor can be used to find the episode from sql, as well as the original text from the json
-//                    let embedding = Memory.shared.getEmbedding(when: Double(neighbor)!)
-//                    let foundDate = Date(timeIntervalSinceReferenceDate: Double(neighbor)!)
-//
-//                    let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
-//                    epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
-//                    do {
-//                        let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
-//                        if fetched.count > 0 {
-//                            foundEps.append(fetched.first!)
-//                        }
-//                    } catch {}
-//
-//                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
-//                    if context.count + new_context.count < maxContextLength {
-//                        context += new_context
-//                    }
-//                    return true
-//                }
-    
+    ///
+    /// Given a user question, apply a prompt template and optionally stuff with context before
+    /// initiating  a request and holding the supplied context for display purposes
+    ///
     @MainActor
     func query(request: String) async {
-//        Memory.shared.rebuildIndex()
         var cleanRequest = request
         var force_chat = false
         if request.starts(with: "chat ") {

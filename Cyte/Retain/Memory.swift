@@ -31,6 +31,10 @@ class CyteInterval: ObservableObject, Identifiable {
     var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
 }
 
+///
+/// All stored data will be rooted to this location. It defaults to application support for the bundle,
+/// and defers to a user preference if set
+///
 func homeDirectory() -> URL {
     let defaults = UserDefaults.standard
     let home = defaults.string(forKey: "CYTE_HOME")
@@ -54,6 +58,9 @@ func urlForEpisode(start: Date?, title: String?) -> URL {
     return url
 }
 
+///
+/// Helper function to open finder pinned to the supplied episode
+///
 func revealEpisode(episode: Episode) {
     let url = urlForEpisode(start: episode.start, title: episode.title)
     NSWorkspace.shared.activateFileViewerSelecting([url])
@@ -366,7 +373,7 @@ class Memory {
         } else {
             let ep = self.episode!
             assetWriter!.finishWriting {
-                if (self.frameCount * Memory.secondsBetweenFrames) > 90 {
+                if (self.frameCount * Memory.secondsBetweenFrames) > 60 {
                     self.trackFileChanges(ep:ep)
                 } else {
                     print("Skip file tracking for small episode")
@@ -385,6 +392,10 @@ class Memory {
         self.reset()
     }
     
+    ///
+    /// Unless the user has specified unlimited retention, calculate a cutoff and
+    /// query then delete episodes and all related data
+    ///
     private func runRetention() {
         // delete any episodes outside retention period
         let defaults = UserDefaults.standard
@@ -494,6 +505,9 @@ class Memory {
         }
     }
     
+    ///
+    /// Peforms a full text search using FTSv4, with a hard limit of 100 most recent results
+    ///
     func search(term: String) -> [CyteInterval] {
         let intervalMatch: QueryType = term.count > 0 ? intervalTable.match("\(term)*").order(IntervalExpression.from).limit(100) : intervalTable.order(IntervalExpression.from).limit(100)
         var result: [CyteInterval] = []

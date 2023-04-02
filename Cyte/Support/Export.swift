@@ -8,6 +8,11 @@
 import Foundation
 import AVKit
 
+///
+/// Build up a composition with references to the assets for supplied episodes
+/// Scale based on requested length, optionally apply watermark, and trigger export
+/// The exporter is returned to the caller so it can track progress and cancel if needed
+///
 func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal: Bool = true) -> AVAssetExportSession {
     let movie = AVMutableComposition()
     let videoTrack = movie.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)

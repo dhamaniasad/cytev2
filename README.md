@@ -58,7 +58,7 @@ Happy to accept PRs related to any of the following
 
 
 ## Release Notes
-### Version 0.2 (beta)
+### Version 0.4 (beta)
 - While the application is running (but not while it is active), it records the users screen
 - Recordings are labelled according to the first window bought into focus for a given app
 - Save recordings as favorites and easily view them from the home screen
