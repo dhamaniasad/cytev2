@@ -47,7 +47,7 @@ struct ContentView: View {
     
     @State private var refreshTask: Task<(), Never>? = nil
     @State private var scrollViewID = UUID()
-    @State var selectedIndex = -1
+    @State private var selectedIndex = -1
     @State private var isPresentingConfirm: Bool = false
     @State private var currentExport: AVAssetExportSession?
     
@@ -185,6 +185,14 @@ struct ContentView: View {
                 let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!)
                 bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color!)
             }
+        }
+    }
+    
+    func move(amount: Int) {
+        searchFocused = false
+        let total_displayed = filter.count == 0 ? episodes.count : intervals.count
+        if (selectedIndex + amount) >= 0 && (selectedIndex + amount) < total_displayed {
+            selectedIndex += amount
         }
     }
     
@@ -388,22 +396,6 @@ struct ContentView: View {
             }
         }
     }
-    
-    func getDateRange(start: Bool) -> ClosedRange<Date> {
-        if start {
-            return (episodes.last?.start ?? Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!) ... (endDate)
-        }
-        return (startDate) ... (episodes.first?.end ?? Date())
-        
-    }
-    
-    func move(amount: Int) {
-        searchFocused = false
-        let total_displayed = filter.count == 0 ? episodes.count : intervals.count
-        if (selectedIndex + amount) >= 0 && (selectedIndex + amount) < total_displayed {
-            selectedIndex += amount
-        }
-    }
 
     var body: some View {
         NavigationStack {
@@ -553,10 +545,10 @@ struct ContentView: View {
                                         self.refreshData()
                                     }) {
                                         Image(systemName: "arrow.clockwise")
+                                            .transformEffect(CGAffineTransformMakeScale(-1, 1))
                                     }
-                                    .rotationEffect(Angle.degrees(180))
                                     .buttonStyle(.plain)
-                                    .padding(EdgeInsets(top: 0.0, leading: 0.0, bottom: 0.0, trailing: 0.0))
+                                    .padding(EdgeInsets(top: 0.0, leading: 10.0, bottom: 0.0, trailing: 0.0))
                                     .opacity(isHovering ? 0.8 : 1.0)
                                     .onHover(perform: { hovering in
                                         self.isHovering = hovering
