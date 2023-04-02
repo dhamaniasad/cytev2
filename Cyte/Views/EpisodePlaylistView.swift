@@ -12,6 +12,18 @@ import AVKit
 import Combine
 import Vision
 
+struct AppInterval :Identifiable {
+    var start: Date
+    var end: Date
+    var bundleId: String
+    var title: String
+    var color: Color = Color.gray
+    var id: Int { "\(start.formatted()) - \(end.formatted())".hashValue }
+    var offset: Double = 0.0
+    var length: Double = 0.0
+}
+
+
 extension AVPlayer {
     var isPlaying: Bool {
         return rate != 0 && error == nil
@@ -160,7 +172,7 @@ struct EpisodePlaylistView: View {
         let chartWidth = geometry.size.width
         let deltaX = gesture.location.x - lastX
         lastX = gesture.location.x
-        let xScale = CGFloat(Timeline.windowLengthInSeconds) / chartWidth
+        let xScale = CGFloat(EpisodePlaylistView.windowLengthInSeconds * 15) / chartWidth
         let deltaSeconds = Double(deltaX) * xScale * 2
 //        print(deltaSeconds)
         
