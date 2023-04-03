@@ -20,6 +20,7 @@ import CoreGraphics
 
 @MainActor
 class ScreenRecorder: ObservableObject {
+    static let shared = ScreenRecorder()
     
     /// The supported capture types.
     enum CaptureType {

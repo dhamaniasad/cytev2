@@ -46,38 +46,10 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 - Keyboard navigation events: Return to open selected episode, escape to pop timeline view
-- Remove close matches from prompt context stuffer
-- Incremental index building on embedding store instead of full recompile at query time
-    * Ideally, wrap FAISS for swift
+- Remove [close matches](https://github.com/hwchase17/langchain/blob/f5a4bf0ce4e401104424296f2cdd145459193804/langchain/vectorstores/utils.py#L13) from prompt context stuffer
 - Wrap tiktoken in Swift for more accurate context stuffing
 - Swift ReAct Agent
 - Filter incognito and safari private windows from capture
 - Easily copy code blocks in chat
 - Fallback to object recognition
 - Encryption e.g. Filevault?
-
-
-## Release Notes
-### Version 0.4 (beta)
-- While the application is running (but not while it is active), it records the users screen
-- Recordings are labelled according to the first window bought into focus for a given app
-- Save recordings as favorites and easily view them from the home screen
-- Show usage statistics by application for shown recordings
-- Select applications to blacklist which will prevent the application from being recorded
-- Search the full text content of screenshots by keywords
-- View any instant in time on a sequential timeline showing back to back recordings
-- View thumbnails for moments around the current instant in timeline view
-- Delete individual episodes through a context menu
-- Filter search results by preset time ranges
-- User supplied OpenAI key with GPT4 access allows user to ask questions in natural language
-- When GPT responds, the source information provided is displayed under the response
-- Use arrow keys to navigate recordings
-- While Cyte is minimised, pressing Command + Period will bring Cyte into focus
-- Pause/resume recording at any time using the Menu Bar icon
-- Show files that have been edited with click to reopen
-- Intel support with frames every 4 seconds, fast OCR path with no corrections and disabled file tracking
-- Right click to reveal recordings in finder
-- Right click on feed to batch delete memories
-- Right click on feed to export results as timelapse
-- Allow user-specified storage directory
-- Automatically delete memories older than user specified length

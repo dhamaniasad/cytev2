@@ -12,35 +12,31 @@ import KeychainSwift
 struct BundleView: View {
     
     @State var bundle: BundleExclusion
+    @State var isExcluded: Bool
     
     var body: some View {
         HStack {
             let binding = Binding<Bool>(get: {
-                return bundle.excluded
+                return isExcluded
             }, set: {
                 if $0 {
                     bundle.excluded = true
                     do {
                         try PersistenceController.shared.container.viewContext.save()
-                        // batch delete all episodes for bundle
-                        let intervalFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Interval")
-                        intervalFetchRequest.predicate = NSPredicate(format: "episode.bundle == %@", bundle.bundle!)
-                        let deleteRequest = NSBatchDeleteRequest(fetchRequest: intervalFetchRequest)
                         
-                        do {
-                            try PersistenceController.shared.container.viewContext.execute(deleteRequest)
-                        } catch {
-                        }
-                        
-                        let episodeFetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Episode")
-                        episodeFetchRequest.predicate = NSPredicate(format: "bundle == %@", bundle.bundle!)
-                        let episodeDeleteRequest = NSBatchDeleteRequest(fetchRequest: episodeFetchRequest)
-                        
-                        do {
-                            try PersistenceController.shared.container.viewContext.execute(episodeDeleteRequest)
-                        } catch {
+                        let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+                        episodeFetch.predicate = NSPredicate(format: "bundle == %@", bundle.bundle!)
+                        let episodes: [Episode] = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
+                        for episode in episodes {
+                            Memory.shared.delete(delete_episode: episode)
                         }
                     } catch {
+                    }
+                    Task {
+                        if ScreenRecorder.shared.isRunning {
+                            await ScreenRecorder.shared.stop()
+                            await ScreenRecorder.shared.start()
+                        }
                     }
                 } else {
                     bundle.excluded = false
@@ -50,6 +46,7 @@ struct BundleView: View {
                         
                     }
                 }
+                isExcluded = bundle.excluded
                 print($0)
             })
             Image(nsImage: getIcon(bundleID: bundle.bundle!) ?? getIcon(bundleID: "com.apple.loginwindow")!)
@@ -206,14 +203,14 @@ struct Settings: View {
                 HStack {
                     List(Array(bundles.enumerated()), id: \.offset) { index, bundle in
                         if bundle.bundle != Bundle.main.bundleIdentifier && index % 2 == 0 {
-                            BundleView(bundle: bundle)
+                            BundleView(bundle: bundle, isExcluded: bundle.excluded)
                         }
                     }
                     .scrollContentBackground(.hidden)
                     .frame(width: 400)
                     List(Array(bundles.enumerated()), id: \.offset) { index, bundle in
                         if bundle.bundle != Bundle.main.bundleIdentifier && index % 2 == 1 {
-                            BundleView(bundle: bundle)
+                            BundleView(bundle: bundle, isExcluded: bundle.excluded)
                         }
                     }
                     .scrollContentBackground(.hidden)

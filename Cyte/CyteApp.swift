@@ -14,7 +14,7 @@ struct CyteApp: App {
 
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
-    @StateObject var screenRecorder = ScreenRecorder()
+    @StateObject var screenRecorder = ScreenRecorder.shared
     
     ///
     /// On first run, sets default prefernce values (90 day retention)
