@@ -411,8 +411,6 @@ struct ContentView: View {
                             self.filter
                         }, set: {
                             self.filter = $0
-                            self.intervals.removeAll()
-                            self.refreshData()
                         })
                         HStack(alignment: .center) {
                             ZStack(alignment:.trailing) {

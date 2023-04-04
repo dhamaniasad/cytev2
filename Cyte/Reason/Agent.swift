@@ -270,10 +270,13 @@ class Agent : ObservableObject, EventSourceDelegate {
             log.info(prompt)
             await query(input: prompt)
             
-            let chatId = chatLog.lastIndex(where: { log in
-                return log.0 == "bot"
-            })
-            chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+            // Check incase the user cleared context while we were running query
+            if chatLog.count > 0 {
+                let chatId = chatLog.lastIndex(where: { log in
+                    return log.0 == "bot"
+                })
+                chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+            }
         } else {
             var history: String = ""
             for chat in chatLog {
