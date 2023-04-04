@@ -122,7 +122,7 @@ class Agent : ObservableObject, EventSourceDelegate {
             response = []
             await query(input: input)
             let raw = llama_get_embeddings(llama)
-            for i in 0..<Int(llama_n_ctx(llama)) {
+            for i in 0..<Int(llama_n_embd(llama)) {
                 response!.append(Double(raw![i]))
             }
         } else {
