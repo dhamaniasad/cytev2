@@ -14,8 +14,12 @@ struct CyteApp: App {
 
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
-    @StateObject var screenRecorder = ScreenRecorder()
+    @StateObject var screenRecorder = ScreenRecorder.shared
     
+    ///
+    /// On first run, sets default prefernce values (90 day retention)
+    /// On every run, starts the recorder and sets up hotkey listeners
+    ///
     func setup() {
         appDelegate.mainApp = self
         let defaults = UserDefaults.standard
@@ -30,6 +34,10 @@ struct CyteApp: App {
         }
     }
     
+    ///
+    /// Stops the recorder which will in turn close any open episode and flush
+    /// to disk.
+    ///
     func teardown() {
         Task {
             if await screenRecorder.canRecord {

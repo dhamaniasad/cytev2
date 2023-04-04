@@ -545,11 +545,10 @@ struct ContentView: View {
                                         self.refreshData()
                                     }) {
                                         Image(systemName: "arrow.clockwise")
-                                            .transformEffect(CGAffineTransformMakeScale(-1, 1))
                                     }
                                     .buttonStyle(.plain)
+                                    .transformEffect(CGAffineTransformMakeScale(-1, 1))
                                     .padding(EdgeInsets(top: 0.0, leading: 10.0, bottom: 0.0, trailing: 0.0))
-                                    .opacity(isHovering ? 0.8 : 1.0)
                                     .onHover(perform: { hovering in
                                         self.isHovering = hovering
                                         if hovering {

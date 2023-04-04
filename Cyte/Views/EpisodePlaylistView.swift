@@ -68,15 +68,15 @@ struct EpisodePlaylistView: View {
     
     private let timelineSize: CGFloat = 16
     
+    ///
+    /// Set length and offset values on each of the supplied intervals
+    ///
     func updateIntervals() {
         var offset = 0.0
         for i in 0..<intervals.count {
             intervals[i].length = (intervals[i].end.timeIntervalSinceReferenceDate - intervals[i].start.timeIntervalSinceReferenceDate)
             intervals[i].offset = offset
             offset += intervals[i].length
-//            print("\(intervals[i].offset) ::: \(intervals[i].length)")
-//            print("\(startTimeForEpisode(interval: intervals[i])) --- \(endTimeForEpisode(interval: intervals[i]))")
-            
         }
     }
     
@@ -164,6 +164,9 @@ struct EpisodePlaylistView: View {
         }
     }
     
+    ///
+    /// Given the user drag gesture, translate the view window by time interval given pixel counts
+    ///
     func updateDisplayInterval(proxy: ChartProxy, geometry: GeometryProxy, gesture: DragGesture.Value) {
         if lastKnownInteractionPoint != gesture.startLocation {
             lastX = gesture.startLocation.x
@@ -281,7 +284,11 @@ struct EpisodePlaylistView: View {
         return Date(timeIntervalSinceReferenceDate: active_interval!.start.timeIntervalSinceReferenceDate + player!.currentTime().seconds).formatted()
     }
     
-    // @todo handle singlular/plural
+    ///
+    /// @todo handle singlular/plural
+    /// Calculates the delta between now and the active playhead location, then formats
+    /// the result for display
+    ///
     func humanReadableOffset() -> String {
         var offset_sum = 0.0
         let active_interval: AppInterval? = intervals.first { interval in

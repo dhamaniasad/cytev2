@@ -14,8 +14,8 @@
             filePath = "Cyte/Retain/Memory.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "432"
-            endingLineNumber = "432"
+            startingLineNumber = "428"
+            endingLineNumber = "428"
             landmarkName = "addFrame(frame:secondLength:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "Cyte/Retain/Memory.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "434"
-            endingLineNumber = "434"
+            startingLineNumber = "419"
+            endingLineNumber = "419"
             landmarkName = "addFrame(frame:secondLength:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -62,8 +62,8 @@
             filePath = "Cyte/Reason/Agent.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "63"
-            endingLineNumber = "63"
+            startingLineNumber = "67"
+            endingLineNumber = "67"
             landmarkName = "setup(key:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -72,14 +72,14 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "3513A981-A7A1-4F48-8786-8A635C9F9C57"
-            shouldBeEnabled = "Yes"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Cyte/Perceive/ScreenRecorder.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "153"
-            endingLineNumber = "153"
+            startingLineNumber = "154"
+            endingLineNumber = "154"
             landmarkName = "stop()"
             landmarkType = "7">
          </BreakpointContent>
@@ -94,57 +94,10 @@
             filePath = "Cyte/CyteApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "35"
-            endingLineNumber = "35"
+            startingLineNumber = "43"
+            endingLineNumber = "43"
             landmarkName = "teardown()"
             landmarkType = "7">
-            <Locations>
-               <Location
-                  uuid = "253C10CA-52D6-4971-889E-55C8447CC581 - 2f33de889ed83fb7"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(1) suspend resume partial function for closure #1 @Sendable () async -&gt; () in Cyte.CyteApp.teardown() -&gt; ()"
-                  moduleName = "Cyte"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "35"
-                  endingLineNumber = "35"
-                  offsetFromSymbolStart = "60">
-               </Location>
-               <Location
-                  uuid = "253C10CA-52D6-4971-889E-55C8447CC581 - f99b8ea069ffb349"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(2) await resume partial function for closure #1 @Sendable () async -&gt; () in Cyte.CyteApp.teardown() -&gt; ()"
-                  moduleName = "Cyte"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "35"
-                  endingLineNumber = "35"
-                  offsetFromSymbolStart = "44">
-               </Location>
-               <Location
-                  uuid = "253C10CA-52D6-4971-889E-55C8447CC581 - f72ea8b658c75bb5"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(3) suspend resume partial function for closure #1 @Sendable () async -&gt; () in Cyte.CyteApp.teardown() -&gt; ()"
-                  moduleName = "Cyte"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "35"
-                  endingLineNumber = "35"
-                  offsetFromSymbolStart = "32">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -157,13 +110,13 @@
             filePath = "Cyte/CyteApp.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "36"
-            endingLineNumber = "36"
+            startingLineNumber = "44"
+            endingLineNumber = "44"
             landmarkName = "teardown()"
             landmarkType = "7">
             <Locations>
                <Location
-                  uuid = "C7BEF0D6-DC96-4021-BD3C-C2995C4A25C5 - f72ea8b658c75bd2"
+                  uuid = "C7BEF0D6-DC96-4021-BD3C-C2995C4A25C5 - f72ea8b658c75cda"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -173,12 +126,12 @@
                   urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "36"
-                  endingLineNumber = "36"
-                  offsetFromSymbolStart = "104">
+                  startingLineNumber = "44"
+                  endingLineNumber = "44"
+                  offsetFromSymbolStart = "64">
                </Location>
                <Location
-                  uuid = "C7BEF0D6-DC96-4021-BD3C-C2995C4A25C5 - 35a1f01414d6f728"
+                  uuid = "C7BEF0D6-DC96-4021-BD3C-C2995C4A25C5 - 35a1f01414d6f020"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -188,24 +141,9 @@
                   urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "36"
-                  endingLineNumber = "36"
-                  offsetFromSymbolStart = "40">
-               </Location>
-               <Location
-                  uuid = "C7BEF0D6-DC96-4021-BD3C-C2995C4A25C5 - bf257a7c12ee67cc"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "(5) suspend resume partial function for closure #1 @Sendable () async -&gt; () in Cyte.CyteApp.teardown() -&gt; ()"
-                  moduleName = "Cyte"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "36"
-                  endingLineNumber = "36"
-                  offsetFromSymbolStart = "28">
+                  startingLineNumber = "44"
+                  endingLineNumber = "44"
+                  offsetFromSymbolStart = "32">
                </Location>
             </Locations>
          </BreakpointContent>
