@@ -132,30 +132,27 @@ class Agent : ObservableObject, EventSourceDelegate {
     func query(input: String) async -> Void {
         if await isFlagged(input: input) { return }
         if llama != nil {
-            let temperature: Float = 0.80
+            let temperature: Float = 1.0
             let nThreads: Int32 = Int32(ProcessInfo.processInfo.activeProcessorCount)
             let topK: Int32 = 40
-            let topP: Float = 0.95
+            let topP: Float = 1.0
             var tokens: Array<llama_token> = []
             let promptTokens = Array<llama_token>(unsafeUninitializedCapacity: input.utf8.count) { buffer, initializedCount in
                 initializedCount = Int(llama_tokenize(llama, input, buffer.baseAddress, Int32(buffer.count), true))
             }
-            for var token in promptTokens {
-                print("\(tokens.count) \(token)")
-                llama_eval(llama, &token, 1, Int32(tokens.count), nThreads)
-                tokens.append(token)
-                
-                let chatId = chatLog.lastIndex(where: { log in
-                    return log.0 == "bot"
-                })
-                chatLog[chatId!].2 = "Priming: \(Double(tokens.count) / Double(promptTokens.count) * 100.0)%"
+
+            let bufferPointer: UnsafeBufferPointer<llama_token> = promptTokens.withUnsafeBufferPointer { bufferPointer in
+                return bufferPointer
             }
-            let chatId = chatLog.lastIndex(where: { log in
-                return log.0 == "bot"
-            })
-            chatLog[chatId!].2 = ""
-            while true { // should stop after reaching context limit!
-                var token = llama_sample_top_p_top_k(llama, nil, 0, topK, topP, temperature, 1)
+            llama_eval(llama, bufferPointer.baseAddress, Int32(promptTokens.count), 0, nThreads)
+            tokens.insert(contentsOf: promptTokens, at: 0)
+
+            let contextLength = llama_n_ctx(llama)
+            while tokens.count < contextLength { // should stop after reaching context limit!
+                let bufferPointer: UnsafeBufferPointer<llama_token> = tokens.withUnsafeBufferPointer { bufferPointer in
+                    return bufferPointer
+                }
+                var token = llama_sample_top_p_top_k(llama, bufferPointer.baseAddress, Int32(tokens.count), topK, topP, temperature, 1)
                 if token == llama_token_eos() {
                     print("[end of text]")
                     break
@@ -221,7 +218,8 @@ class Agent : ObservableObject, EventSourceDelegate {
         chatSources.append([])
         
         var context: String = ""
-        let maxContextLength = ((llama != nil ? 2000 : 8000) * 3 /* rough token len */) - Agent.promptTemplate.count
+        let contextTokenLength = (llama != nil ? Int(llama_n_ctx(llama)) : 8000)
+        let maxContextLength = (contextTokenLength * 3 /* rough token len */) - Agent.promptTemplate.count
         var foundEps: [Episode] = []
         var concepts: [String] = []
         
