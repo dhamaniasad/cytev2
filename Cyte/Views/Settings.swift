@@ -72,6 +72,7 @@ struct Settings: View {
     private let defaults = UserDefaults.standard
     @State var isHovering: Bool = false
     @State var currentRetention: Int = 0
+    @State var excludePrivate: Bool = false
     
     var body: some View {
         ScrollView {
@@ -105,7 +106,7 @@ struct Settings: View {
                     .padding()
                     .onAppear {
                         currentRetention = defaults.integer(forKey: "CYTE_RETENTION")
-                }
+                    }
                 
                 
                 HStack {
@@ -168,6 +169,22 @@ struct Settings: View {
                     }
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                
+                let binding = Binding<Bool>(get: {
+                    return excludePrivate
+                }, set: {
+                    defaults.set($0, forKey: "CYTE_PRIVATE")
+                    excludePrivate = $0
+                })
+                Text("Exclude english language incognito and private browsing windows")
+                    .foregroundColor(.black)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .onAppear {
+                        excludePrivate = defaults.bool(forKey: "CYTE_PRIVATE")
+                    }
+                Toggle(isOn: binding) {
+                    
+                }
                 
                 VStack(alignment: .leading) {
                     HStack {

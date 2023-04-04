@@ -11,6 +11,7 @@ import OSLog
 import Combine
 import SQLite
 import NaturalLanguage
+import AXSwift
 
 ///
 /// CoreData style wrapper for Intervals so it is observable in the UI
@@ -87,6 +88,33 @@ struct CyteEmbedding : Codable {
 }
 
 ///
+/// Use AX API to perform a fragile string comparison for incognito/private browsing
+///
+func isPrivateContext(context: String) -> Bool {
+    if !UserDefaults.standard.bool(forKey: "CYTE_PRIVATE") {
+        return false
+    }
+    if ["com.apple.Safari", "com.google.Chrome"].contains(context) {
+        print("Check if in private mode")
+        do {
+            let apps = Application.allForBundleID(context)
+            for app in apps {
+                NSLog("finder: \(app)")
+                for window in try app.windows()! {
+                    let main = (try window.attribute(.main) as Bool?)
+                    let title = (try window.attribute(.title) as String?)
+                    if main == true && title != nil && (title!.contains("(Incognito)") || title!.contains("Private Browsing")) {
+                        print("Bypass private browsing context")
+                        return true
+                    }
+                }
+            }
+        } catch { }
+    }
+    return false
+}
+
+///
 ///  Tracks active application context (driven by external caller)
 ///  Opens, encodes and closes the video stream, triggers analysis on frames
 ///  and indexes the resultant information for search
@@ -116,6 +144,7 @@ class Memory {
     static let secondsBetweenFrames : Int = utsname.isAppleSilicon ? 2 : 4
     
     var currentContext : String = "Startup"
+    var currentContextIsPrivate: Bool = false
     
     ///
     /// Close any in-progress episodes (in case Cyte was not properly shut down)
@@ -261,13 +290,16 @@ class Memory {
     func updateActiveContext(windowTitles: Dictionary<String, String>) {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
         let context = front.bundleIdentifier ?? "Unnamed"
-        if front.isActive && currentContext != context {
+        let isPrivate = isPrivateContext(context:context)
+        
+        if front.isActive && (currentContext != context || currentContextIsPrivate != isPrivate) {
             if assetWriter != nil && assetWriterInput!.isReadyForMoreMediaData {
                 closeEpisode()
             }
             currentContext = context
+            currentContextIsPrivate = isPrivate
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
-            if  assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
+            if assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false && !currentContextIsPrivate {
                 var title: String = windowTitles[currentContext] ?? ""
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).count == 0 {
                     title = front.localizedName ?? currentContext
@@ -528,8 +560,13 @@ class Memory {
                     //failed, fallback to create
                 }
                 
-                let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.from]), to: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.to]), episode: ep!, document: interval[IntervalExpression.document])
-                result.append(inter)
+                if ep != nil {
+                    let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.from]), to: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.to]), episode: ep!, document: interval[IntervalExpression.document])
+                    result.append(inter)
+                } else {
+                    log.error("Found an interval without base episode - dangling ref?")
+                    //@todo maybe should delete?
+                }
             }
         } catch { }
         return result

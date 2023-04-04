@@ -7,6 +7,7 @@
 
 import SwiftUI
 import XCGLogger
+import AXSwift
 
 @main
 struct CyteApp: App {
@@ -100,6 +101,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var mainApp: CyteApp?
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        if !checkIsProcessTrusted(prompt: true) {
+            log.error("Not trusted as an AX process; please authorize and re-launch")
+        }
         let logUrl: URL = homeDirectory().appendingPathComponent("Log").appendingPathComponent("Cyte.log")
         do {
             try FileManager.default.createDirectory(at: logUrl.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)
@@ -113,6 +117,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                                                           name: NSWorkspace.willSleepNotification, object: nil)
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(sleepListener(_:)),
                                                           name: NSWorkspace.didWakeNotification, object: nil)
+        
+        
+        do {
+            let apps = Application.allForBundleID("com.google.Chrome")
+            for app in apps {
+                NSLog("finder: \(app)")
+                for window in try app.windows()! {
+                    let main = (try window.attribute(.main) as Bool?)
+                    let url = (try window.attribute(.title) as String?)
+                    print("\(url) ISMAIN: \(main)")
+                }
+            }
+        } catch { }
+        //(Incognito) | Private Browsing
+        do {
+            let apps = Application.allForBundleID("com.apple.Safari")
+            for app in apps {
+                NSLog("finder: \(app)")
+                for window in try app.windows()! {
+                    let main = (try window.attribute(.main) as Bool?)
+                    let url = (try window.attribute(.title) as String?)
+                    print("\(url) ISMAIN: \(main)")
+                }
+            }
+        } catch { }
     }
 
 
