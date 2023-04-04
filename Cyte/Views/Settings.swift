@@ -130,11 +130,11 @@ struct Settings: View {
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
-                Text("To enable GPT4 enter your API key").font(.title2)
+                Text("To enable Knowledge base features enter your GPT4 API key, or a path to a llama.cpp compatible model file").font(.title2)
                     .padding()
                 HStack {
                     if Agent.shared.isSetup {
-                        Text("OpenAI enabled")
+                        Text("Knowledge base enabled")
                             .frame(width: 1000, height: 50)
                             .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                         Button(action: {
