@@ -528,8 +528,13 @@ class Memory {
                     //failed, fallback to create
                 }
                 
-                let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.from]), to: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.to]), episode: ep!, document: interval[IntervalExpression.document])
-                result.append(inter)
+                if ep != nil {
+                    let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.from]), to: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.to]), episode: ep!, document: interval[IntervalExpression.document])
+                    result.append(inter)
+                } else {
+                    log.error("Found an interval without base episode - dangling ref?")
+                    //@todo maybe should delete?
+                }
             }
         } catch { }
         return result
