@@ -12,6 +12,7 @@ import NaturalLanguage
 import OpenAI
 import KeychainSwift
 import XCGLogger
+import llama
 
 class Agent : ObservableObject, EventSourceDelegate {
     static let shared : Agent = Agent()
@@ -53,6 +54,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     
     @Published public var chatLog : [(String, String, String)] = []
     @Published public var chatSources : [[Episode]?] = []
+    private var llama: OpaquePointer?
     
     init() {
         setup()
@@ -64,16 +66,33 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     func setup(key: String? = nil) {
         if key != nil {
-            keychain.set(key!, forKey: "CYTE_OPENAI_KEY")
+            keychain.set(key!, forKey: "CYTE_LLM_KEY")
         }
-        let apiKey = keychain.get("CYTE_OPENAI_KEY")
+        let apiKey = keychain.get("CYTE_LLM_KEY")
         if apiKey != nil {
-            openAIClient = OpenAI(apiToken: apiKey!, callback: self)
-            isSetup = true
-            log.info("Setup OpenAI")
+            if FileManager.default.fileExists(atPath: apiKey!) {
+                llama = llama_init_from_file(apiKey, llama_context_default_params())
+                isSetup = true
+                log.info("Setup llama")
+            } else {
+                openAIClient = OpenAI(apiToken: apiKey!, callback: self)
+                isSetup = true
+                log.info("Setup OpenAI")
+            }
+        } else {
+            teardown()
+        }
+    }
+    
+    func teardown() {
+        reset()
+        if llama != nil {
+            llama_free(llama)
+            llama = nil
         } else {
             openAIClient = nil
         }
+        isSetup = false
     }
     
     ///
@@ -81,6 +100,9 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// a charging endpoint
     ///
     func isFlagged(input: String) async -> Bool {
+        if llama != nil {
+            return false
+        }
         let query = OpenAI.ModerationQuery(input: input, model: .textModerationLatest)
         var response: Bool = false
         do {
@@ -94,7 +116,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// Embeds the given string
     ///
     func embed(input: String) async -> [Double]? {
-        if await isFlagged(input: input) { return nil }
+        if await isFlagged(input: input) || llama != nil { return nil }
         let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
         var response: [Double]? = nil
         do {
@@ -109,8 +131,44 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     func query(input: String) async -> Void {
         if await isFlagged(input: input) { return }
-        let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)], stream: true)
-        openAIClient!.chats(query: query)
+        if llama != nil {
+            let temperature: Float = 0.80
+            let nThreads: Int32 = Int32(ProcessInfo.processInfo.activeProcessorCount)
+            let topK: Int32 = 40
+            let topP: Float = 0.95
+            var tokens: Array<llama_token> = []
+            let promptTokens = Array<llama_token>(unsafeUninitializedCapacity: input.utf8.count) { buffer, initializedCount in
+                initializedCount = Int(llama_tokenize(llama, input, buffer.baseAddress, Int32(buffer.count), true))
+            }
+            for var token in promptTokens {
+                print("\(tokens.count) \(token)")
+                llama_eval(llama, &token, 1, Int32(tokens.count), nThreads)
+                tokens.append(token)
+                
+                let chatId = chatLog.lastIndex(where: { log in
+                    return log.0 == "bot"
+                })
+                chatLog[chatId!].2 = "Priming: \(Double(tokens.count) / Double(promptTokens.count) * 100.0)%"
+            }
+            let chatId = chatLog.lastIndex(where: { log in
+                return log.0 == "bot"
+            })
+            chatLog[chatId!].2 = ""
+            while true { // should stop after reaching context limit!
+                var token = llama_sample_top_p_top_k(llama, nil, 0, topK, topP, temperature, 1)
+                if token == llama_token_eos() {
+                    print("[end of text]")
+                    break
+                }
+                let thisResult = String(cString: llama_token_to_str(llama, token))
+                onNewToken(token: thisResult)
+                llama_eval(llama, &token, 1, Int32(tokens.count), nThreads)
+                tokens.append(token)
+            }
+        } else {
+            let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)], stream: true)
+            openAIClient!.chats(query: query)
+        }
     }
     
     ///
@@ -138,7 +196,9 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// Stop any pending requests and clear state
     ///
     func reset() {
-        openAIClient!.stop()
+        if openAIClient != nil {
+            openAIClient!.stop()
+        }
         chatLog.removeAll()
         chatSources.removeAll()
     }
@@ -161,7 +221,7 @@ class Agent : ObservableObject, EventSourceDelegate {
         chatSources.append([])
         
         var context: String = ""
-        let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
+        let maxContextLength = ((llama != nil ? 2000 : 8000) * 3 /* rough token len */) - Agent.promptTemplate.count
         var foundEps: [Episode] = []
         var concepts: [String] = []
         

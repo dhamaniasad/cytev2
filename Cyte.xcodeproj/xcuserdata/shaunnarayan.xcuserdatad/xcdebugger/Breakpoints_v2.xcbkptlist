@@ -62,8 +62,8 @@
             filePath = "Cyte/Reason/Agent.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "67"
-            endingLineNumber = "67"
+            startingLineNumber = "69"
+            endingLineNumber = "69"
             landmarkName = "setup(key:)"
             landmarkType = "7">
          </BreakpointContent>

@@ -44,6 +44,7 @@ struct CyteApp: App {
                 await screenRecorder.stop()
             }
         }
+        Agent.shared.teardown()
     }
 
     var body: some Scene {
