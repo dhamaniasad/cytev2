@@ -145,6 +145,7 @@ class Memory {
     
     var currentContext : String = "Startup"
     var currentContextIsPrivate: Bool = false
+    private var skipNextNFrames: Int = 0
     
     ///
     /// Close any in-progress episodes (in case Cyte was not properly shut down)
@@ -291,6 +292,9 @@ class Memory {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
         let context = front.bundleIdentifier ?? "Unnamed"
         let isPrivate = isPrivateContext(context:context)
+        if !isPrivate && currentContextIsPrivate {
+            skipNextNFrames = 1
+        }
         
         if front.isActive && (currentContext != context || currentContextIsPrivate != isPrivate) {
             if assetWriter != nil && assetWriterInput!.isReadyForMoreMediaData {
@@ -457,6 +461,10 @@ class Memory {
     ///
     @MainActor
     func addFrame(frame: CapturedFrame, secondLength: Int64) {
+        if skipNextNFrames > 0 {
+            skipNextNFrames -= 1
+            return
+        }
         if assetWriter != nil {
             if assetWriterInput!.isReadyForMoreMediaData {
                 let frameTime = CMTimeMake(value: Int64(frameCount) * secondLength, timescale: 1)
