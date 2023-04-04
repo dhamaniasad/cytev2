@@ -116,13 +116,22 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// Embeds the given string
     ///
     func embed(input: String) async -> [Double]? {
-        if await isFlagged(input: input) || llama != nil { return nil }
-        let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
+        if await isFlagged(input: input) { return nil }
         var response: [Double]? = nil
-        do {
-            let result = try await openAIClient!.embeddings(query: query)
-            response = result.data[0].embedding
-        } catch {}
+        if llama != nil {
+            response = []
+            await query(input: input)
+            let raw = llama_get_embeddings(llama)
+            for i in 0..<Int(llama_n_ctx(llama)) {
+                response!.append(Double(raw![i]))
+            }
+        } else {
+            let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
+            do {
+                let result = try await openAIClient!.embeddings(query: query)
+                response = result.data[0].embedding
+            } catch {}
+        }
         return response
     }
     
@@ -144,11 +153,13 @@ class Agent : ObservableObject, EventSourceDelegate {
             let bufferPointer: UnsafeBufferPointer<llama_token> = promptTokens.withUnsafeBufferPointer { bufferPointer in
                 return bufferPointer
             }
-            llama_eval(llama, bufferPointer.baseAddress, Int32(promptTokens.count), 0, nThreads)
+            let _ = DispatchQueue.main.sync {
+                llama_eval(llama, bufferPointer.baseAddress, Int32(promptTokens.count), 0, nThreads)
+            }
             tokens.insert(contentsOf: promptTokens, at: 0)
 
             let contextLength = llama_n_ctx(llama)
-            while tokens.count < contextLength { // should stop after reaching context limit!
+            while (tokens.count < contextLength) && chatLog.count > 0 {
                 let bufferPointer: UnsafeBufferPointer<llama_token> = tokens.withUnsafeBufferPointer { bufferPointer in
                     return bufferPointer
                 }
@@ -158,7 +169,9 @@ class Agent : ObservableObject, EventSourceDelegate {
                     break
                 }
                 let thisResult = String(cString: llama_token_to_str(llama, token))
-                onNewToken(token: thisResult)
+                DispatchQueue.main.sync {
+                    onNewToken(token: thisResult)
+                }
                 llama_eval(llama, &token, 1, Int32(tokens.count), nThreads)
                 tokens.append(token)
             }
