@@ -15,7 +15,11 @@ import NaturalLanguage
 ///
 /// CoreData style wrapper for Intervals so it is observable in the UI
 ///
-class CyteInterval: ObservableObject, Identifiable {
+class CyteInterval: ObservableObject, Identifiable, Equatable {
+    static func == (lhs: CyteInterval, rhs: CyteInterval) -> Bool {
+        return (lhs.from == rhs.from) && (lhs.to == rhs.to)
+    }
+    
     @Published var from: Date
     @Published var to: Date
     @Published var episode: Episode

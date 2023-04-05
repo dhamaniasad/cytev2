@@ -290,6 +290,9 @@ struct EpisodePlaylistView: View {
     /// the result for display
     ///
     func humanReadableOffset() -> String {
+        if intervals.count == 0 {
+            return ""
+        }
         var offset_sum = 0.0
         let active_interval: AppInterval? = intervals.first { interval in
             let window_center = secondsOffsetFromLastEpisode
@@ -301,7 +304,7 @@ struct EpisodePlaylistView: View {
         
         let progress = offset_sum - secondsOffsetFromLastEpisode
         let anchor = Date().timeIntervalSinceReferenceDate - ((active_interval ?? intervals.last)!.end.timeIntervalSinceReferenceDate)
-        let seconds = anchor - progress
+        let seconds = max(1, anchor - progress)
         return "\(secondsToReadable(seconds: seconds)) ago"
     }
     
@@ -374,7 +377,7 @@ struct EpisodePlaylistView: View {
                         })
                         .frame(width: width, height: height)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in
-                            if (player != nil && player!.error != nil) {
+                            if (player != nil && player!.error != nil) || intervals.count == 0 {
                                 return
                             }
                             var offset_sum = 0.0

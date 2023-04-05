@@ -13,6 +13,7 @@ import OpenAI
 import KeychainSwift
 import XCGLogger
 import llama
+import SwiftUI
 
 class Agent : ObservableObject, EventSourceDelegate {
     static let shared : Agent = Agent()
@@ -188,7 +189,9 @@ class Agent : ObservableObject, EventSourceDelegate {
         let chatId = chatLog.lastIndex(where: { log in
             return log.0 == "bot"
         })
-        chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
+        withAnimation(.easeInOut(duration: 0.3)) {
+            chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
+        }
     }
     
     func onStreamDone() {
@@ -209,8 +212,10 @@ class Agent : ObservableObject, EventSourceDelegate {
         if openAIClient != nil {
             openAIClient!.stop()
         }
-        chatLog.removeAll()
-        chatSources.removeAll()
+        withAnimation(.easeInOut(duration: 0.3)) {
+            chatLog.removeAll()
+            chatSources.removeAll()
+        }
     }
     
     ///
@@ -226,10 +231,12 @@ class Agent : ObservableObject, EventSourceDelegate {
         }
         
         DispatchQueue.main.sync {
-            chatLog.append(("user", "", cleanRequest))
-            chatSources.append([])
-            chatLog.append(("bot", "", ""))
-            chatSources.append([])
+            withAnimation(.easeIn(duration: 0.3)) {
+                chatLog.append(("user", "", cleanRequest))
+                chatSources.append([])
+                chatLog.append(("bot", "", ""))
+                chatSources.append([])
+            }
         }
         
         var context: String = ""
