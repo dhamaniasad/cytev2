@@ -122,21 +122,23 @@ struct ContentView: View {
             }
         } else {
             let potentials: [CyteInterval] = Memory.shared.search(term: self.filter)
-            intervals = potentials.filter { (interval: CyteInterval) in
-                if showFaves && interval.episode.save != true {
-                    return false
+            withAnimation(.easeInOut(duration: 0.3)) {
+                intervals = potentials.filter { (interval: CyteInterval) in
+                    if showFaves && interval.episode.save != true {
+                        return false
+                    }
+                    if highlightedBundle.count != 0  && interval.episode.bundle != highlightedBundle {
+                        return false
+                    }
+                    let is_within = interval.episode.start ?? Date() >= startDate && interval.episode.end ?? Date() <= endDate
+                    let ep_included: Episode? = episodes.first(where: { ep in
+                        return ep.start == interval.episode.start
+                    })
+                    if ep_included == nil && is_within {
+                        _episodes.append(interval.episode)
+                    }
+                    return is_within
                 }
-                if highlightedBundle.count != 0  && interval.episode.bundle != highlightedBundle {
-                    return false
-                }
-                let is_within = interval.episode.start ?? Date() >= startDate && interval.episode.end ?? Date() <= endDate
-                let ep_included: Episode? = episodes.first(where: { ep in
-                    return ep.start == interval.episode.start
-                })
-                if ep_included == nil && is_within {
-                    _episodes.append(interval.episode)
-                }
-                return is_within
             }
         }
         
@@ -154,7 +156,8 @@ struct ContentView: View {
             episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
             return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""] ?? Color.gray )
         }
-        withAnimation(.easeIn(duration: 0.3)) {
+        
+        withAnimation(.easeInOut(duration: 0.3)) {
             episodes = _episodes
         }
         // now that we have episodes, if a bundle is highlighted get the documents too
@@ -367,7 +370,8 @@ struct ContentView: View {
                         }
                     }
                     .padding(.all)
-                    .animation(.easeInOut(duration: 0.3))
+                    .animation(.easeInOut(duration: 0.3), value: episodes)
+                    .animation(.easeInOut(duration: 0.3), value: intervals)
                 }
                 .id(self.scrollViewID)
                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
