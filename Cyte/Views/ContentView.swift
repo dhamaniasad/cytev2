@@ -47,7 +47,6 @@ struct ContentView: View {
     
     @State private var refreshTask: Task<(), Never>? = nil
     @State private var scrollViewID = UUID()
-    @State private var selectedIndex = -1
     @State private var isPresentingConfirm: Bool = false
     @State private var currentExport: AVAssetExportSession?
     
@@ -98,9 +97,9 @@ struct ContentView: View {
     ///
     @MainActor func performRefreshData() {
         scrollViewID = UUID()
-        selectedIndex = -1
         episodes.removeAll()
         intervals.removeAll()
+        
         if self.filter.count < 3 || self.filter.split(separator: " ").count > 5 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
             episodeFetch.sortDescriptors = [NSSortDescriptor(key:"start", ascending: false)]
@@ -114,11 +113,13 @@ struct ContentView: View {
                 pred += String("AND save == true")
             }
             episodeFetch.predicate = NSPredicate(format: pred, argumentArray: args)
-            do {
-                episodes = try viewContext.fetch(episodeFetch)
-                intervals.removeAll()
-            } catch {
-                
+            withAnimation(.easeIn(duration: 0.3)) {
+                do {
+                    episodes = try viewContext.fetch(episodeFetch)
+                    intervals.removeAll()
+                } catch {
+                    
+                }
             }
         } else {
             let potentials: [CyteInterval] = Memory.shared.search(term: self.filter)
@@ -134,7 +135,9 @@ struct ContentView: View {
                     return ep.start == interval.episode.start
                 })
                 if ep_included == nil && is_within {
-                    episodes.append(interval.episode)
+                    withAnimation(.easeIn(duration: 0.3)) {
+                        episodes.append(interval.episode)
+                    }
                 }
                 return is_within
             }
@@ -157,7 +160,9 @@ struct ContentView: View {
                 var paths = Set<URL>()
                 for doc in docs {
                     if !paths.contains(doc.path!) {
-                        documentsForBundle.append(doc)
+                        withAnimation(.easeIn(duration: 0.3)) {
+                            documentsForBundle.append(doc)
+                        }
                         paths.insert(doc.path!)
                     }
                 }
@@ -188,209 +193,192 @@ struct ContentView: View {
         }
     }
     
-    func move(amount: Int) {
-        searchFocused = false
-        let total_displayed = filter.count == 0 ? episodes.count : intervals.count
-        if (selectedIndex + amount) >= 0 && (selectedIndex + amount) < total_displayed {
-            selectedIndex += amount
-        }
-    }
-    
     var usage: some View {
-        withAnimation {
-            VStack {
-                HStack(alignment: .center) {
-                    DatePicker(
-                        "",
-                        selection: $startDate,
-                        displayedComponents: [.date, .hourAndMinute]
+        VStack {
+            HStack(alignment: .center) {
+                DatePicker(
+                    "",
+                    selection: $startDate,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .onChange(of: startDate, perform: { value in
+                    refreshData()
+                })
+                .frame(width: 200, alignment: .leading)
+                DatePicker(
+                    " - ",
+                    selection: $endDate,
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .onChange(of: endDate, perform: { value in
+                    refreshData()
+                })
+                .frame(width: 200, alignment: .leading)
+                Spacer()
+                Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
+                Button(action: {
+                    if currentExport == nil || currentExport!.progress >= 1.0 {
+                        currentExport = makeTimelapse(episodes: episodes.reversed())
+                    } else {
+                        log.error("Cannot export: export already in progress")
+                    }
+                }) {
+                    Image(systemName: "timelapse")
+                }
+                .buttonStyle(.plain)
+                .onHover(perform: { hovering in
+                    self.isHovering = hovering
+                    if hovering {
+                        NSCursor.pointingHand.set()
+                    } else {
+                        NSCursor.arrow.set()
+                    }
+                })
+                Button(action: {
+                    isPresentingConfirm = true
+                }) {
+                    Image(systemName: "folder.badge.minus")
+                }
+                .buttonStyle(.plain)
+                .onHover(perform: { hovering in
+                    self.isHovering = hovering
+                    if hovering {
+                        NSCursor.pointingHand.set()
+                    } else {
+                        NSCursor.arrow.set()
+                    }
+                })
+                .confirmationDialog("This action cannot be undone. Are you sure?",
+                 isPresented: $isPresentingConfirm) {
+                    Button("Delete all results", role: .destructive) {
+                         for episode in episodes {
+                             Memory.shared.delete(delete_episode: episode)
+                         }
+                         refreshData()
+                    }
+                }
+            }
+            
+            Chart {
+                ForEach(episodes.sorted {
+                    return ($0.bundle ?? "").compare($1.bundle ?? "").rawValue == 1
+                }) { shape in
+                    BarMark(
+                        x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start ?? Date())),
+                        y: .value("Total Count", (shape.end ?? Date()).timeIntervalSince(shape.start ?? Date()))
                     )
-                    .onChange(of: startDate, perform: { value in
-                        refreshData()
-                    })
-                    .frame(width: 200, alignment: .leading)
-                    DatePicker(
-                        " - ",
-                        selection: $endDate,
-                        displayedComponents: [.date, .hourAndMinute]
-                    )
-                    .onChange(of: endDate, perform: { value in
-                        refreshData()
-                    })
-                    .frame(width: 200, alignment: .leading)
-                    Spacer()
-                    Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
-                    Button(action: {
-                        if currentExport == nil || currentExport!.progress >= 1.0 {
-                            currentExport = makeTimelapse(episodes: episodes.reversed())
-                        } else {
-                            log.error("Cannot export: export already in progress")
-                        }
-                    }) {
-                        Image(systemName: "timelapse")
-                    }
-                    .buttonStyle(.plain)
-                    .onHover(perform: { hovering in
-                        self.isHovering = hovering
-                        if hovering {
-                            NSCursor.pointingHand.set()
-                        } else {
-                            NSCursor.arrow.set()
-                        }
-                    })
-                    Button(action: {
-                        isPresentingConfirm = true
-                    }) {
-                        Image(systemName: "folder.badge.minus")
-                    }
-                    .buttonStyle(.plain)
-                    .onHover(perform: { hovering in
-                        self.isHovering = hovering
-                        if hovering {
-                            NSCursor.pointingHand.set()
-                        } else {
-                            NSCursor.arrow.set()
-                        }
-                    })
-                    .confirmationDialog("This action cannot be undone. Are you sure?",
-                     isPresented: $isPresentingConfirm) {
-                        Button("Delete all results", role: .destructive) {
-                             for episode in episodes {
-                                 Memory.shared.delete(delete_episode: episode)
-                             }
-                             refreshData()
-                        }
-                    }
+                    .foregroundStyle(bundleColors[shape.bundle ?? ""] ?? .gray)
                 }
-                
-                Chart {
-                    ForEach(episodes.sorted {
-                        return ($0.bundle ?? "").compare($1.bundle ?? "").rawValue == 1
-                    }) { shape in
-                        BarMark(
-                            x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start ?? Date())),
-                            y: .value("Total Count", (shape.end ?? Date()).timeIntervalSince(shape.start ?? Date()))
-                        )
-                        .foregroundStyle(bundleColors[shape.bundle ?? ""] ?? .gray)
-                    }
-                }
-                .frame(height: 100)
-                .chartLegend {
-                }
-                HStack {
-                    LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
-                        ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
-                            HStack {
-                                Image(nsImage: getIcon(bundleID: bundle)!)
-                                Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
-                                    .foregroundColor(.black)
+            }
+            .frame(height: 100)
+            .chartLegend {
+            }
+            HStack {
+                LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
+                    ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
+                        HStack {
+                            Image(nsImage: getIcon(bundleID: bundle)!)
+                            Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
+                                .foregroundColor(.black)
+                        }
+                        .contentShape(Rectangle())
+                        .onHover(perform: { hovering in
+                            self.isHoveringFilter = hovering
+                            if hovering {
+                                NSCursor.pointingHand.set()
+                            } else {
+                                NSCursor.arrow.set()
                             }
-                            .contentShape(Rectangle())
-                            .onHover(perform: { hovering in
-                                self.isHoveringFilter = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.set()
-                                } else {
-                                    NSCursor.arrow.set()
-                                }
-                            })
-                            .onTapGesture { gesture in
-                                if highlightedBundle.count == 0 {
+                        })
+                        .onTapGesture { gesture in
+                            if highlightedBundle.count == 0 {
+                                withAnimation(.easeOut(duration: 0.3)) {
                                     highlightedBundle = bundle
-                                } else {
-                                    highlightedBundle = ""
                                 }
-                                self.refreshData()
+                            } else {
+                                highlightedBundle = ""
                             }
-                        }
-                    }
-                }
-                HStack {
-                    LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
-                        ForEach(documentsForBundle) { doc in
-                            HStack {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
-                                Text(doc.path!.lastPathComponent)
-                                    .foregroundColor(.black)
-                            }
-                            .onHover(perform: { hovering in
-                                self.isHoveringFilter = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.set()
-                                } else {
-                                    NSCursor.arrow.set()
-                                }
-                            })
-                            .onTapGesture { gesture in
-                                // @todo should really open with currently highlighted bundle
-                                NSWorkspace.shared.open(doc.path!)
-                            }
+                            self.refreshData()
                         }
                     }
                 }
             }
-            .contentShape(Rectangle())
-            .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+            HStack {
+                LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
+                    ForEach(documentsForBundle) { doc in
+                        HStack {
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
+                            Text(doc.path!.lastPathComponent)
+                                .foregroundColor(.black)
+                        }
+                        .onHover(perform: { hovering in
+                            self.isHoveringFilter = hovering
+                            if hovering {
+                                NSCursor.pointingHand.set()
+                            } else {
+                                NSCursor.arrow.set()
+                            }
+                        })
+                        .onTapGesture { gesture in
+                            // @todo should really open with currently highlighted bundle
+                            NSWorkspace.shared.open(doc.path!)
+                        }
+                    }
+                }
+            }
         }
+        .contentShape(Rectangle())
+        .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
     }
     
     var feed: some View {
         GeometryReader { metrics in
-            withAnimation {
-                ScrollViewReader { value in
+            ScrollViewReader { value in
+                
+                ScrollView {
                     
-                    Group {
-                        Button(action: { move(amount:-1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
-                            .keyboardShortcut(.leftArrow, modifiers: [])
-                        Button(action: { move(amount:1); value.scrollTo(filter.count > 0 ? intervals[selectedIndex].from : episodes[selectedIndex].start); }) {}
-                            .keyboardShortcut(.rightArrow, modifiers: [])
-                        Button(action: { searchFocused = true; selectedIndex = -1; print(metrics.size); }) {}
-                            .keyboardShortcut(.escape, modifiers: [])
-                    }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
-                    ScrollView {
-                        
-                        LazyVGrid(columns: (metrics.size.width > 1500 && utsname.isAppleSilicon) ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
-                            if intervals.count == 0 {
-                                ForEach(episodes.filter { ep in
-                                    return (ep.title ?? "").count > 0 && (ep.start != ep.end)
-                                }) { episode in
-                                    EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: selectedIndex >= 0 && episode.start == episodes[selectedIndex].start)
-                                        .frame(width: 360, height: 260)
-                                        .contextMenu {
-                                            Button {
-                                                Memory.shared.delete(delete_episode: episode)
-                                                self.refreshData()
-                                            } label: {
-                                                Label("Delete", systemImage: "xmark.bin")
-                                            }
-                                            Button {
-                                                revealEpisode(episode: episode)
-                                            } label: {
-                                                Label("Reveal in Finder", systemImage: "questionmark.folder")
-                                            }
+                    LazyVGrid(columns: (metrics.size.width > 1500 && utsname.isAppleSilicon) ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
+                        if intervals.count == 0 {
+                            ForEach(episodes.filter { ep in
+                                return (ep.title ?? "").count > 0 && (ep.start != ep.end)
+                            }) { episode in
+                                EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: false)
+                                    .frame(width: 360, height: 260)
+                                    .contextMenu {
+                                        Button {
+                                            Memory.shared.delete(delete_episode: episode)
+                                            self.refreshData()
+                                        } label: {
+                                            Label("Delete", systemImage: "xmark.bin")
                                         }
-                                        .id(episode.start)
-                                }
-                            }
-                            else {
-                                ForEach(intervals.filter { (interval: CyteInterval) in
-                                    return (interval.episode.title ?? "").count > 0
-                                }) { (interval : CyteInterval) in
-                                    StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: selectedIndex >= 0 && interval.from == intervals[selectedIndex].from)
-                                        .id(interval.from)
-                                }
+                                        Button {
+                                            revealEpisode(episode: episode)
+                                        } label: {
+                                            Label("Reveal in Finder", systemImage: "questionmark.folder")
+                                        }
+                                    }
+                                    .id(episode.start)
                             }
                         }
-                        .padding(.all)
+                        else {
+                            ForEach(intervals.filter { (interval: CyteInterval) in
+                                return (interval.episode.title ?? "").count > 0
+                            }) { (interval : CyteInterval) in
+                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: false)
+                                    .id(interval.from)
+                            }
+                        }
                     }
-                    .id(self.scrollViewID)
-                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            if !self.showUsage {
-                                endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
-                            }
-                            self.refreshData()
+                    .padding(.all)
+                    .animation(.easeInOut(duration: 0.3))
+                }
+                .id(self.scrollViewID)
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        if !self.showUsage {
+                            endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
                         }
+                        self.refreshData()
                     }
                 }
             }
@@ -473,8 +461,12 @@ struct ContentView: View {
                                 if agent.chatLog.count == 0 {
                                     Button(action: {
                                         let showing = self.showUsage
-                                        self.resetFilters()
-                                        self.showUsage = !showing
+                                        if showing {
+                                            self.resetFilters()
+                                        }
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            self.showUsage = !showing
+                                        }
                                         self.refreshData()
                                     }) {
                                         Image(systemName: showUsage ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
