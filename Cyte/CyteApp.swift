@@ -46,6 +46,7 @@ struct CyteApp: App {
             }
         }
         FAISS.shared.teardown()
+        Agent.shared.teardown()
     }
 
     var body: some Scene {

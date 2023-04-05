@@ -39,6 +39,7 @@
 		3FDBE5BD29D0029800A4C6C0 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BC29D0029800A4C6C0 /* XCGLogger */; };
 		3FDBE5C429D4704300A4C6C0 /* Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C329D4704300A4C6C0 /* Export.swift */; };
 		3FDBE5C829D5440900A4C6C0 /* Faiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C729D5440900A4C6C0 /* Faiss.swift */; };
+		3FE7822629DBDB4A008CB97D /* llama in Frameworks */ = {isa = PBXBuildFile; productRef = 3FE7822529DBDB4A008CB97D /* llama */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -99,6 +100,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FE7822629DBDB4A008CB97D /* llama in Frameworks */,
 				3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */,
 				3F7BB7D829DDE79F00D8A0BB /* libomp.dylib in Frameworks */,
 				3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */,
@@ -277,6 +279,7 @@
 				3FDBE5B429CD7BAC00A4C6C0 /* OpenAI */,
 				3FDBE5BA29D0029800A4C6C0 /* ObjcExceptionBridging */,
 				3FDBE5BC29D0029800A4C6C0 /* XCGLogger */,
+				3FE7822529DBDB4A008CB97D /* llama */,
 			);
 			productName = Cyte;
 			productReference = 3FCAA1FC29AC7C0100898995 /* Cyte.app */;
@@ -313,6 +316,7 @@
 				3FC6C78929CC2EA2004E19FF /* XCRemoteSwiftPackageReference "keychain-swift" */,
 				3FDBE5B329CD7BAC00A4C6C0 /* XCRemoteSwiftPackageReference "OpenAI" */,
 				3FDBE5B929D0029800A4C6C0 /* XCRemoteSwiftPackageReference "XCGLogger" */,
+				3FE7822429DBDB4A008CB97D /* XCRemoteSwiftPackageReference "llama" */,
 			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
 			projectDirPath = "";
@@ -673,6 +677,14 @@
 				minimumVersion = 7.0.0;
 			};
 		};
+		3FE7822429DBDB4A008CB97D /* XCRemoteSwiftPackageReference "llama" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ggerganov/llama.cpp";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -705,6 +717,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3FDBE5B929D0029800A4C6C0 /* XCRemoteSwiftPackageReference "XCGLogger" */;
 			productName = XCGLogger;
+		};
+		3FE7822529DBDB4A008CB97D /* llama */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FE7822429DBDB4A008CB97D /* XCRemoteSwiftPackageReference "llama" */;
+			productName = llama;
 		};
 /* End XCSwiftPackageProductDependency section */
 

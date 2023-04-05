@@ -431,7 +431,6 @@ class Memory {
         do {
             let episodes = try PersistenceController.shared.container.viewContext.fetch(episodeFetch)
             for episode in episodes {
-                log.info("Purging old episode: \(episode.start?.formatted())")
                 delete(delete_episode: episode)
             }
         } catch {
