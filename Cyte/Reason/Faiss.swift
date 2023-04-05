@@ -82,7 +82,7 @@ class FAISS : ObservableObject {
             return bufferPointer
         }
         faiss_Index_search(index, 1, byBufferPointer.baseAddress, idx_t(k), distancesBufferPointer.baseAddress, labelsBufferPointer.baseAddress)
-        let amount = Int(labels.first(where: { label in label == -1 }) ?? idx_t(k))
+        let amount = Int(labels.firstIndex(where: { label in label == -1 }) ?? k)
         return (Array(labels[..<amount]), Array(distances[..<amount]))
     }
 }
