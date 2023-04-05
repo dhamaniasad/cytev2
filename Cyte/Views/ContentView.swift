@@ -99,6 +99,7 @@ struct ContentView: View {
         scrollViewID = UUID()
         episodes.removeAll()
         intervals.removeAll()
+        var _episodes: [Episode] = []
         
         if self.filter.count < 3 || self.filter.split(separator: " ").count > 5 {
             let episodeFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
@@ -115,7 +116,7 @@ struct ContentView: View {
             episodeFetch.predicate = NSPredicate(format: pred, argumentArray: args)
             withAnimation(.easeIn(duration: 0.3)) {
                 do {
-                    episodes = try viewContext.fetch(episodeFetch)
+                    _episodes = try viewContext.fetch(episodeFetch)
                     intervals.removeAll()
                 } catch {
                     
@@ -136,19 +137,28 @@ struct ContentView: View {
                 })
                 if ep_included == nil && is_within {
                     withAnimation(.easeIn(duration: 0.3)) {
-                        episodes.append(interval.episode)
+                        _episodes.append(interval.episode)
                     }
                 }
                 return is_within
             }
         }
         
-        refreshIcons()
-        episodesLengthSum = 0.0
-        appIntervals = episodes.enumerated().map { (index, episode) in
-            episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
-            return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""]! )
+        for episode in _episodes {
+            if !bundleColors.contains(where: { (bundleId, color) in
+                return bundleId == episode.bundle
+            }) {
+                let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!)
+                bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color!)
+            }
         }
+        
+        episodesLengthSum = 0.0
+        appIntervals = _episodes.enumerated().map { (index, episode) in
+            episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
+            return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""] ?? Color.gray )
+        }
+        episodes = _episodes
         // now that we have episodes, if a bundle is highlighted get the documents too
         // @todo break this out into its own component and use FetchRequest
         documentsForBundle.removeAll()
@@ -180,17 +190,6 @@ struct ContentView: View {
         
         startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!
         endDate = Date()
-    }
-    
-    func refreshIcons() {
-        for episode in episodes {
-            if !bundleColors.contains(where: { (bundleId, color) in
-                return bundleId == episode.bundle
-            }) {
-                let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!)
-                bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color!)
-            }
-        }
     }
     
     var usage: some View {
@@ -373,14 +372,15 @@ struct ContentView: View {
                     .animation(.easeInOut(duration: 0.3))
                 }
                 .id(self.scrollViewID)
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        if !self.showUsage {
-                            endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
-                        }
-                        self.refreshData()
-                    }
-                }
+               .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                   DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                       if !self.showUsage {
+                           self.resetFilters()
+                           endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
+                       }
+                       self.refreshData()
+                   }
+               }
             }
         }
     }

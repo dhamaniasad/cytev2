@@ -47,11 +47,13 @@ struct StaticEpisodeView: View {
                 // fallback for intel
                 request.recognitionLevel = .fast
 //            }
-            do {
-                // Perform the text-recognition request.
-                try requestHandler.perform([request])
-            } catch {
-                print("Unable to perform the requests: \(error).")
+            Task.detached {
+                do {
+                    // Perform the text-recognition request.
+                    try requestHandler.perform([request])
+                } catch {
+                    print("Unable to perform the requests: \(error).")
+                }
             }
         } catch {
             print("Failed to generate thumbnail!")
