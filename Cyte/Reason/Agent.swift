@@ -161,6 +161,7 @@ class Agent : ObservableObject, EventSourceDelegate {
 
             let contextLength = llama_n_ctx(llama)
             while (tokens.count < contextLength) && chatLog.count > 0 {
+
                 let bufferPointer: UnsafeBufferPointer<llama_token> = tokens.withUnsafeBufferPointer { bufferPointer in
                     return bufferPointer
                 }
@@ -170,10 +171,13 @@ class Agent : ObservableObject, EventSourceDelegate {
                     break
                 }
                 let thisResult = String(cString: llama_token_to_str(llama, token))
+                let current_tokens = tokens
                 DispatchQueue.main.sync {
-                    onNewToken(token: thisResult)
+                    if chatLog.count != 0 {
+                        onNewToken(token: thisResult)
+                        llama_eval(llama, &token, 1, Int32(current_tokens.count), nThreads)
+                    }
                 }
-                llama_eval(llama, &token, 1, Int32(tokens.count), nThreads)
                 tokens.append(token)
             }
         } else {
@@ -223,13 +227,13 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// initiating  a request and holding the supplied context for display purposes
     ///
     func query(request: String) async {
-        var cleanRequest = request
+        var _cleanRequest = request
         var force_chat = false
         if request.starts(with: "chat ") {
             force_chat = true
-            cleanRequest = String(request.dropFirst("chat ".count))
+            _cleanRequest = String(request.dropFirst("chat ".count))
         }
-        
+        let cleanRequest = _cleanRequest
         DispatchQueue.main.sync {
             withAnimation(.easeIn(duration: 0.3)) {
                 chatLog.append(("user", "", cleanRequest))
@@ -281,12 +285,14 @@ class Agent : ObservableObject, EventSourceDelegate {
             print(prompt)
             log.info(prompt)
             await query(input: prompt)
-            
+            let foundEpsConst = foundEps
             DispatchQueue.main.sync {
-                let chatId = chatLog.lastIndex(where: { log in
-                    return log.0 == "bot"
-                })
-                chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+                if chatLog.count != 0 {
+                    let chatId = chatLog.lastIndex(where: { log in
+                        return log.0 == "bot"
+                    })
+                    chatSources[chatId!]!.append(contentsOf: Array(Set(foundEpsConst)))
+                }
             }
         } else {
             var history: String = ""
