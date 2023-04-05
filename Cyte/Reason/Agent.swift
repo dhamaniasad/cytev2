@@ -147,7 +147,6 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// Given a user question, apply a prompt template and optionally stuff with context before
     /// initiating  a request and holding the supplied context for display purposes
     ///
-    @MainActor
     func query(request: String) async {
         var cleanRequest = request
         var force_chat = false
@@ -155,12 +154,18 @@ class Agent : ObservableObject, EventSourceDelegate {
             force_chat = true
             cleanRequest = String(request.dropFirst("chat ".count))
         }
-        chatLog.append(("user", "", cleanRequest))
-        chatSources.append([])
-        chatLog.append(("bot", "", ""))
-        chatSources.append([])
+        
+        DispatchQueue.main.sync {
+            chatLog.append(("user", "", cleanRequest))
+            chatSources.append([])
+            chatLog.append(("bot", "", ""))
+            chatSources.append([])
+        }
         
         var context: String = ""
+        // @todo improve with actual tokenization, and maybe a min limit to save for return tokens
+        // for now, using a heuristic of 3 chars per token (vs ~4 in reality) leaves on avg ~25%
+        // of the window for response
         let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
         var foundEps: [Episode] = []
         var concepts: [String] = []
@@ -179,10 +184,10 @@ class Agent : ObservableObject, EventSourceDelegate {
             return true
         }
         if concepts.count == 0 { concepts.append(request) }
-        var intervals = Memory.shared.search(term: concepts.joined(separator: " AND "))
+        var intervals = await Memory.shared.search(term: concepts.joined(separator: " AND "))
         if intervals.count == 0 {
             print("Fallback to full search")
-            intervals = Memory.shared.search(term: "")
+            intervals = await Memory.shared.search(term: "")
         }
         if intervals.count > 0 && !force_chat {
             for interval in intervals {
@@ -199,10 +204,12 @@ class Agent : ObservableObject, EventSourceDelegate {
             log.info(prompt)
             await query(input: prompt)
             
-            let chatId = chatLog.lastIndex(where: { log in
-                return log.0 == "bot"
-            })
-            chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+            DispatchQueue.main.sync {
+                let chatId = chatLog.lastIndex(where: { log in
+                    return log.0 == "bot"
+                })
+                chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+            }
         } else {
             var history: String = ""
             for chat in chatLog {

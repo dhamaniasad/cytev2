@@ -396,6 +396,24 @@ struct ContentView: View {
             }
         }
     }
+    
+    func runSearch() {
+        if Agent.shared.isSetup && self.filter.hasSuffix("?") {
+            Task {
+                if refreshTask != nil && !refreshTask!.isCancelled {
+                    refreshTask!.cancel()
+                }
+                if !self.filter.hasPrefix("chat ") {
+                    agent.reset()
+                }
+                let what = self.filter
+                self.filter = ""
+                await agent.query(request: what)
+            }
+        } else {
+            refreshData()
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -428,37 +446,10 @@ struct ContentView: View {
                                 .foregroundColor(Color(red: 107.0 / 255.0, green: 107.0 / 255.0, blue: 107.0 / 255.0))
                                 .focused($searchFocused)
                                 .onSubmit {
-                                    Task {
-                                        if Agent.shared.isSetup && self.filter.hasSuffix("?") {
-                                            Task {
-                                                if refreshTask != nil && !refreshTask!.isCancelled {
-                                                    refreshTask!.cancel()
-                                                }
-                                                if !self.filter.hasPrefix("chat ") {
-                                                    agent.reset()
-                                                }
-                                                let what = self.filter
-                                                self.filter = ""
-                                                await agent.query(request: what)
-                                            }
-                                        }
-                                        refreshData()
-                                    }
+                                    self.runSearch()
                                 }
                                 Button(action: {
-                                    if Agent.shared.isSetup && self.filter.hasSuffix("?") {
-                                        Task {
-                                            if refreshTask != nil && !refreshTask!.isCancelled {
-                                                refreshTask!.cancel()
-                                            }
-                                            if !self.filter.hasPrefix("chat ") {
-                                                agent.reset()
-                                            }
-                                            let what = self.filter
-                                            self.filter = ""
-                                            await agent.query(request: what)
-                                        }
-                                    }
+                                    self.runSearch()
                                 }) {
                                     Image(systemName: "paperplane")
                                         .onHover(perform: { hovering in
