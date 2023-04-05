@@ -49,7 +49,5 @@ Happy to accept PRs related to any of the following
 - Remove [close matches](https://github.com/hwchase17/langchain/blob/f5a4bf0ce4e401104424296f2cdd145459193804/langchain/vectorstores/utils.py#L13) from prompt context stuffer
 - Wrap tiktoken in Swift for more accurate context stuffing
 - Swift ReAct Agent
-- Filter incognito and safari private windows from capture
-- Easily copy code blocks in chat
 - Fallback to object recognition
 - Encryption e.g. Filevault?

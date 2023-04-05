@@ -12,6 +12,7 @@ import NaturalLanguage
 import OpenAI
 import KeychainSwift
 import XCGLogger
+import SwiftUI
 
 class Agent : ObservableObject, EventSourceDelegate {
     static let shared : Agent = Agent()
@@ -120,7 +121,9 @@ class Agent : ObservableObject, EventSourceDelegate {
         let chatId = chatLog.lastIndex(where: { log in
             return log.0 == "bot"
         })
-        chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
+        withAnimation(.easeInOut(duration: 0.3)) {
+            chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
+        }
     }
     
     func onStreamDone() {
@@ -139,15 +142,16 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     func reset() {
         openAIClient!.stop()
-        chatLog.removeAll()
-        chatSources.removeAll()
+        withAnimation(.easeInOut(duration: 0.3)) {
+            chatLog.removeAll()
+            chatSources.removeAll()
+        }
     }
     
     ///
     /// Given a user question, apply a prompt template and optionally stuff with context before
     /// initiating  a request and holding the supplied context for display purposes
     ///
-    @MainActor
     func query(request: String) async {
         var cleanRequest = request
         var force_chat = false
@@ -155,12 +159,20 @@ class Agent : ObservableObject, EventSourceDelegate {
             force_chat = true
             cleanRequest = String(request.dropFirst("chat ".count))
         }
-        chatLog.append(("user", "", cleanRequest))
-        chatSources.append([])
-        chatLog.append(("bot", "", ""))
-        chatSources.append([])
+        
+        DispatchQueue.main.sync {
+            withAnimation(.easeIn(duration: 0.3)) {
+                chatLog.append(("user", "", cleanRequest))
+                chatSources.append([])
+                chatLog.append(("bot", "", ""))
+                chatSources.append([])
+            }
+        }
         
         var context: String = ""
+        // @todo improve with actual tokenization, and maybe a min limit to save for return tokens
+        // for now, using a heuristic of 3 chars per token (vs ~4 in reality) leaves on avg ~25%
+        // of the window for response
         let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
         var foundEps: [Episode] = []
         var concepts: [String] = []
@@ -179,10 +191,10 @@ class Agent : ObservableObject, EventSourceDelegate {
             return true
         }
         if concepts.count == 0 { concepts.append(request) }
-        var intervals = Memory.shared.search(term: concepts.joined(separator: " AND "))
+        var intervals = await Memory.shared.search(term: concepts.joined(separator: " AND "))
         if intervals.count == 0 {
             print("Fallback to full search")
-            intervals = Memory.shared.search(term: "")
+            intervals = await Memory.shared.search(term: "")
         }
         if !force_chat {
             // semantic search
@@ -221,10 +233,12 @@ class Agent : ObservableObject, EventSourceDelegate {
             log.info(prompt)
             await query(input: prompt)
             
-            let chatId = chatLog.lastIndex(where: { log in
-                return log.0 == "bot"
-            })
-            chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+            DispatchQueue.main.sync {
+                let chatId = chatLog.lastIndex(where: { log in
+                    return log.0 == "bot"
+                })
+                chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
+            }
         } else {
             var history: String = ""
             for chat in chatLog {

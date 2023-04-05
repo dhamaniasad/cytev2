@@ -77,6 +77,7 @@ struct ChatView: View {
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: Alignment.leading)
+            .animation(.easeInOut(duration: 0.3))
             .background(
                 RoundedRectangle(cornerRadius: String(chat.0) == "bot" ? 0 : 17)
                     .foregroundColor(String(chat.0) == "bot" ? .clear : Color(red: 255.0/255.0, green: 255.0/255.0, blue: 255.0/255.0)))
@@ -84,45 +85,43 @@ struct ChatView: View {
     }
     
     var body: some View {
-        withAnimation {
-            VStack {
-                Spacer().frame(height:40)
-                HStack(alignment: .top ) {
-                    VStack(alignment:.leading) {
-                        Spacer().frame(height:10)
-                        Button {
-                            agent.reset()
-                        } label: {
-                            HStack {
-                                Image(systemName: "arrow.backward")
-                                    .foregroundColor(.white)
-                                Text("Return")
-                                    .foregroundColor(.white)
-                            }
+        VStack {
+            Spacer().frame(height:40)
+            HStack(alignment: .top ) {
+                VStack(alignment:.leading) {
+                    Spacer().frame(height:10)
+                    Button {
+                        agent.reset()
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.backward")
+                                .foregroundColor(.white)
+                            Text("Return")
+                                .foregroundColor(.white)
                         }
-                        .padding()
-                        .buttonStyle(.plain)
-                        .background(RoundedRectangle(cornerRadius: 4.0).foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0)))
-                        .onHover(perform: { hovering in
-                            self.isHoveringReturn = hovering
-                            if hovering {
-                                NSCursor.pointingHand.set()
-                            } else {
-                                NSCursor.arrow.set()
-                            }
-                        })
-                        Spacer()
                     }
-                    .frame(minWidth: 200, maxHeight: .infinity, alignment: .leading)
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            messages
+                    .padding()
+                    .buttonStyle(.plain)
+                    .background(RoundedRectangle(cornerRadius: 4.0).foregroundColor(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0)))
+                    .onHover(perform: { hovering in
+                        self.isHoveringReturn = hovering
+                        if hovering {
+                            NSCursor.pointingHand.set()
+                        } else {
+                            NSCursor.arrow.set()
                         }
-                        .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 245))
-                    }
+                    })
+                    Spacer()
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minWidth: 200, maxHeight: .infinity, alignment: .leading)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        messages
+                    }
+                    .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 245))
+                }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

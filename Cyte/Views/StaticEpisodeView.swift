@@ -43,15 +43,17 @@ struct StaticEpisodeView: View {
             // Run through vision and store results
             let requestHandler = VNImageRequestHandler(cgImage: thumbnail!, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
-            if !utsname.isAppleSilicon {
+//            if !utsname.isAppleSilicon {
                 // fallback for intel
                 request.recognitionLevel = .fast
-            }
-            do {
-                // Perform the text-recognition request.
-                try requestHandler.perform([request])
-            } catch {
-                print("Unable to perform the requests: \(error).")
+//            }
+            Task.detached {
+                do {
+                    // Perform the text-recognition request.
+                    try requestHandler.perform([request])
+                } catch {
+                    print("Unable to perform the requests: \(error).")
+                }
             }
         } catch {
             print("Failed to generate thumbnail!")
@@ -77,7 +79,9 @@ struct StaticEpisodeView: View {
             let boundingBox = boxObservation?.boundingBox ?? .zero
             
             if candidate.string.lowercased().contains((filter.lowercased())) {
-                highlight.append(boundingBox)
+                withAnimation(.easeIn(duration: 0.3)) {
+                    highlight.append(boundingBox)
+                }
             }
             
             // Convert the rectangle from normalized coordinates to image coordinates.
@@ -126,7 +130,7 @@ struct StaticEpisodeView: View {
                             )
                     } else {
                         Color.black
-                            .opacity(0.9)
+                            .opacity(0.5)
                     }
                 }
                 
@@ -216,11 +220,10 @@ struct StaticEpisodeView: View {
         }
         .frame(width: 360, height: 260)
         .onAppear {
-            genTask = Task {
-                do {
-                    try await Task.sleep(nanoseconds: 400_000_000)
+            if genTask == nil {
+                genTask = Task {
                     await generateThumbnail(offset: ((result.from.timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate))
-                } catch { }
+                }
             }
         }
         .onDisappear {
