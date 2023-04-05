@@ -13,7 +13,7 @@ import AVKit
 /// Scale based on requested length, optionally apply watermark, and trigger export
 /// The exporter is returned to the caller so it can track progress and cancel if needed
 ///
-func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal: Bool = true) -> AVAssetExportSession {
+func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal: Bool = true) async -> AVAssetExportSession {
     let movie = AVMutableComposition()
     let videoTrack = movie.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
 //    let audioTrack = movie.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
@@ -25,18 +25,18 @@ func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal:
         export_title += episode.title ?? ""
         
         let asset = AVURLAsset(url: url)
-        
-//        let assetAudioTrack = asset.tracks(withMediaType: .audio).first!
-        let assetVideoTrack = asset.tracks(withMediaType: .video).first!
-        let assetRange = CMTimeRangeMake(start: CMTime.zero, duration: asset.duration)
-        
         do {
+            let assetDuration = try await asset.load(.duration)
+    //        let assetAudioTrack = asset.tracks(withMediaType: .audio).first!
+            let assetVideoTrack = try await asset.loadTracks(withMediaType: .video).first!
+            let assetRange = CMTimeRangeMake(start: CMTime.zero, duration:assetDuration )
             let at = CMTime(value: CMTimeValue(sum_seconds), timescale: 1)
             
             try videoTrack?.insertTimeRange(assetRange, of: assetVideoTrack, at: at)
 //            try audioTrack?.insertTimeRange(assetRange, of: assetAudioTrack, at: at)
+            sum_seconds += assetDuration.seconds
         } catch {}
-        sum_seconds += asset.duration.seconds
+        
     }
     
 //    let imageLayer = CALayer()
@@ -86,7 +86,7 @@ func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal:
     exporter?.outputURL = outputMovieURL
     exporter?.outputFileType = .mov
 //    exporter?.videoComposition = videoComposition
-    exporter?.exportAsynchronously(completionHandler: { [weak exporter] in
+    let _ = exporter?.exportAsynchronously() {
         DispatchQueue.main.async {
             if let error = exporter?.error {
                 print("failed \(error.localizedDescription)")
@@ -99,7 +99,7 @@ func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal:
                 }
             }
         }
-    })
+    }
     
     return exporter!
 }

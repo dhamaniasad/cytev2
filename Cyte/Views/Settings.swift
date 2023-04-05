@@ -130,24 +130,24 @@ struct Settings: View {
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
-                Text("To enable GPT4 enter your API key").font(.title2)
+                Text("To enable Knowledge base features enter your GPT4 API key, or a path to a llama.cpp compatible model file").font(.title2)
                     .padding()
                 HStack {
                     if Agent.shared.isSetup {
-                        Text("OpenAI enabled")
+                        Text("Knowledge base enabled")
                             .frame(width: 1000, height: 50)
                             .background(Color(red: 177.0 / 255.0, green: 181.0 / 255.0, blue: 255.0 / 255.0))
                         Button(action: {
                             let keys = KeychainSwift()
-                            let _ = keys.delete("CYTE_OPENAI_KEY")
-                            Agent.shared.isSetup = false
+                            let _ = keys.delete("CYTE_LLM_KEY")
+                            Agent.shared.teardown()
                         }) {
                             Image(systemName: "multiply")
                         }
                         
                     } else {
                         TextField(
-                            "OpenAI API Key",
+                            "OpenAI API Key or path to LLaMA model",
                             text: $apiDetails
                         )
                         .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
@@ -163,7 +163,7 @@ struct Settings: View {
                             Agent.shared.setup(key: apiDetails)
                             apiDetails = ""
                         }) {
-                            Image(systemName: "checkmark.icloud")
+                            Image(systemName: "checkmark.message")
                         }
                     }
                 }

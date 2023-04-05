@@ -217,14 +217,17 @@ struct ContentView: View {
                 Spacer()
                 Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
                 Button(action: {
-                    if currentExport == nil || currentExport!.progress >= 1.0 {
-                        currentExport = makeTimelapse(episodes: episodes.reversed())
-                    } else {
-                        log.error("Cannot export: export already in progress")
+                    Task {
+                        if currentExport == nil || currentExport!.progress >= 1.0 {
+                            currentExport = await makeTimelapse(episodes: episodes.reversed())
+                        } else {
+                            log.error("Cannot export: export already in progress")
+                        }
                     }
                 }) {
                     Image(systemName: "timelapse")
                 }
+                .disabled(currentExport != nil && currentExport!.progress < 1.0)
                 .buttonStyle(.plain)
                 .onHover(perform: { hovering in
                     self.isHovering = hovering

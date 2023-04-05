@@ -7,7 +7,7 @@
 🚧 Work in progress - this is beta software, use with care
 
 A background screen recorder for easy history search. 
-If you choose to supply an OpenAI key, it can act as a knowledge base. Be aware that transcriptions will then be sent to OpenAI when you chat.
+If you choose to supply an OpenAI key, or a local language model like LLaMA, it can act as a knowledge base. Be aware that transcriptions will be sent to OpenAI when you chat if you provide an OpenAI API key.
 
 ![Cyte Screenshot](assets/images/cyte.gif)
 
