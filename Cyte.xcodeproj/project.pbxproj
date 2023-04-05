@@ -18,6 +18,9 @@
 		3F68242229AEBF270044A0F2 /* Cyte.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 3F68242029AEBF270044A0F2 /* Cyte.xcdatamodeld */; };
 		3F6FE07E29C424230061DBF5 /* StaticEpisodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F6FE07D29C424230061DBF5 /* StaticEpisodeView.swift */; };
 		3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 3F6FE08029CAB0170061DBF5 /* SQLite */; };
+		3F7BB7D629DDE67400D8A0BB /* Accelerate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F7BB7D529DDE67400D8A0BB /* Accelerate.framework */; };
+		3F7BB7D829DDE79F00D8A0BB /* libomp.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F7BB7D729DDE79F00D8A0BB /* libomp.dylib */; };
+		3F7BB7D929DDE79F00D8A0BB /* libomp.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3F7BB7D729DDE79F00D8A0BB /* libomp.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		3F7DA05829B6F8AE00EF2F5E /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F7DA05729B6F8AE00EF2F5E /* Settings.swift */; };
 		3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3F8F932929B5CF9C00C938DE /* Charts.framework */; };
 		3FAD36A629B1BB5C00CCCE82 /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FAD36A529B1BB5C00CCCE82 /* Analysis.swift */; };
@@ -35,7 +38,6 @@
 		3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BA29D0029800A4C6C0 /* ObjcExceptionBridging */; };
 		3FDBE5BD29D0029800A4C6C0 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BC29D0029800A4C6C0 /* XCGLogger */; };
 		3FDBE5C429D4704300A4C6C0 /* Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C329D4704300A4C6C0 /* Export.swift */; };
-		3FDBE5C629D53D2000A4C6C0 /* libfaiss_c.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 3FDBE5C529D53CD000A4C6C0 /* libfaiss_c.a */; };
 		3FDBE5C829D5440900A4C6C0 /* Faiss.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C729D5440900A4C6C0 /* Faiss.swift */; };
 /* End PBXBuildFile section */
 
@@ -47,6 +49,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				3FC6C78129CBBD5A004E19FF /* DiffMatchPatch.framework in Embed Frameworks */,
+				3F7BB7D929DDE79F00D8A0BB /* libomp.dylib in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -65,6 +68,9 @@
 		3F58AE2529B18344007E7703 /* Events.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Events.swift; sourceTree = "<group>"; };
 		3F68242129AEBF270044A0F2 /* Cyte.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Cyte.xcdatamodel; sourceTree = "<group>"; };
 		3F6FE07D29C424230061DBF5 /* StaticEpisodeView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StaticEpisodeView.swift; sourceTree = "<group>"; };
+		3F7BB7CF29DDD9E700D8A0BB /* faiss.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = faiss.framework; sourceTree = "<group>"; };
+		3F7BB7D529DDE67400D8A0BB /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
+		3F7BB7D729DDE79F00D8A0BB /* libomp.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libomp.dylib; path = ../lib/libomp.dylib; sourceTree = "<group>"; };
 		3F7DA05729B6F8AE00EF2F5E /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		3F8F932929B5CF9C00C938DE /* Charts.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Charts.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk/System/Library/Frameworks/Charts.framework; sourceTree = DEVELOPER_DIR; };
 		3F9E3DFA29BA157600FE31CB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -93,14 +99,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				3FDBE5C629D53D2000A4C6C0 /* libfaiss_c.a in Frameworks */,
 				3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */,
+				3F7BB7D829DDE79F00D8A0BB /* libomp.dylib in Frameworks */,
 				3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */,
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
 				3F14BDCA29BCEF6500F12FE7 /* Highlightr in Frameworks */,
 				3FC6C78B29CC2EA2004E19FF /* KeychainSwift in Frameworks */,
 				3FDBE5BD29D0029800A4C6C0 /* XCGLogger in Frameworks */,
 				3FDBE5B529CD7BAC00A4C6C0 /* OpenAI in Frameworks */,
+				3F7BB7D629DDE67400D8A0BB /* Accelerate.framework in Frameworks */,
 				3F14BDD629C0D4A900F12FE7 /* AVKit.framework in Frameworks */,
 				3FC6C78029CBBD5A004E19FF /* DiffMatchPatch.framework in Frameworks */,
 			);
@@ -122,6 +129,9 @@
 		3F8F932829B5CF9C00C938DE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3F7BB7D729DDE79F00D8A0BB /* libomp.dylib */,
+				3F7BB7D529DDE67400D8A0BB /* Accelerate.framework */,
+				3F7BB7CF29DDD9E700D8A0BB /* faiss.framework */,
 				3FDBE5C529D53CD000A4C6C0 /* libfaiss_c.a */,
 				3F14BDD529C0D4A800F12FE7 /* AVKit.framework */,
 				3FC6C77E29CBBCCB004E19FF /* DiffMatchPatch.framework */,
@@ -336,7 +346,6 @@
 				3F14BDD229BF06F900F12FE7 /* EpisodeView.swift in Sources */,
 				3FAD36AC29B1BD1A00CCCE82 /* Agent.swift in Sources */,
 				3FDBE5C829D5440900A4C6C0 /* Faiss.swift in Sources */,
-				3F14BDD429C0145200F12FE7 /* RippleEffect.swift in Sources */,
 				3F0B8C0129B310E40018BD60 /* CaptureEngine.swift in Sources */,
 				3F0B8C0029B310E40018BD60 /* ScreenRecorder.swift in Sources */,
 				3FCAA20729AC7C0100898995 /* ContentView.swift in Sources */,
@@ -490,7 +499,7 @@
 					"$(PROJECT_DIR)",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib/faiss;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../lib/faiss";
 				INFOPLIST_FILE = Cyte/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cyte;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -507,10 +516,20 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib;
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../lib";
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MARKETING_VERSION = 0.4;
-				OTHER_LDFLAGS = "-lfaiss_c";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Xclang",
+					"-fopenmp",
+				);
+				OTHER_LDFLAGS = (
+					"-lfaiss_c",
+					"-lc++",
+					"-lfaiss",
+					"-lomp",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -547,7 +566,7 @@
 					"$(PROJECT_DIR)",
 				);
 				GENERATE_INFOPLIST_FILE = YES;
-				HEADER_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib/faiss;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/../lib/faiss";
 				INFOPLIST_FILE = Cyte/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cyte;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
@@ -564,10 +583,20 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
-				LIBRARY_SEARCH_PATHS = /Users/shaunnarayan/dev/cytev2/lib;
+				LIBRARY_SEARCH_PATHS = "$(PROJECT_DIR)/../lib";
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MARKETING_VERSION = 0.4;
-				OTHER_LDFLAGS = "-lfaiss_c";
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Xclang",
+					"-fopenmp",
+				);
+				OTHER_LDFLAGS = (
+					"-lfaiss_c",
+					"-lc++",
+					"-lfaiss",
+					"-lomp",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;

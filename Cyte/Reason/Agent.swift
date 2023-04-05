@@ -201,7 +201,7 @@ class Agent : ObservableObject, EventSourceDelegate {
             let query_embedding: [Double] = await embed(input: request)!
             let results: ([idx_t], [Float]) = FAISS.shared.search(by: query_embedding.map{Float($0)}, k: 8)
             for idx in results.0 {
-                let embedding = Memory.shared.lookupEmbedding(index: idx)
+                let embedding = await Memory.shared.lookupEmbedding(index: idx)
                 let foundDate = Date(timeIntervalSinceReferenceDate: embedding!.time)
                 let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
                 epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)

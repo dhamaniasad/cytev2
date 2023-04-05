@@ -32,6 +32,7 @@ struct CyteApp: App {
             }
             HotkeyListener.register()
         }
+        FAISS.shared.setup()
     }
     
     ///
