@@ -114,13 +114,11 @@ struct ContentView: View {
                 pred += String("AND save == true")
             }
             episodeFetch.predicate = NSPredicate(format: pred, argumentArray: args)
-            withAnimation(.easeIn(duration: 0.3)) {
-                do {
-                    _episodes = try viewContext.fetch(episodeFetch)
-                    intervals.removeAll()
-                } catch {
-                    
-                }
+            do {
+                _episodes = try viewContext.fetch(episodeFetch)
+                intervals.removeAll()
+            } catch {
+                
             }
         } else {
             let potentials: [CyteInterval] = Memory.shared.search(term: self.filter)
@@ -136,9 +134,7 @@ struct ContentView: View {
                     return ep.start == interval.episode.start
                 })
                 if ep_included == nil && is_within {
-                    withAnimation(.easeIn(duration: 0.3)) {
-                        _episodes.append(interval.episode)
-                    }
+                    _episodes.append(interval.episode)
                 }
                 return is_within
             }
@@ -158,7 +154,9 @@ struct ContentView: View {
             episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
             return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""] ?? Color.gray )
         }
-        episodes = _episodes
+        withAnimation(.easeIn(duration: 0.3)) {
+            episodes = _episodes
+        }
         // now that we have episodes, if a bundle is highlighted get the documents too
         // @todo break this out into its own component and use FetchRequest
         documentsForBundle.removeAll()
