@@ -120,11 +120,15 @@ class Agent : ObservableObject, EventSourceDelegate {
         if await isFlagged(input: input) { return nil }
         var response: [Double]? = nil
         if llama != nil {
-            response = []
-            await query(input: input)
+            await query(input: input, prompt_only: true)
             let raw = llama_get_embeddings(llama)
-            for i in 0..<Int(llama_n_embd(llama)) {
-                response!.append(Double(raw![i]))
+            if raw != nil {
+                print("Got embedding")
+                response = []
+                for i in 0..<Int(llama_n_ctx(llama)) {
+                    print(i)
+                    response!.append(Double(raw![i]))
+                }
             }
         } else {
             let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
@@ -139,7 +143,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     /// Requests a streaming completion for the fully formatted prompt
     ///
-    func query(input: String) async -> Void {
+    func query(input: String, prompt_only: Bool = false) async -> Void {
         if await isFlagged(input: input) { return }
         if llama != nil {
             let temperature: Float = 1.0
@@ -160,7 +164,7 @@ class Agent : ObservableObject, EventSourceDelegate {
             tokens.insert(contentsOf: promptTokens, at: 0)
 
             let contextLength = llama_n_ctx(llama)
-            while (tokens.count < contextLength) && chatLog.count > 0 {
+            while (tokens.count < contextLength) && chatLog.count > 0  && !prompt_only {
 
                 let bufferPointer: UnsafeBufferPointer<llama_token> = tokens.withUnsafeBufferPointer { bufferPointer in
                     return bufferPointer
@@ -272,24 +276,30 @@ class Agent : ObservableObject, EventSourceDelegate {
             intervals = await Memory.shared.search(term: "")
         }
         if !force_chat {
+            print("Run symantic search")
             // semantic search
-            let query_embedding: [Double] = await embed(input: request)!
-            let results: ([idx_t], [Float]) = FAISS.shared.search(by: query_embedding.map{Float($0)}, k: 8)
-            for idx in results.0 {
-                let embedding = await Memory.shared.lookupEmbedding(index: idx)
-                let foundDate = Date(timeIntervalSinceReferenceDate: embedding!.time)
-                let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
-                epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
-                do {
-                    let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
-                    let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
-                    if context.count + new_context.count < maxContextLength {
-                        context += new_context
-                        if fetched.count > 0 {
-                            foundEps.append(fetched.first!)
-                        }
+            let query_embedding: [Double]? = await embed(input: request)
+            if query_embedding != nil {
+                let results: ([idx_t], [Float]) = FAISS.shared.search(by: query_embedding!.map{Float($0)}, k: 8)
+                for idx in results.0 {
+                    let embedding = await Memory.shared.lookupEmbedding(index: idx)
+                    if embedding != nil {
+                        print("Matched episode")
+                        let foundDate = Date(timeIntervalSinceReferenceDate: embedding!.time)
+                        let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
+                        epFetch.predicate = NSPredicate(format: "start < %@ AND end > %@", foundDate as CVarArg, foundDate as CVarArg)
+                        do {
+                            let fetched = try PersistenceController.shared.container.viewContext.fetch(epFetch)
+                            let new_context = Agent.contextTemplate.replacing("{when}", with: foundDate.formatted()).replacing("{ocr}", with: embedding!.text)
+                            if context.count + new_context.count < maxContextLength {
+                                context += new_context
+                                if fetched.count > 0 {
+                                    foundEps.append(fetched.first!)
+                                }
+                            }
+                        } catch {}
                     }
-                } catch {}
+                }
             }
             
             // syntactic search

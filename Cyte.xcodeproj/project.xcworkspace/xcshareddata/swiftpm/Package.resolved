@@ -24,7 +24,7 @@
       "location" : "https://github.com/ggerganov/llama.cpp",
       "state" : {
         "branch" : "master",
-        "revision" : "34162989297fdfe3ab7305451ce55bc87e3f4c9c"
+        "revision" : "eeaa7b0492fc79baab8bb1fe195d6c87159f2bd3"
       }
     },
     {
