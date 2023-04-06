@@ -216,27 +216,24 @@ struct ContentView: View {
                 .frame(width: 200, alignment: .leading)
                 Spacer()
                 Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
-                Button(action: {
-                    Task {
-                        if currentExport == nil || currentExport!.progress >= 1.0 {
+                if episodesLengthSum < (60 * 60 * 40) && (currentExport == nil || currentExport!.progress >= 1.0) {
+                    Button(action: {
+                        Task {
                             currentExport = await makeTimelapse(episodes: episodes.reversed())
-                        } else {
-                            log.error("Cannot export: export already in progress")
                         }
+                    }) {
+                        Image(systemName: "timelapse")
                     }
-                }) {
-                    Image(systemName: "timelapse")
+                    .buttonStyle(.plain)
+                    .onHover(perform: { hovering in
+                        self.isHovering = hovering
+                        if hovering {
+                            NSCursor.pointingHand.set()
+                        } else {
+                            NSCursor.arrow.set()
+                        }
+                    })
                 }
-                .disabled(currentExport != nil && currentExport!.progress < 1.0)
-                .buttonStyle(.plain)
-                .onHover(perform: { hovering in
-                    self.isHovering = hovering
-                    if hovering {
-                        NSCursor.pointingHand.set()
-                    } else {
-                        NSCursor.arrow.set()
-                    }
-                })
                 Button(action: {
                     isPresentingConfirm = true
                 }) {
