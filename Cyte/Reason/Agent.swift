@@ -54,7 +54,6 @@ class Agent : ObservableObject, EventSourceDelegate {
     """
     
     @Published public var chatLog : [(String, String, String)] = []
-    @Published public var chatSources : [[Episode]?] = []
     private var llama: OpaquePointer?
     
     init() {
@@ -218,7 +217,6 @@ class Agent : ObservableObject, EventSourceDelegate {
         }
         withAnimation(.easeInOut(duration: 0.3)) {
             chatLog.removeAll()
-            chatSources.removeAll()
         }
     }
     
@@ -226,7 +224,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// Given a user question, apply a prompt template and optionally stuff with context before
     /// initiating  a request and holding the supplied context for display purposes
     ///
-    func query(request: String) async {
+    func query(request: String, over: [CyteInterval]) async {
         var _cleanRequest = request
         var force_chat = false
         if request.starts(with: "chat ") {
@@ -237,44 +235,21 @@ class Agent : ObservableObject, EventSourceDelegate {
         DispatchQueue.main.sync {
             withAnimation(.easeIn(duration: 0.3)) {
                 chatLog.append(("user", "", cleanRequest))
-                chatSources.append([])
                 chatLog.append(("bot", "", ""))
-                chatSources.append([])
             }
         }
         
         var context: String = ""
-        let contextTokenLength = (llama != nil ? Int(llama_n_ctx(llama)) : 8000)
         // @todo improve with actual tokenization, and maybe a min limit to save for return tokens
         // for now, using a heuristic of 3 chars per token (vs ~4 in reality) leaves on avg ~25%
         // of the window for response
+        let contextTokenLength = (llama != nil ? Int(llama_n_ctx(llama)) : 8000)
         let maxContextLength = (contextTokenLength * 3 /* rough token len */) - Agent.promptTemplate.count
-        var foundEps: [Episode] = []
-        var concepts: [String] = []
-        
-        let tagger = NLTagger(tagSchemes: [.lexicalClass])
-        tagger.string = request
-        let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
-        tagger.enumerateTags(in: request.startIndex..<request.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
-            if let tag = tag {
-                // if verb or noun
-                if tag.rawValue == "Noun" {
-                    let concept = request[tokenRange]
-                    concepts.append(String(concept))
-                }
-            }
-            return true
-        }
-        if concepts.count == 0 { concepts.append(request) }
-        var intervals = await Memory.shared.search(term: concepts.joined(separator: " AND "))
-        if intervals.count == 0 {
-            print("Fallback to full search")
-            intervals = await Memory.shared.search(term: "")
-        }
+
+        let intervals = over.count > 0 ? over : await Memory.shared.search(term: "")
         if intervals.count > 0 && !force_chat {
             for interval in intervals {
-                if interval.document.count > 100 {
-                    foundEps.append(interval.episode)
+                if interval.document.count > 0 {
                     let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
                     if context.count + new_context.count < maxContextLength {
                         context += new_context
@@ -282,18 +257,8 @@ class Agent : ObservableObject, EventSourceDelegate {
                 }
             }
             let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
-            print(prompt)
             log.info(prompt)
             await query(input: prompt)
-            let foundEpsConst = foundEps
-            DispatchQueue.main.sync {
-                if chatLog.count != 0 {
-                    let chatId = chatLog.lastIndex(where: { log in
-                        return log.0 == "bot"
-                    })
-                    chatSources[chatId!]!.append(contentsOf: Array(Set(foundEpsConst)))
-                }
-            }
         } else {
             var history: String = ""
             for chat in chatLog {

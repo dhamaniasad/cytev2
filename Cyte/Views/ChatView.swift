@@ -62,16 +62,6 @@ struct ChatView: View {
                             .font(Font.body)
                             .lineLimit(100)
                     }
-                    if agent.chatSources.count > index && chat.1.count > 0 && agent.chatSources[index]!.count > 0 {
-                        Text("Sources:")
-                            .padding()
-                            .fontWeight(.bold)
-                            .font(.caption)
-                        ForEach((agent.chatSources[index] ?? [])!.prefix(6)) { episode in
-                            EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: intervals, filter: "", selected: false)
-                                .frame(width: (displaySize.width-505.0), height: (displaySize.width-505.0) / 16.0 * 10.5)
-                        }
-                    }
                 }
                 
             }

@@ -81,14 +81,6 @@ struct IntervalExpression {
     public static let document = Expression<String>("document")
 }
 
-///
-/// Wrapper for DB embeddings
-///
-struct CyteEmbedding : Codable {
-    let time: Double
-    let text: String
-    let vec: [Double]
-}
 
 ///
 ///  Tracks active application context (driven by external caller)
@@ -110,10 +102,8 @@ class Memory {
     private var intervalTable: VirtualTable = VirtualTable("Interval")
     
     /// Context change tracking/indexing
-    private var embeddingTable: Table = Table("Embedding")
     private var lastObservation: String = ""
     private var differ = DiffMatchPatch()
-    static private var embeddingSize = 1536//openai ada
     
     /// Intel fallbacks - due to lack of hardware acelleration for video encoding and frame analysis, tradeoffs must be made
     private var shouldTrackFileChanges: Bool = true
@@ -132,25 +122,14 @@ class Memory {
             let url: URL = homeDirectory().appendingPathComponent("CyteMemory.sqlite3")
             intervalDb = try Connection(url.path(percentEncoded: false))
             do {
-                let config = FTS4Config()
+                let config = FTS5Config()
                     .column(IntervalExpression.from, [.unindexed])
                     .column(IntervalExpression.to, [.unindexed])
                     .column(IntervalExpression.episodeStart, [.unindexed])
                     .column(IntervalExpression.document)
-                    .languageId("lid")
-                    .order(.desc)
+                    .tokenizer(Tokenizer.Porter) // @todo remove this for non-english languages
 
-                try intervalDb!.run(intervalTable.create(.FTS4(config), ifNotExists: true))
-            }
-            do {
-                try intervalDb!.run(embeddingTable.create(ifNotExists: true) { t in
-                    for i in 1...Memory.embeddingSize {
-                        let dexp = Expression<Double>("d\(i)")
-                        t.column(dexp)
-                    }
-                    t.column(Expression<Double>("episode_start"))
-                    t.column(Expression<String>("fulltext"))
-                })
+                try intervalDb!.run(intervalTable.create(.FTS5(config), ifNotExists: true))
             }
             
             let fetched = try PersistenceController.shared.container.viewContext.fetch(unclosedFetch)
@@ -161,56 +140,7 @@ class Memory {
             
         }
     }
-    
-    func getEmbeddings() -> [CyteEmbedding] {
-        let startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -90, to:Date())!
-        let embeddingMatch: QueryType = embeddingTable.filter(Expression<Double>("episode_start") > startDate.timeIntervalSinceReferenceDate)
-        var result: [CyteEmbedding] = []
-        do {
-            for embedding in try intervalDb!.prepare(embeddingMatch) {
-                var vec: [Double] = []
-                for i in 1...Memory.embeddingSize {
-                    vec.append(embedding[Expression<Double>("d\(i)")])
-                }
-                let embed = CyteEmbedding(time: embedding[Expression<Double>("episode_start")], text: embedding[Expression<String>("fulltext")], vec: vec)
-                result.append(embed)
-                
-            }
-        } catch {}
-        return result
-    }
-    
-    func getEmbedding(when: Double) -> CyteEmbedding? {
-        let embeddingMatch: QueryType = embeddingTable.filter(Expression<Double>("episode_start") == when)
-        do {
-            for embedding in try intervalDb!.prepare(embeddingMatch) {
-                var vec: [Double] = []
-                for i in 1...Memory.embeddingSize {
-                    vec.append(embedding[Expression<Double>("d\(i)")])
-                }
-                let embed = CyteEmbedding(time: embedding[Expression<Double>("episode_start")], text: embedding[Expression<String>("fulltext")], vec: vec)
-                return embed
-                
-            }
-        } catch {}
-        return nil
-    }
-    
-    func rebuildIndex() {
-        let embeddings = getEmbeddings()
-        let coremlUrl: URL = homeDirectory().appendingPathComponent("Embeddings.coreml")
-        do {
-            var nlembedding: [String: [Double]] = [:]
-            for embedding in embeddings {
-                nlembedding["\(embedding.time)"] = embedding.vec
-            }
-            if FileManager.default.fileExists(atPath: coremlUrl.path(percentEncoded: false)) {
-                try FileManager.default.removeItem(atPath: coremlUrl.path(percentEncoded: false))
-            }
-            try NLEmbedding.write(nlembedding, language: NLLanguage.english, revision: 0, to: coremlUrl)
-        } catch { print(error) }
-    }
-    
+
     ///
     /// Enumerates target directories and filters by last edit time.
     /// This is imperfect for a number of reasons, it is very low granularity for long episodes
@@ -471,18 +401,6 @@ class Memory {
             }
         }
         
-        if total_match < 100 && lastObservation.count > 0 {
-            // Delta must be non-zero to account for system wide text, e.g. date/time, battery percent
-            print("Frames share little context (\(total_match)) - closing and embedding document")
-            // Disable embedding until FAISS is integrated
-            let embedding: [Double]? = nil//await Agent.shared.embed(input: lastObservation)
-            if embedding != nil {
-                insert(embedding:CyteEmbedding(time: start.timeIntervalSinceReferenceDate, text: what, vec: embedding!))
-            }
-        } else {
-            print("Skip high delta \(total_match)")
-        }
-        
         let newItem = CyteInterval(from: start, to: Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: Memory.secondsBetweenFrames, to: start)!, episode: episode!, document: added)
         insert(interval: newItem)
         lastObservation = what
@@ -497,10 +415,8 @@ class Memory {
             return
         }
         let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
-        let embeddings = embeddingTable.filter(Expression<Double>("episode_start") == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)
         do {
-            try intervalDb!.run(embeddings.delete())
             try intervalDb!.run(intervals.delete())
             try PersistenceController.shared.container.viewContext.save()
             try FileManager.default.removeItem(at: urlForEpisode(start: delete_episode.start, title: delete_episode.title))
@@ -512,11 +428,12 @@ class Memory {
     /// Peforms a full text search using FTSv4, with a hard limit of 100 most recent results
     ///
     func search(term: String) -> [CyteInterval] {
-        let intervalMatch: QueryType = term.count > 0 ? intervalTable.match("\(term)*").order(IntervalExpression.from).limit(100) : intervalTable.order(IntervalExpression.from).limit(100)
         var result: [CyteInterval] = []
         do {
-            for interval in try intervalDb!.prepare(intervalMatch) {
-                let epStart: Date = Date(timeIntervalSinceReferenceDate: interval[IntervalExpression.episodeStart])
+            let stmt = term.count > 0 ? try intervalDb!.prepare("SELECT * FROM Interval WHERE Interval MATCH '\(term)' ORDER BY bm25(Interval) LIMIT 64") : try intervalDb!.prepare("SELECT * FROM Interval LIMIT 64")
+        
+            for interval in stmt {
+                let epStart: Date = Date(timeIntervalSinceReferenceDate: interval[2] as! Double)
                 
                 let epFetch : NSFetchRequest<Episode> = Episode.fetchRequest()
                 epFetch.predicate = NSPredicate(format: "start == %@", epStart as CVarArg)
@@ -532,7 +449,7 @@ class Memory {
                 }
                 
                 if ep != nil {
-                    let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.from]), to: Date(timeIntervalSinceReferenceDate:interval[IntervalExpression.to]), episode: ep!, document: interval[IntervalExpression.document])
+                    let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[0] as! Double), to: Date(timeIntervalSinceReferenceDate:interval[1] as! Double), episode: ep!, document: interval[3] as! String)
                     result.append(inter)
                 } else {
                     log.error("Found an interval without base episode - dangling ref?")
@@ -550,35 +467,6 @@ class Memory {
                                                                  IntervalExpression.episodeStart <- interval.episode.start!.timeIntervalSinceReferenceDate,
                                                                  IntervalExpression.document <- interval.document
                                                                 ))
-        } catch {
-            fatalError("insertion failed: \(error)")
-        }
-    }
-    
-    func insert(embedding: CyteEmbedding) {
-        do {
-            // Generate an array of tuples with column names and values
-            var columnsAndValues: [(String, Any)] = []
-            for i in 1...Memory.embeddingSize {
-                columnsAndValues.append(("d\(i)", embedding.vec[i-1]))
-            }
-            columnsAndValues.append(("episode_start", embedding.time))
-            columnsAndValues.append(("fulltext", embedding.text))
-            // Create a dictionary of column names and values
-            var columnValues: [String: Any] = [:]
-            for (column, value) in columnsAndValues {
-                columnValues[column] = value
-            }
-            // Convert dictionary keys to expressions
-            let expressions = columnValues.map { (key, value) -> Setter in
-                if key == "fulltext" {
-                    return Expression<String>(key) <- value as! String
-                } else {
-                    return Expression<Double>(key) <- value as! Double
-                }
-            }
-            let insertQuery = embeddingTable.insert(expressions)
-            try intervalDb!.run(insertQuery)
         } catch {
             fatalError("insertion failed: \(error)")
         }

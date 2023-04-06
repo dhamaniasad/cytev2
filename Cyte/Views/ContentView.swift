@@ -401,7 +401,7 @@ struct ContentView: View {
                 }
                 let what = self.filter
                 self.filter = ""
-                await agent.query(request: what)
+                await agent.query(request: what, over: intervals)
             }
         } else {
             refreshData()
