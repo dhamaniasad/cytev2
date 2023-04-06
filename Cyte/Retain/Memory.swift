@@ -110,6 +110,9 @@ class Memory {
     static let secondsBetweenFrames : Int = utsname.isAppleSilicon ? 2 : 4
     
     var currentContext : String = "Startup"
+    // List of migrations:
+    // 0 -> 1 = FST4 to FST5
+    private static let DB_VERSION: UserVersion = 1
     
     ///
     /// Close any in-progress episodes (in case Cyte was not properly shut down)
@@ -121,23 +124,60 @@ class Memory {
         do {
             let url: URL = homeDirectory().appendingPathComponent("CyteMemory.sqlite3")
             intervalDb = try Connection(url.path(percentEncoded: false))
+
             do {
-                let config = FTS5Config()
+                let config = FTS4Config()
                     .column(IntervalExpression.from, [.unindexed])
                     .column(IntervalExpression.to, [.unindexed])
                     .column(IntervalExpression.episodeStart, [.unindexed])
                     .column(IntervalExpression.document)
-                    .tokenizer(Tokenizer.Porter) // @todo remove this for non-english languages
+                    .languageId("lid")
+                    .order(.desc)
 
-                try intervalDb!.run(intervalTable.create(.FTS5(config), ifNotExists: true))
+                try intervalDb!.run(intervalTable.create(.FTS4(config), ifNotExists: true))
             }
             
             let fetched = try PersistenceController.shared.container.viewContext.fetch(unclosedFetch)
             for unclosed in fetched {
                 PersistenceController.shared.container.viewContext.delete(unclosed)
             }
+            
+            // Run migrations
+            migrate()
         } catch {
             
+        }
+    }
+    
+    func migrate() {
+        if intervalDb!.userVersion == 0 {
+            log.info("Migrating 0 -> 1")
+            do {
+                // Moving from fts4 to fts5
+                // Read intervals into mem, drop the table.
+                let intervals = search(term: "")
+                try intervalDb!.run(intervalTable.drop())
+                // Create with new FTS config
+                do {
+                    let config = FTS5Config()
+                        .column(IntervalExpression.from, [.unindexed])
+                        .column(IntervalExpression.to, [.unindexed])
+                        .column(IntervalExpression.episodeStart, [.unindexed])
+                        .column(IntervalExpression.document)
+                        .tokenizer(Tokenizer.Porter) // @todo remove this for non-english languages
+                    
+                    try intervalDb!.run(intervalTable.create(.FTS5(config), ifNotExists: true))
+                }
+                // Insert old data
+                for interval in intervals {
+                    log.info("Migrate \(interval.from.formatted())")
+                    insert(interval: interval)
+                }
+                
+                intervalDb!.userVersion = 1
+            } catch {
+                log.error("Migration 0 -> 1 Failed")
+            }
         }
     }
 
