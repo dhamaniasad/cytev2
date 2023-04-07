@@ -37,6 +37,9 @@ Happy to accept PRs related to any of the following
 - App sandbox is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Build process fails on Github (Needs signing cert installed to sign embedded content?)
+- Sometimes app icons do not show on timeline view
+- Only the top result is highlighted in timeline view
+- Should not [perform video analysis](https://developer.apple.com/documentation/avkit/avplayerview/3986556-allowsvideoframeanalysis) on feed
 
 ### Refactor
 
@@ -46,8 +49,7 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 - Keyboard navigation events: Return to open selected episode, escape to pop timeline view
-- Remove [close matches](https://github.com/hwchase17/langchain/blob/f5a4bf0ce4e401104424296f2cdd145459193804/langchain/vectorstores/utils.py#L13) from prompt context stuffer
-- Wrap tiktoken in Swift for more accurate context stuffing
 - Swift ReAct Agent
 - Fallback to object recognition
 - Encryption e.g. Filevault?
+  
