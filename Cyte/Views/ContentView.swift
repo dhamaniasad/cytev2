@@ -156,8 +156,8 @@ struct ContentView: View {
             if !bundleColors.contains(where: { (bundleId, color) in
                 return bundleId == episode.bundle
             }) {
-                let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!)
-                bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color!)
+                let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!) ?? .gray
+                bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color)
             }
         }
         
