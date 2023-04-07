@@ -14,6 +14,7 @@ import ScreenCaptureKit
 import AVKit
 import Charts
 import Foundation
+import Combine
 
 extension Date {
     var dayOfYear: Int {
@@ -55,6 +56,9 @@ struct ContentView: View {
     @State private var scrollViewID = UUID()
     @State private var isPresentingConfirm: Bool = false
     @State private var currentExport: AVAssetExportSession?
+    
+    @State private var progressID = UUID()
+    @State private var timer: Timer?
     
     let feedColumnLayoutSmall = [
         GridItem(.fixed(360), spacing: 50),
@@ -277,7 +281,6 @@ struct ContentView: View {
                         .foregroundStyle(bundleColors[shape.bundle ?? ""] ?? .gray)
                     }
                 }
-                .chartYScale(domain: [0, 100])
                 .chartXAxis {
                     AxisMarks(values: .automatic(desiredCount: 5))
                 }
@@ -347,7 +350,7 @@ struct ContentView: View {
     var feed: some View {
         GeometryReader { metrics in
             if episodes.count == 0 && intervals.count == 0 {
-                Text("No results found. Update your search, or make some memories if you haven't started").font(.title).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+                Text("No results found. Update your search, or record some more activity").font(.title).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
             } else {
                 ScrollViewReader { value in
                     ScrollView {
@@ -419,7 +422,7 @@ struct ContentView: View {
             refreshData()
         }
     }
-
+    
     var body: some View {
         NavigationStack {
             VStack {
@@ -565,6 +568,15 @@ struct ContentView: View {
                                                 currentExport = nil
                                             }) {
                                                 Image(systemName: "stop.circle")
+                                            }
+                                            .id(progressID)
+                                            .onAppear {
+                                                timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true, block: { _ in
+                                                    progressID = UUID()
+                                                })
+                                            }
+                                            .onDisappear {
+                                                timer?.invalidate()
                                             }
                                             .buttonStyle(.plain)
                                             .onHover(perform: { hovering in
