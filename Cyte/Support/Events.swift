@@ -28,15 +28,15 @@ extension NSImage {
 }
 
 func getColor(bundleID: String) -> NSColor? {
-    return getIcon(bundleID: bundleID)?.averageColor
+    return getIcon(bundleID: bundleID).averageColor
 }
 
-func getIcon(bundleID: String) -> NSImage? {
+func getIcon(bundleID: String) -> NSImage {
     guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
-    else { return nil }
+    else { return NSImage() }
     
     guard FileManager.default.fileExists(atPath: path)
-    else { return nil }
+    else { return NSImage() }
     
     return NSWorkspace.shared.icon(forFile: path)
 }
