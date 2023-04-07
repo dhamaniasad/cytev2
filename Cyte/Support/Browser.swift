@@ -16,7 +16,6 @@ func isPrivateContext(context: String) -> Bool {
         return false
     }
     if ["com.apple.Safari", "com.google.Chrome"].contains(context) {
-        print("Check if in private mode")
         do {
             let apps = Application.allForBundleID(context)
             for app in apps {
@@ -24,7 +23,6 @@ func isPrivateContext(context: String) -> Bool {
                     let main = (try window.attribute(.main) as Bool?)
                     let title = (try window.attribute(.title) as String?)
                     if main == true && title != nil && (title!.contains("(Incognito)") || title!.contains("Private Browsing")) {
-                        print("Bypass private browsing context")
                         return true
                     }
                 }

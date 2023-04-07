@@ -368,15 +368,6 @@ struct ContentView: View {
                     .animation(.easeInOut(duration: 0.3), value: intervals)
                 }
                 .id(self.scrollViewID)
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        if !self.showUsage {
-                            self.resetFilters()
-                            endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
-                        }
-                        self.refreshData()
-                    }
-                }
             }
         }
     }
