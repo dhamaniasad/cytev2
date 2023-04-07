@@ -293,7 +293,7 @@ struct ContentView: View {
                 LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
                     ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
                         HStack {
-                            Image(nsImage: getIcon(bundleID: bundle)!)
+                            Image(nsImage: getIcon(bundleID: bundle))
                             Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
                                 .foregroundColor(.black)
                         }

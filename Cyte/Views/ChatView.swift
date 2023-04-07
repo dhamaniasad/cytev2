@@ -48,7 +48,7 @@ struct ChatView: View {
                         )
                         
                 } else {
-                    Image(nsImage: getIcon(bundleID: Bundle.main.bundleIdentifier!)!)
+                    Image(nsImage: getIcon(bundleID: Bundle.main.bundleIdentifier!))
                         .resizable()
                         .cornerRadius(15.0)
                         .frame(width: 30, height: 30)
