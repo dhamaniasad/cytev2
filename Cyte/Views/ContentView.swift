@@ -131,7 +131,7 @@ struct ContentView: View {
                 
             }
         } else {
-            let potentials: [CyteInterval] = Memory.shared.search(term: self.filter)
+            let potentials: [CyteInterval] = Memory.shared.search(term: self.filter, expanding: 2)
             withAnimation(.easeInOut(duration: 0.3)) {
                 intervals = potentials.filter { (interval: CyteInterval) in
                     if showFaves && interval.episode.save != true {

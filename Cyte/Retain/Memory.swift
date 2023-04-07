@@ -113,6 +113,7 @@ class Memory {
     // List of migrations:
     // 0 -> 1 = FST4 to FST5
     private static let DB_VERSION: UserVersion = 1
+    private let embedding: NLEmbedding? = NLEmbedding.wordEmbedding(for: NLLanguage.english)
     
     ///
     /// Close any in-progress episodes (in case Cyte was not properly shut down)
@@ -466,11 +467,44 @@ class Memory {
     
     ///
     /// Peforms a full text search using FTSv4, with a hard limit of 100 most recent results
+    /// If expanding is non-zero, nouns and verbs in the search query will be transparently replaced with
+    /// an FTS query for it and simmilar words
     ///
-    func search(term: String) -> [CyteInterval] {
+    func search(term: String, expanding: Int = 0) -> [CyteInterval] {
         var result: [CyteInterval] = []
         do {
-            let stmt = term.count > 0 ? try intervalDb!.prepare("SELECT * FROM Interval WHERE Interval MATCH '\(term)' ORDER BY bm25(Interval) LIMIT 64") : try intervalDb!.prepare("SELECT * FROM Interval LIMIT 64")
+            var finalTerm = term
+            if expanding > 0 {
+                let tagger = NLTagger(tagSchemes: [.lexicalClass])
+                tagger.string = finalTerm
+                let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
+                var replacements: [(String, String)] = []
+                tagger.enumerateTags(in: finalTerm.startIndex..<finalTerm.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
+                    if let tag = tag {
+                        // if verb or noun
+                        if tag.rawValue == "Noun" || tag.rawValue == "Verb" {
+                            let concept = String(finalTerm[tokenRange])
+                            var replacement = ""
+                            embedding!.enumerateNeighbors(for: concept, maximumCount: expanding) { neighbor, distance in
+                                replacement += " OR \(neighbor)"
+                                return true
+                            }
+                            if replacement.count > 0 {
+                                replacement = "(\(concept)\(replacement))"
+                            } else {
+                                replacement = concept
+                            }
+                            replacements.append((concept, replacement))
+                        }
+                    }
+                    return true
+                }
+                for replacement in replacements {
+                    finalTerm = finalTerm.replacing(replacement.0, with: "\"\(replacement.1)\"")
+                }
+                finalTerm = "NEAR(\(finalTerm), 100)"
+            }
+            let stmt = finalTerm.count > 0 ? try intervalDb!.prepare("SELECT * FROM Interval WHERE Interval MATCH '\(finalTerm)' ORDER BY bm25(Interval) LIMIT 64") : try intervalDb!.prepare("SELECT * FROM Interval LIMIT 64")
         
             for interval in stmt {
                 let epStart: Date = Date(timeIntervalSinceReferenceDate: interval[2] as! Double)
