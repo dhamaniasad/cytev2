@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "axswift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tmandry/AXSwift",
+      "state" : {
+        "revision" : "81dcc36aced905d6464cc25e35f8d13184bbf21c",
+        "version" : "0.3.2"
+      }
+    },
+    {
       "identity" : "highlightr",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/raspu/Highlightr",
@@ -24,7 +33,7 @@
       "location" : "https://github.com/ggerganov/llama.cpp",
       "state" : {
         "branch" : "master",
-        "revision" : "53dbba769537e894ead5c6913ab2fd3a4658b738"
+        "revision" : "cc9cee8e9e7598bd280295f6264f36d3a9224006"
       }
     },
     {

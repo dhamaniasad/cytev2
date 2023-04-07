@@ -34,7 +34,13 @@ func getColor(bundleID: String) -> NSColor? {
 
 func getIcon(bundleID: String) -> NSImage {
     guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
-    else { return NSImage() }
+    else {
+        do {
+            return NSImage(data: try Data(contentsOf: FavIcon(bundleID)[.m])) ?? NSImage()
+        } catch {
+            return NSImage()
+        }
+    }
     
     guard FileManager.default.fileExists(atPath: path)
     else { return NSImage() }
@@ -44,10 +50,10 @@ func getIcon(bundleID: String) -> NSImage {
 
 func getApplicationNameFromBundleID(bundleID: String) -> String? {
     guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
-    else { return nil }
+    else { return bundleID }
     guard let appBundle = Bundle(path: path),
           let executableName = appBundle.executableURL?.lastPathComponent else {
-        return nil
+        return bundleID
     }
     return executableName
 }

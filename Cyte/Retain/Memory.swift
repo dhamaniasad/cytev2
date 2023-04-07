@@ -11,6 +11,7 @@ import OSLog
 import Combine
 import SQLite
 import NaturalLanguage
+import AXSwift
 
 ///
 /// CoreData style wrapper for Intervals so it is observable in the UI
@@ -81,7 +82,6 @@ struct IntervalExpression {
     public static let document = Expression<String>("document")
 }
 
-
 ///
 ///  Tracks active application context (driven by external caller)
 ///  Opens, encodes and closes the video stream, triggers analysis on frames
@@ -110,6 +110,9 @@ class Memory {
     static let secondsBetweenFrames : Int = utsname.isAppleSilicon ? 2 : 4
     
     var currentContext : String = "Startup"
+    var currentContextIsPrivate: Bool = false
+    var currentUrlContext : URL? = nil
+    private var skipNextNFrames: Int = 0
     // List of migrations:
     // 0 -> 1 = FST4 to FST5
     private static let DB_VERSION: UserVersion = 1
@@ -234,15 +237,49 @@ class Memory {
     @MainActor
     func updateActiveContext(windowTitles: Dictionary<String, String>) {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
-        let context = front.bundleIdentifier ?? "Unnamed"
-        if front.isActive && currentContext != context {
+        var context = front.bundleIdentifier ?? ""
+        var title: String = windowTitles[front.bundleIdentifier ?? ""] ?? ""
+        var url: URL? = nil
+        if context.count > 0 {
+            let url_and_title = getAddressBarContent(context: context)
+            if url_and_title.1 != nil {
+                url = URL(string: url_and_title.1!)
+                context = url!.host ?? context
+            }
+            if url_and_title.0 != nil {
+                title = url_and_title.0!
+            }
+        } else {
+            context = "Unnamed"
+        }
+        if currentUrlContext != nil && url == nil && episode != nil {
+            // create document
+            let doc = Document(context: PersistenceController.shared.container.viewContext)
+            doc.path = currentUrlContext
+            doc.episode = episode
+            do {
+                try PersistenceController.shared.container.viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            }
+            skipNextNFrames = 1
+        }
+        currentUrlContext = url
+        let isPrivate = isPrivateContext(context:context)
+        if !isPrivate && currentContextIsPrivate {
+            skipNextNFrames = 1
+        }
+        
+        if front.isActive && (currentContext != context || currentContextIsPrivate != isPrivate) {
             if assetWriter != nil && assetWriterInput!.isReadyForMoreMediaData {
                 closeEpisode()
             }
             currentContext = context
+            currentContextIsPrivate = isPrivate
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
-            if  assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false {
-                var title: String = windowTitles[currentContext] ?? ""
+            if assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false && !currentContextIsPrivate {
+                
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).count == 0 {
                     title = front.localizedName ?? currentContext
                 }
@@ -398,6 +435,10 @@ class Memory {
     ///
     @MainActor
     func addFrame(frame: CapturedFrame, secondLength: Int64) {
+        if skipNextNFrames > 0 {
+            skipNextNFrames -= 1
+            return
+        }
         if assetWriter != nil {
             if assetWriterInput!.isReadyForMoreMediaData {
                 let frameTime = CMTimeMake(value: Int64(frameCount) * secondLength, timescale: 1)
