@@ -14,6 +14,7 @@ extension NSImage {
     /// This is used as a background color for contexts related to an app, like chart axis etc
     ///
     var averageColor: NSColor? {
+        if self.tiffRepresentation == nil { return nil }
         guard let inputImage = CIImage(data: self.tiffRepresentation!) else { return nil }
         let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
         guard let filter = CIFilter(name: "CIAreaAverage", parameters: [kCIInputImageKey: inputImage, kCIInputExtentKey: extentVector]) else { return nil }
