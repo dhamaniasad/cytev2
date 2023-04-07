@@ -349,56 +349,52 @@ struct ContentView: View {
     
     var feed: some View {
         GeometryReader { metrics in
-            if episodes.count == 0 && intervals.count == 0 {
-                Text("No results found. Update your search, or record some more activity").font(.title).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            } else {
-                ScrollViewReader { value in
-                    ScrollView {
-                        LazyVGrid(columns: (metrics.size.width > 1500 && utsname.isAppleSilicon) ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
-                            if intervals.count == 0 {
-                                ForEach(episodes.filter { ep in
-                                    return (ep.title ?? "").count > 0 && (ep.start != ep.end)
-                                }) { episode in
-                                    EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: false)
-                                        .frame(width: 360, height: 260)
-                                        .contextMenu {
-                                            Button {
-                                                Memory.shared.delete(delete_episode: episode)
-                                                self.refreshData()
-                                            } label: {
-                                                Label("Delete", systemImage: "xmark.bin")
-                                            }
-                                            Button {
-                                                revealEpisode(episode: episode)
-                                            } label: {
-                                                Label("Reveal in Finder", systemImage: "questionmark.folder")
-                                            }
+            ScrollViewReader { value in
+                ScrollView {
+                    LazyVGrid(columns: (metrics.size.width > 1500 && utsname.isAppleSilicon) ? feedColumnLayoutLarge : (metrics.size.width > 1200 ? feedColumnLayout : feedColumnLayoutSmall), spacing: 20) {
+                        if intervals.count == 0 {
+                            ForEach(episodes.filter { ep in
+                                return (ep.title ?? "").count > 0 && (ep.start != ep.end)
+                            }) { episode in
+                                EpisodeView(player: AVPlayer(url: urlForEpisode(start: episode.start, title: episode.title)), episode: episode, intervals: appIntervals, filter: filter, selected: false)
+                                    .frame(width: 360, height: 260)
+                                    .contextMenu {
+                                        Button {
+                                            Memory.shared.delete(delete_episode: episode)
+                                            self.refreshData()
+                                        } label: {
+                                            Label("Delete", systemImage: "xmark.bin")
                                         }
-                                        .id(episode.start)
-                                }
-                            }
-                            else {
-                                ForEach(intervals.filter { (interval: CyteInterval) in
-                                    return (interval.episode.title ?? "").count > 0
-                                }) { (interval : CyteInterval) in
-                                    StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: false)
-                                        .id(interval.from)
-                                }
+                                        Button {
+                                            revealEpisode(episode: episode)
+                                        } label: {
+                                            Label("Reveal in Finder", systemImage: "questionmark.folder")
+                                        }
+                                    }
+                                    .id(episode.start)
                             }
                         }
-                        .padding(.all)
-                        .animation(.easeInOut(duration: 0.3), value: episodes)
-                        .animation(.easeInOut(duration: 0.3), value: intervals)
+                        else {
+                            ForEach(intervals.filter { (interval: CyteInterval) in
+                                return (interval.episode.title ?? "").count > 0
+                            }) { (interval : CyteInterval) in
+                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: false)
+                                    .id(interval.from)
+                            }
+                        }
                     }
-                    .id(self.scrollViewID)
-                    .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            if !self.showUsage {
-                                self.resetFilters()
-                                endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
-                            }
-                            self.refreshData()
+                    .padding(.all)
+                    .animation(.easeInOut(duration: 0.3), value: episodes)
+                    .animation(.easeInOut(duration: 0.3), value: intervals)
+                }
+                .id(self.scrollViewID)
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        if !self.showUsage {
+                            self.resetFilters()
+                            endDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .second, value: 2, to: Date())!
                         }
+                        self.refreshData()
                     }
                 }
             }
