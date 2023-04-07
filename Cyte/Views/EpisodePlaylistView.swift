@@ -449,7 +449,7 @@ struct EpisodePlaylistView: View {
                                 GeometryReader { metrics in
                                     HStack {
                                         if interval.bundleId.count > 0 {
-                                            Image(nsImage: getIcon(bundleID: interval.bundleId)!)
+                                            Image(nsImage: getIcon(bundleID: interval.bundleId))
                                                 .resizable()
                                                 .frame(width: timelineSize * 2, height: timelineSize * 2)
                                         }

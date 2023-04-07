@@ -68,7 +68,7 @@ class Agent : ObservableObject, EventSourceDelegate {
         if key != nil {
             keychain.set(key!, forKey: "CYTE_LLM_KEY")
         }
-        let apiKey = keychain.get("CYTE_LLM_KEY")
+        let apiKey = key != nil ? key : keychain.get("CYTE_LLM_KEY")
         if apiKey != nil {
             if FileManager.default.fileExists(atPath: apiKey!) {
                 llama = llama_init_from_file(apiKey, llama_context_default_params())
