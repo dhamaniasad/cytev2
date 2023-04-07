@@ -249,7 +249,7 @@ class Agent : ObservableObject, EventSourceDelegate {
         let intervals = over.count > 0 ? over : await Memory.shared.search(term: "")
         if intervals.count > 0 && !force_chat {
             for interval in intervals {
-                if interval.document.count > 0 {
+                if interval.document.count > 100 {
                     let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
                     if context.count + new_context.count < maxContextLength {
                         context += new_context
