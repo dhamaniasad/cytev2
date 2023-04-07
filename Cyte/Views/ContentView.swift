@@ -269,26 +269,6 @@ struct ContentView: View {
                 }
             }
             
-            if (Set(episodes.map { $0.start?.dayOfYear }).count > 5) {
-                Chart {
-                    ForEach(episodes.sorted {
-                        return ($0.bundle ?? "").compare($1.bundle ?? "").rawValue == 1
-                    }) { shape in
-                        BarMark(
-                            x: .value("Date", Calendar(identifier: Calendar.Identifier.iso8601).startOfDay(for: shape.start ?? Date())),
-                            y: .value("Total Count", (shape.end ?? Date()).timeIntervalSince(shape.start ?? Date()))
-                        )
-                        .foregroundStyle(bundleColors[shape.bundle ?? ""] ?? .gray)
-                    }
-                }
-                .chartXAxis {
-                    AxisMarks(values: .automatic(desiredCount: 5))
-                }
-                .frame(height: 100)
-                .chartLegend {
-                }
-            }
-            
             HStack {
                 LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
                     ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in

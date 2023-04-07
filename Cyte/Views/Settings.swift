@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import KeychainSwift
+import AXSwift
 
 struct BundleView: View {
     
@@ -72,7 +73,7 @@ struct Settings: View {
     private let defaults = UserDefaults.standard
     @State var isHovering: Bool = false
     @State var currentRetention: Int = 0
-    @State var excludePrivate: Bool = false
+    @State var browserAware: Bool = false
     
     var body: some View {
         ScrollView {
@@ -170,21 +171,27 @@ struct Settings: View {
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
-                let binding = Binding<Bool>(get: {
-                    return excludePrivate
-                }, set: {
-                    defaults.set($0, forKey: "CYTE_PRIVATE")
-                    excludePrivate = $0
-                })
-                Text("Exclude english language incognito and private browsing windows")
-                    .foregroundColor(.black)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .onAppear {
-                        excludePrivate = defaults.bool(forKey: "CYTE_PRIVATE")
+                HStack {
+                    let binding = Binding<Bool>(get: {
+                        return browserAware
+                    }, set: {
+                        defaults.set($0, forKey: "CYTE_BROWSER")
+                        browserAware = $0
+                        checkIsProcessTrusted(prompt: $0)
+                    })
+                    Text("Browser awareness (Ignore Incognito and Private Browsing windows, episodes track domains)")
+                        .foregroundColor(.black)
+                        .font(.title2)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onAppear {
+                            browserAware = defaults.bool(forKey: "CYTE_BROWSER")
+                        }
+                        .frame(width: 1000, height: 50, alignment: .leading)
+                    Toggle(isOn: binding) {
+                        
                     }
-                Toggle(isOn: binding) {
-                    
                 }
+                .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
                 VStack(alignment: .leading) {
                     HStack {

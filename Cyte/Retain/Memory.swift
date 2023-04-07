@@ -82,35 +82,6 @@ struct IntervalExpression {
     public static let document = Expression<String>("document")
 }
 
-
-
-///
-/// Use AX API to perform a fragile string comparison for incognito/private browsing
-///
-func isPrivateContext(context: String) -> Bool {
-    if !UserDefaults.standard.bool(forKey: "CYTE_PRIVATE") {
-        return false
-    }
-    if ["com.apple.Safari", "com.google.Chrome"].contains(context) {
-        print("Check if in private mode")
-        do {
-            let apps = Application.allForBundleID(context)
-            for app in apps {
-                NSLog("finder: \(app)")
-                for window in try app.windows()! {
-                    let main = (try window.attribute(.main) as Bool?)
-                    let title = (try window.attribute(.title) as String?)
-                    if main == true && title != nil && (title!.contains("(Incognito)") || title!.contains("Private Browsing")) {
-                        print("Bypass private browsing context")
-                        return true
-                    }
-                }
-            }
-        } catch { }
-    }
-    return false
-}
-
 ///
 ///  Tracks active application context (driven by external caller)
 ///  Opens, encodes and closes the video stream, triggers analysis on frames
@@ -140,6 +111,7 @@ class Memory {
     
     var currentContext : String = "Startup"
     var currentContextIsPrivate: Bool = false
+    var currentUrlContext : URL? = nil
     private var skipNextNFrames: Int = 0
     // List of migrations:
     // 0 -> 1 = FST4 to FST5
@@ -265,7 +237,35 @@ class Memory {
     @MainActor
     func updateActiveContext(windowTitles: Dictionary<String, String>) {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
-        let context = front.bundleIdentifier ?? "Unnamed"
+        var context = front.bundleIdentifier ?? ""
+        var title: String = windowTitles[front.bundleIdentifier ?? ""] ?? ""
+        var url: URL? = nil
+        if context.count > 0 {
+            let url_and_title = getAddressBarContent(context: context)
+            if url_and_title.1 != nil {
+                url = URL(string: url_and_title.1!)
+                context = url!.host ?? context
+            }
+            if url_and_title.0 != nil {
+                title = url_and_title.0!
+            }
+        } else {
+            context = "Unnamed"
+        }
+        if currentUrlContext != nil && url == nil && episode != nil {
+            // create document
+            let doc = Document(context: PersistenceController.shared.container.viewContext)
+            doc.path = currentUrlContext
+            doc.episode = episode
+            do {
+                try PersistenceController.shared.container.viewContext.save()
+            } catch {
+                let nsError = error as NSError
+                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+            }
+            skipNextNFrames = 1
+        }
+        currentUrlContext = url
         let isPrivate = isPrivateContext(context:context)
         if !isPrivate && currentContextIsPrivate {
             skipNextNFrames = 1
@@ -279,7 +279,7 @@ class Memory {
             currentContextIsPrivate = isPrivate
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
             if assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false && !currentContextIsPrivate {
-                var title: String = windowTitles[currentContext] ?? ""
+                
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).count == 0 {
                     title = front.localizedName ?? currentContext
                 }
