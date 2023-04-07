@@ -7,7 +7,6 @@
 
 import SwiftUI
 import XCGLogger
-import AXSwift
 
 @main
 struct CyteApp: App {
