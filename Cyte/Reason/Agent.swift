@@ -12,6 +12,8 @@ import NaturalLanguage
 import OpenAI
 import KeychainSwift
 import XCGLogger
+import llama
+import SwiftUI
 
 class Agent : ObservableObject, EventSourceDelegate {
     static let shared : Agent = Agent()
@@ -52,7 +54,7 @@ class Agent : ObservableObject, EventSourceDelegate {
     """
     
     @Published public var chatLog : [(String, String, String)] = []
-    @Published public var chatSources : [[Episode]?] = []
+    private var llama: OpaquePointer?
     
     init() {
         setup()
@@ -64,16 +66,33 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     func setup(key: String? = nil) {
         if key != nil {
-            keychain.set(key!, forKey: "CYTE_OPENAI_KEY")
+            keychain.set(key!, forKey: "CYTE_LLM_KEY")
         }
-        let apiKey = keychain.get("CYTE_OPENAI_KEY")
+        let apiKey = key != nil ? key : keychain.get("CYTE_LLM_KEY")
         if apiKey != nil {
-            openAIClient = OpenAI(apiToken: apiKey!, callback: self)
-            isSetup = true
-            log.info("Setup OpenAI")
+            if FileManager.default.fileExists(atPath: apiKey!) {
+                llama = llama_init_from_file(apiKey, llama_context_default_params())
+                isSetup = true
+                log.info("Setup llama")
+            } else {
+                openAIClient = OpenAI(apiToken: apiKey!, callback: self)
+                isSetup = true
+                log.info("Setup OpenAI")
+            }
+        } else {
+            teardown()
+        }
+    }
+    
+    func teardown() {
+        reset()
+        if llama != nil {
+            llama_free(llama)
+            llama = nil
         } else {
             openAIClient = nil
         }
+        isSetup = false
     }
     
     ///
@@ -81,6 +100,9 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// a charging endpoint
     ///
     func isFlagged(input: String) async -> Bool {
+        if llama != nil {
+            return false
+        }
         let query = OpenAI.ModerationQuery(input: input, model: .textModerationLatest)
         var response: Bool = false
         do {
@@ -95,12 +117,21 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     func embed(input: String) async -> [Double]? {
         if await isFlagged(input: input) { return nil }
-        let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
         var response: [Double]? = nil
-        do {
-            let result = try await openAIClient!.embeddings(query: query)
-            response = result.data[0].embedding
-        } catch {}
+        if llama != nil {
+            response = []
+            await query(input: input)
+            let raw = llama_get_embeddings(llama)
+            for i in 0..<Int(llama_n_embd(llama)) {
+                response!.append(Double(raw![i]))
+            }
+        } else {
+            let query = OpenAI.EmbeddingsQuery(model: .textEmbeddingAda, input: input)
+            do {
+                let result = try await openAIClient!.embeddings(query: query)
+                response = result.data[0].embedding
+            } catch {}
+        }
         return response
     }
     
@@ -109,8 +140,49 @@ class Agent : ObservableObject, EventSourceDelegate {
     ///
     func query(input: String) async -> Void {
         if await isFlagged(input: input) { return }
-        let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)], stream: true)
-        openAIClient!.chats(query: query)
+        if llama != nil {
+            let temperature: Float = 1.0
+            let nThreads: Int32 = Int32(ProcessInfo.processInfo.activeProcessorCount)
+            let topK: Int32 = 40
+            let topP: Float = 1.0
+            var tokens: Array<llama_token> = []
+            let promptTokens = Array<llama_token>(unsafeUninitializedCapacity: input.utf8.count) { buffer, initializedCount in
+                initializedCount = Int(llama_tokenize(llama, input, buffer.baseAddress, Int32(buffer.count), true))
+            }
+
+            let bufferPointer: UnsafeBufferPointer<llama_token> = promptTokens.withUnsafeBufferPointer { bufferPointer in
+                return bufferPointer
+            }
+            let _ = DispatchQueue.main.sync {
+                llama_eval(llama, bufferPointer.baseAddress, Int32(promptTokens.count), 0, nThreads)
+            }
+            tokens.insert(contentsOf: promptTokens, at: 0)
+
+            let contextLength = llama_n_ctx(llama)
+            while (tokens.count < contextLength) && chatLog.count > 0 {
+
+                let bufferPointer: UnsafeBufferPointer<llama_token> = tokens.withUnsafeBufferPointer { bufferPointer in
+                    return bufferPointer
+                }
+                var token = llama_sample_top_p_top_k(llama, bufferPointer.baseAddress, Int32(tokens.count), topK, topP, temperature, 1)
+                if token == llama_token_eos() {
+                    print("[end of text]")
+                    break
+                }
+                let thisResult = String(cString: llama_token_to_str(llama, token))
+                let current_tokens = tokens
+                DispatchQueue.main.sync {
+                    if chatLog.count != 0 {
+                        onNewToken(token: thisResult)
+                        llama_eval(llama, &token, 1, Int32(current_tokens.count), nThreads)
+                    }
+                }
+                tokens.append(token)
+            }
+        } else {
+            let query = OpenAI.ChatQuery(model: .gpt4, messages: [.init(role: "user", content: input)], stream: true)
+            openAIClient!.chats(query: query)
+        }
     }
     
     ///
@@ -120,7 +192,9 @@ class Agent : ObservableObject, EventSourceDelegate {
         let chatId = chatLog.lastIndex(where: { log in
             return log.0 == "bot"
         })
-        chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
+        withAnimation(.easeInOut(duration: 0.3)) {
+            chatLog[chatId!].2.append(token.replacingOccurrences(of: "\\n", with: "\n"))
+        }
     }
     
     func onStreamDone() {
@@ -138,56 +212,44 @@ class Agent : ObservableObject, EventSourceDelegate {
     /// Stop any pending requests and clear state
     ///
     func reset() {
-        openAIClient!.stop()
-        chatLog.removeAll()
-        chatSources.removeAll()
+        if openAIClient != nil {
+            openAIClient!.stop()
+        }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            chatLog.removeAll()
+        }
     }
     
     ///
     /// Given a user question, apply a prompt template and optionally stuff with context before
     /// initiating  a request and holding the supplied context for display purposes
     ///
-    @MainActor
-    func query(request: String) async {
-        var cleanRequest = request
+    func query(request: String, over: [CyteInterval]) async {
+        var _cleanRequest = request
         var force_chat = false
         if request.starts(with: "chat ") {
             force_chat = true
-            cleanRequest = String(request.dropFirst("chat ".count))
+            _cleanRequest = String(request.dropFirst("chat ".count))
         }
-        chatLog.append(("user", "", cleanRequest))
-        chatSources.append([])
-        chatLog.append(("bot", "", ""))
-        chatSources.append([])
+        let cleanRequest = _cleanRequest
+        DispatchQueue.main.sync {
+            withAnimation(.easeIn(duration: 0.3)) {
+                chatLog.append(("user", "", cleanRequest))
+                chatLog.append(("bot", "", ""))
+            }
+        }
         
         var context: String = ""
-        let maxContextLength = (8000 * 3 /* rough token len */) - Agent.promptTemplate.count
-        var foundEps: [Episode] = []
-        var concepts: [String] = []
-        
-        let tagger = NLTagger(tagSchemes: [.lexicalClass])
-        tagger.string = request
-        let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
-        tagger.enumerateTags(in: request.startIndex..<request.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
-            if let tag = tag {
-                // if verb or noun
-                if tag.rawValue == "Noun" {
-                    let concept = request[tokenRange]
-                    concepts.append(String(concept))
-                }
-            }
-            return true
-        }
-        if concepts.count == 0 { concepts.append(request) }
-        var intervals = Memory.shared.search(term: concepts.joined(separator: " AND "))
-        if intervals.count == 0 {
-            print("Fallback to full search")
-            intervals = Memory.shared.search(term: "")
-        }
+        // @todo improve with actual tokenization, and maybe a min limit to save for return tokens
+        // for now, using a heuristic of 3 chars per token (vs ~4 in reality) leaves on avg ~25%
+        // of the window for response
+        let contextTokenLength = (llama != nil ? Int(llama_n_ctx(llama)) : 8000)
+        let maxContextLength = (contextTokenLength * 3 /* rough token len */) - Agent.promptTemplate.count
+
+        let intervals = over.count > 0 ? over : await Memory.shared.search(term: "")
         if intervals.count > 0 && !force_chat {
             for interval in intervals {
                 if interval.document.count > 100 {
-                    foundEps.append(interval.episode)
                     let new_context = Agent.contextTemplate.replacing("{when}", with: interval.from.formatted()).replacing("{ocr}", with: interval.document)
                     if context.count + new_context.count < maxContextLength {
                         context += new_context
@@ -195,14 +257,8 @@ class Agent : ObservableObject, EventSourceDelegate {
                 }
             }
             let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
-            print(prompt)
             log.info(prompt)
             await query(input: prompt)
-            
-            let chatId = chatLog.lastIndex(where: { log in
-                return log.0 == "bot"
-            })
-            chatSources[chatId!]!.append(contentsOf: Array(Set(foundEps)))
         } else {
             var history: String = ""
             for chat in chatLog {

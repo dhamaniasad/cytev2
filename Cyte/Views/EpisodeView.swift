@@ -127,7 +127,7 @@ struct EpisodeView: View {
                                 NSCursor.arrow.set()
                             }
                         })
-                    Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!)!)
+                    Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier!)) ?? NSImage())
                 }
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }

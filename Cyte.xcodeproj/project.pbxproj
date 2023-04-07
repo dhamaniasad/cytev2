@@ -35,6 +35,7 @@
 		3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BA29D0029800A4C6C0 /* ObjcExceptionBridging */; };
 		3FDBE5BD29D0029800A4C6C0 /* XCGLogger in Frameworks */ = {isa = PBXBuildFile; productRef = 3FDBE5BC29D0029800A4C6C0 /* XCGLogger */; };
 		3FDBE5C429D4704300A4C6C0 /* Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FDBE5C329D4704300A4C6C0 /* Export.swift */; };
+		3FE7822629DBDB4A008CB97D /* llama in Frameworks */ = {isa = PBXBuildFile; productRef = 3FE7822529DBDB4A008CB97D /* llama */; };
 		3FE7822329DB15A8008CB97D /* AXSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 3FE7822229DB15A8008CB97D /* AXSwift */; };
 /* End PBXBuildFile section */
 
@@ -90,6 +91,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3FE7822629DBDB4A008CB97D /* llama in Frameworks */,
 				3FDBE5BB29D0029800A4C6C0 /* ObjcExceptionBridging in Frameworks */,
 				3F6FE08129CAB0170061DBF5 /* SQLite in Frameworks */,
 				3F8F932A29B5CF9C00C938DE /* Charts.framework in Frameworks */,
@@ -262,6 +264,7 @@
 				3FDBE5B429CD7BAC00A4C6C0 /* OpenAI */,
 				3FDBE5BA29D0029800A4C6C0 /* ObjcExceptionBridging */,
 				3FDBE5BC29D0029800A4C6C0 /* XCGLogger */,
+				3FE7822529DBDB4A008CB97D /* llama */,
 				3FE7822229DB15A8008CB97D /* AXSwift */,
 			);
 			productName = Cyte;
@@ -299,6 +302,7 @@
 				3FC6C78929CC2EA2004E19FF /* XCRemoteSwiftPackageReference "keychain-swift" */,
 				3FDBE5B329CD7BAC00A4C6C0 /* XCRemoteSwiftPackageReference "OpenAI" */,
 				3FDBE5B929D0029800A4C6C0 /* XCRemoteSwiftPackageReference "XCGLogger" */,
+				3FE7822429DBDB4A008CB97D /* XCRemoteSwiftPackageReference "llama" */,
 				3FE7822129DB15A8008CB97D /* XCRemoteSwiftPackageReference "AXSwift" */,
 			);
 			productRefGroup = 3FCAA1FD29AC7C0100898995 /* Products */;
@@ -502,7 +506,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
-				MARKETING_VERSION = 0.4;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -556,7 +560,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
-				MARKETING_VERSION = 0.4;
+				MARKETING_VERSION = 0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = shoplex.Cyte;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = auto;
@@ -633,6 +637,14 @@
 				minimumVersion = 7.0.0;
 			};
 		};
+		3FE7822429DBDB4A008CB97D /* XCRemoteSwiftPackageReference "llama" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ggerganov/llama.cpp";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		3FE7822129DB15A8008CB97D /* XCRemoteSwiftPackageReference "AXSwift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/tmandry/AXSwift";
@@ -673,6 +685,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 3FDBE5B929D0029800A4C6C0 /* XCRemoteSwiftPackageReference "XCGLogger" */;
 			productName = XCGLogger;
+		};
+		3FE7822529DBDB4A008CB97D /* llama */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3FE7822429DBDB4A008CB97D /* XCRemoteSwiftPackageReference "llama" */;
+			productName = llama;
 		};
 		3FE7822229DB15A8008CB97D /* AXSwift */ = {
 			isa = XCSwiftPackageProductDependency;

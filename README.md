@@ -7,7 +7,7 @@
 🚧 Work in progress - this is beta software, use with care
 
 A background screen recorder for easy history search. 
-If you choose to supply an OpenAI key, it can act as a knowledge base. Be aware that transcriptions will then be sent to OpenAI when you chat.
+If you choose to supply an OpenAI key, or a local language model like LLaMA, it can act as a knowledge base. Be aware that transcriptions will be sent to OpenAI when you chat if you provide an OpenAI API key.
 
 ![Cyte Screenshot](assets/images/cyte.gif)
 
@@ -37,6 +37,10 @@ Happy to accept PRs related to any of the following
 - App sandbox is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Build process fails on Github (Needs signing cert installed to sign embedded content?)
+- Sometimes app icons do not show on timeline view
+- Only the top result is highlighted in timeline view
+- Should not [perform video analysis](https://developer.apple.com/documentation/avkit/avplayerview/3986556-allowsvideoframeanalysis) on feed
+- Semantic matches are not highlighted in feed, should attach [matchinfo](https://www.sqlite.org/fts3.html#matchinfo) results to CyteInterval
 
 ### Refactor
 
@@ -46,10 +50,5 @@ Happy to accept PRs related to any of the following
 
 ### Feature requests
 - Keyboard navigation events: Return to open selected episode, escape to pop timeline view
-- Remove [close matches](https://github.com/hwchase17/langchain/blob/f5a4bf0ce4e401104424296f2cdd145459193804/langchain/vectorstores/utils.py#L13) from prompt context stuffer
-- Wrap tiktoken in Swift for more accurate context stuffing
-- Swift ReAct Agent
-- Filter incognito and safari private windows from capture
-- Easily copy code blocks in chat
 - Fallback to object recognition
 - Encryption e.g. Filevault?
