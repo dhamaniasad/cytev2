@@ -234,5 +234,6 @@ struct StaticEpisodeView: View {
 
     var body: some View {
         playerView
+            .accessibilityLabel("A single recording, with a video player, title, date/time and application context details.")
     }
 }

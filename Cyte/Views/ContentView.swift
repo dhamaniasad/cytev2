@@ -214,6 +214,7 @@ struct ContentView: View {
                 .onChange(of: startDate, perform: { value in
                     refreshData()
                 })
+                .accessibilityLabel("Set the earliest date/time for recording results")
                 .frame(width: 200, alignment: .leading)
                 DatePicker(
                     " - ",
@@ -223,6 +224,7 @@ struct ContentView: View {
                 .onChange(of: endDate, perform: { value in
                     refreshData()
                 })
+                .accessibilityLabel("Set the latest date/time for recording results")
                 .frame(width: 200, alignment: .leading)
                 Spacer()
                 Text("\(secondsToReadable(seconds: episodesLengthSum)) displayed")
@@ -363,6 +365,7 @@ struct ContentView: View {
                             }
                         }
                     }
+                    .accessibilityLabel("A grid of recordings matching current search and filters.")
                     .padding(.all)
                     .animation(.easeInOut(duration: 0.3), value: episodes)
                     .animation(.easeInOut(duration: 0.3), value: intervals)
@@ -411,6 +414,7 @@ struct ContentView: View {
                                     "Search \(Agent.shared.isSetup ? "or chat " : "")your history",
                                     text: binding
                                 )
+                                .accessibilityLabel("The main search bar for your recordings. Use an FTS formatted search query.")
                                 .frame(width: agent.chatLog.count == 0 ? 650 : nil, height: 48)
                                 .cornerRadius(5)
                                 .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
@@ -458,6 +462,7 @@ struct ContentView: View {
                                     }) {
                                         Image(systemName: showUsage ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                                     }
+                                    .accessibilityLabel("Opens the advanced search pane")
                                     .padding()
                                     .opacity(0.8)
                                     .buttonStyle(.plain)
@@ -478,6 +483,7 @@ struct ContentView: View {
                                     }) {
                                         Image(systemName: showFaves ? "star.fill": "star")
                                     }
+                                    .accessibilityLabel("Filters results to exclude non-starred")
                                     .opacity(0.8)
                                     .buttonStyle(.plain)
                                     .padding(EdgeInsets(top: 0.0, leading: 0.0, bottom: 0.0, trailing: 0.0))
@@ -496,6 +502,7 @@ struct ContentView: View {
                                     } label: {
                                         Image(systemName: "gearshape")
                                     }
+                                    .accessibilityLabel("Opens the settings pane")
                                     .padding()
                                     .opacity(isHoveringSettings ? 0.8 : 1.0)
                                     .buttonStyle(.plain)
@@ -514,6 +521,7 @@ struct ContentView: View {
                                     }) {
                                         Image(systemName: "arrow.clockwise")
                                     }
+                                    .accessibilityLabel("Clears all filters and refreshes the feed")
                                     .buttonStyle(.plain)
                                     .transformEffect(CGAffineTransformMakeScale(-1, 1))
                                     .padding(EdgeInsets(top: 0.0, leading: 10.0, bottom: 0.0, trailing: 0.0))

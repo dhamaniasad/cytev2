@@ -40,8 +40,6 @@ Happy to accept PRs related to any of the following
 - Sometimes app icons do not show on timeline view
 - Only the top result is highlighted in timeline view
 - Should not [perform video analysis](https://developer.apple.com/documentation/avkit/avplayerview/3986556-allowsvideoframeanalysis) on feed
-- Semantic matches are not highlighted in feed, should attach [matchinfo](https://www.sqlite.org/fts3.html#matchinfo) results to CyteInterval
-- Need to label elements like feed, search etc for accessibility
 
 ### Refactor
 
