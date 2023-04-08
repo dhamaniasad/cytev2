@@ -264,29 +264,6 @@ struct EpisodePlaylistView: View {
         return portion
     }
     
-    func playerEnded() {
-        // @todo Switch over to next interval. If it's empty, setup a timer to move time forward.
-        var offset_sum = 0.0
-        var previous_interval: AppInterval?
-        let window_center = secondsOffsetFromLastEpisode + 0.5
-        let _: AppInterval? = intervals.first { interval in
-            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-            let is_within = offset_sum <= window_center && next_offset >= window_center
-            offset_sum = next_offset
-            if !is_within {
-                previous_interval = interval
-            }
-            return is_within
-        }
-        if previous_interval != nil {
-            // reset the AVPlayer to the new asset
-            player = AVPlayer(url: urlForEpisode(start: previous_interval!.start, title: previous_interval!.title))
-            self.player!.play()
-            secondsOffsetFromLastEpisode = previous_interval!.offset + previous_interval!.length
-        }
-        
-    }
-    
     func startTimeForEpisode(interval: AppInterval) -> Double {
         return max(Double(secondsOffsetFromLastEpisode) + (Double(EpisodePlaylistView.windowLengthInSeconds) - interval.offset - interval.length), 0.0)
     }
@@ -388,7 +365,7 @@ struct EpisodePlaylistView: View {
                         let height = metrics.size.height - 100.0
                         VideoPlayer(player: player, videoOverlay: {
                             Rectangle()
-                                .fill(Color.black.opacity(0.5))
+                                .fill(highlight.count == 0 ? .clear : Color.black.opacity(0.5))
                                 .cutout(
                                     highlight.map { high in
                                         RoundedRectangle(cornerRadius: 4)
@@ -420,10 +397,6 @@ struct EpisodePlaylistView: View {
                                 secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                             }
                             updateData()
-                        }
-                        .onReceive(NotificationCenter.default.publisher(for: .AVPlayerItemDidPlayToEndTime)) { _ in
-                            //                                playerEnded()
-                            player!.seek(to: .zero, toleranceBefore: .zero, toleranceAfter: .zero)
                         }
                         
                         
