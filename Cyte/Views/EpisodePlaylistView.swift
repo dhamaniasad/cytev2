@@ -67,6 +67,35 @@ struct EpisodePlaylistView: View {
     
     private let timelineSize: CGFloat = 16
     
+    @State var documents: [Document] = []
+    
+    func loadDocuments() {
+        documents = []
+        var offset_sum = 0.0
+        let active_interval: AppInterval? = intervals.first { interval in
+            let window_center = secondsOffsetFromLastEpisode
+            let next_offset = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
+            let is_within = offset_sum <= window_center && next_offset >= window_center
+            offset_sum = next_offset
+            return is_within
+        }
+        if active_interval == nil { return }
+        let docFetch : NSFetchRequest<Document> = Document.fetchRequest()
+        docFetch.predicate = NSPredicate(format: "episode.start == %@", active_interval!.start as CVarArg)
+        do {
+            let docs = try PersistenceController.shared.container.viewContext.fetch(docFetch)
+            var paths = Set<URL>()
+            for doc in docs {
+                if !paths.contains(doc.path!) {
+                    documents.append(doc)
+                    paths.insert(doc.path!)
+                }
+            }
+        } catch {
+            
+        }
+    }
+    
     ///
     /// Set length and offset values on each of the supplied intervals
     ///
@@ -130,8 +159,8 @@ struct EpisodePlaylistView: View {
             } catch {
                 print("Unable to perform the requests: \(error).")
             }
-            
         }
+        loadDocuments()
     }
     
     // @todo Function is duplicated 3 times (here, episodeview and analysis. needs to be Factored out)
@@ -475,6 +504,16 @@ struct EpisodePlaylistView: View {
                 }.frame(maxWidth: 0, maxHeight: 0).opacity(0)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .toolbar {
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if documents.count > 0 {
+                        Button("Open \(documents.first!.path!.lastPathComponent)") {
+                            // Handle button tap here
+                            NSWorkspace.shared.open(documents.first!.path!)
+                        }
+                    }
+                }
+            }
         }
     }
 }
