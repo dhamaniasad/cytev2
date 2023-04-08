@@ -37,9 +37,10 @@ Happy to accept PRs related to any of the following
 - App sandbox is disabled to allow file tracking; [instead should request document permissions](https://stackoverflow.com/a/70972475)
 - Timeline slider not updating while video playing (timeJumped notification not sent until pause)
 - Build process fails on Github (Needs signing cert installed to sign embedded content?)
+- Should not [perform video analysis](https://developer.apple.com/documentation/avkit/avplayerview/3986556-allowsvideoframeanalysis) on feed
 - Sometimes app icons do not show on timeline view
 - Only the top result is highlighted in timeline view
-- Should not [perform video analysis](https://developer.apple.com/documentation/avkit/avplayerview/3986556-allowsvideoframeanalysis) on feed
+- Some results from searching fail to highlight the result snippet
 
 ### Refactor
 

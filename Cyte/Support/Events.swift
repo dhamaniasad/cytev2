@@ -28,32 +28,39 @@ extension NSImage {
     }
 }
 
+var bundleColorCache : Dictionary<String, NSColor> = ["": NSColor.gray]
 func getColor(bundleID: String) -> NSColor? {
-    return getIcon(bundleID: bundleID).averageColor
+    if bundleColorCache[bundleID] != nil {
+        return bundleColorCache[bundleID]!
+    }
+    return NSColor.gray
 }
 
 var bundleImageCache: [String: NSImage] = [:]
 func getIcon(bundleID: String) -> NSImage {
+    if bundleImageCache[bundleID] != nil {
+        return bundleImageCache[bundleID]!
+    }
     guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
     else {
-        if bundleImageCache[bundleID] != nil {
-            return bundleImageCache[bundleID]!
-        } else {
-            URLSession.shared.dataTask(with: FavIcon(bundleID)[.m]) { (data, response, error) in
-              guard let imageData = data else { return }
+        URLSession.shared.dataTask(with: FavIcon(bundleID)[.m]) { (data, response, error) in
+          guard let imageData = data else { return }
 
-              DispatchQueue.main.async {
-                  bundleImageCache[bundleID] = NSImage(data: imageData)
-              }
-            }.resume()
-        }
+          DispatchQueue.main.async {
+              bundleImageCache[bundleID] = NSImage(data: imageData)
+              bundleColorCache[bundleID] = bundleImageCache[bundleID]!.averageColor
+          }
+        }.resume()
         return NSImage()
     }
     
     guard FileManager.default.fileExists(atPath: path)
     else { return NSImage() }
     
-    return NSWorkspace.shared.icon(forFile: path)
+    let icon = NSWorkspace.shared.icon(forFile: path)
+    bundleImageCache[bundleID] = icon
+    bundleColorCache[bundleID] = icon.averageColor
+    return icon
 }
 
 func getApplicationNameFromBundleID(bundleID: String) -> String? {

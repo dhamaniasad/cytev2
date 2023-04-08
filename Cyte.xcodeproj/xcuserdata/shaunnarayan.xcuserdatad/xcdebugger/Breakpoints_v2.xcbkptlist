@@ -46,8 +46,8 @@
             filePath = "Cyte/Views/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "545"
-            endingLineNumber = "545"
+            startingLineNumber = "535"
+            endingLineNumber = "535"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -158,10 +158,10 @@
             filePath = "Cyte/Views/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "377"
-            endingLineNumber = "377"
-            landmarkName = "runSearch()"
-            landmarkType = "7">
+            startingLineNumber = "367"
+            endingLineNumber = "367"
+            landmarkName = "ContentView"
+            landmarkType = "14">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -174,8 +174,8 @@
             filePath = "Cyte/Views/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "109"
-            endingLineNumber = "109"
+            startingLineNumber = "108"
+            endingLineNumber = "108"
             landmarkName = "performRefreshData()"
             landmarkType = "7">
          </BreakpointContent>
@@ -190,8 +190,8 @@
             filePath = "Cyte/Views/ContentView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "175"
-            endingLineNumber = "175"
+            startingLineNumber = "165"
+            endingLineNumber = "165"
             landmarkName = "performRefreshData()"
             landmarkType = "7">
          </BreakpointContent>

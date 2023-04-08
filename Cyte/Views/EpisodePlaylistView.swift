@@ -17,7 +17,6 @@ struct AppInterval :Identifiable {
     var end: Date
     var bundleId: String
     var title: String
-    var color: Color = Color.gray
     var id: Int { "\(start.formatted()) - \(end.formatted())".hashValue }
     var offset: Double = 0.0
     var length: Double = 0.0
@@ -321,7 +320,7 @@ struct EpisodePlaylistView: View {
                     y: .value("?", 0),
                     height: MarkDimension(floatLiteral: timelineSize * 2)
                 )
-                .foregroundStyle(interval.color)
+                .foregroundStyle(Color(nsColor:getColor(bundleID: interval.bundleId) ?? NSColor.gray))
                 .cornerRadius(40.0)
             }
         }

@@ -41,7 +41,6 @@ struct ContentView: View {
     @State private var startDate = Calendar(identifier: Calendar.Identifier.iso8601).date(byAdding: .day, value: -30, to: Date())!
     @State private var endDate = Date()
     
-    @State private var bundleColors : Dictionary<String, Color> = ["": Color.gray]
     @State private var appIntervals : [AppInterval] = []
     
     // Hover states
@@ -91,9 +90,9 @@ struct ContentView: View {
         }
         if refreshTask == nil || refreshTask!.isCancelled {
             refreshTask = Task {
-                // debounce to 400ms
+                // debounce to 10ms
                 do {
-                    try await Task.sleep(nanoseconds: 400_000_000)
+                    try await Task.sleep(nanoseconds: 10_000_000)
                     self.performRefreshData()
                 } catch { }
             }
@@ -152,19 +151,10 @@ struct ContentView: View {
             }
         }
         
-        for episode in _episodes {
-            if !bundleColors.contains(where: { (bundleId, color) in
-                return bundleId == episode.bundle
-            }) {
-                let color = getColor(bundleID: episode.bundle ?? Bundle.main.bundleIdentifier!) ?? .gray
-                bundleColors[episode.bundle ?? Bundle.main.bundleIdentifier!] = Color(nsColor: color)
-            }
-        }
-        
         episodesLengthSum = 0.0
         appIntervals = _episodes.enumerated().map { (index, episode) in
             episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
-            return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "", color: bundleColors[episode.bundle ?? ""] ?? Color.gray )
+            return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "" )
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {

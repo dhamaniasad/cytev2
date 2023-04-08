@@ -11,7 +11,7 @@ DAL for CoreData model definition, plus logic to handle tracking application con
 
 ## Classify
 
-OCR followed by POS tagging for incoming frames providing compressed features for free text search.
+OCR followed for incoming frames providing compressed features for free text search.
 
 ## Support
 
@@ -20,11 +20,7 @@ Used for tracking global hotkey events, wrapping NSWorkspace and NSRunningApplic
 ## Reason
 
 Handles the intersection between indexing and querying: 
-- Creates medium granularity features (OpenAI ada embeddings for documents and web content stored in FAISS index)
-- Natural language knowledge base querying using GPT to reason about embedding clusters rooted around the input query
-
-This is currently done in a support app built in Python to leverage langchain until it has more bindings.
-Optional module, and the app falls back gracefully to low granularity feature search when not available.
+- Natural language knowledge base querying using GPT/llama to reason about the current result set rooted around the input query
 
 ## Views
 
