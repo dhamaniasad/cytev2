@@ -11,6 +11,7 @@ import Highlightr
 import AVKit
 
 struct ChatView: View {
+    @EnvironmentObject var bundleCache: BundleCache
     @StateObject private var agent = Agent.shared
     @State var intervals: [AppInterval]
     
@@ -48,7 +49,7 @@ struct ChatView: View {
                         )
                         
                 } else {
-                    Image(nsImage: getIcon(bundleID: Bundle.main.bundleIdentifier!))
+                    Image(nsImage: bundleCache.getIcon(bundleID: Bundle.main.bundleIdentifier!))
                         .resizable()
                         .cornerRadius(15.0)
                         .frame(width: 30, height: 30)

@@ -24,6 +24,7 @@ extension Date {
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject var bundleCache: BundleCache
     @StateObject private var agent = Agent.shared
     @FocusState private var searchFocused: Bool
     
@@ -265,7 +266,7 @@ struct ContentView: View {
                 LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
                     ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
                         HStack {
-                            Image(nsImage: getIcon(bundleID: bundle))
+                            Image(nsImage: bundleCache.getIcon(bundleID: bundle))
                                 .frame(width: 32, height: 32)
                             Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
                                 .foregroundColor(.black)

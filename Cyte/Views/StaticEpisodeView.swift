@@ -14,6 +14,7 @@ import Vision
 
 struct StaticEpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject var bundleCache: BundleCache
     
     @State var asset: AVAsset
     @ObservedObject var episode: Episode
@@ -212,7 +213,7 @@ struct StaticEpisodeView: View {
                                 NSCursor.arrow.set()
                             }
                         })
-                    Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!))
+                    Image(nsImage: bundleCache.getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!))
                         .frame(width: 32, height: 32)
                 }
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))

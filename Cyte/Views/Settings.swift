@@ -11,6 +11,7 @@ import KeychainSwift
 import AXSwift
 
 struct BundleView: View {
+    @EnvironmentObject var bundleCache: BundleCache
     
     @State var bundle: BundleExclusion
     @State var isExcluded: Bool
@@ -50,7 +51,7 @@ struct BundleView: View {
                 isExcluded = bundle.excluded
                 print($0)
             })
-            Image(nsImage: getIcon(bundleID: bundle.bundle!))
+            Image(nsImage: bundleCache.getIcon(bundleID: bundle.bundle!))
                 .frame(width: 32, height: 32)
             Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!) ?? bundle.bundle!)
                 .foregroundColor(.black)

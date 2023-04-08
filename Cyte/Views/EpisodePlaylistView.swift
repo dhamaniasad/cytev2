@@ -49,6 +49,7 @@ func secondsToReadable(seconds: Double) -> String {
 }
 
 struct EpisodePlaylistView: View {
+    @EnvironmentObject var bundleCache: BundleCache
     
     @State var player: AVPlayer?
     @State private var thumbnailImages: [CGImage?] = []
@@ -253,7 +254,7 @@ struct EpisodePlaylistView: View {
         // seek to correct offset
         let progress = (offset_sum) - secondsOffsetFromLastEpisode
         let offset: CMTime = CMTime(seconds: progress, preferredTimescale: player!.currentTime().timescale)
-        self.player!.seek(to: offset, toleranceBefore: CMTime.zero, toleranceAfter: CMTime.zero)
+        self.player!.seek(to: offset, toleranceBefore: CMTime(value: 1, timescale: 1), toleranceAfter: CMTime(value: 1, timescale: 1))
     }
     
     func windowOffsetToCenter(of: AppInterval) -> Double {
@@ -326,7 +327,7 @@ struct EpisodePlaylistView: View {
                     y: .value("?", 0),
                     height: MarkDimension(floatLiteral: timelineSize * 2)
                 )
-                .foregroundStyle(Color(nsColor:getColor(bundleID: interval.bundleId) ?? NSColor.gray))
+                .foregroundStyle(Color(nsColor:bundleCache.getColor(bundleID: interval.bundleId) ?? NSColor.gray))
                 .cornerRadius(40.0)
             }
         }
@@ -389,13 +390,7 @@ struct EpisodePlaylistView: View {
                                 return is_within
                             }
                             let url = urlForEpisode(start: active_interval?.start, title: active_interval?.title)
-                            if url != urlOfCurrentlyPlayingInPlayer(player: player!) {
-                                // @todo hack to get around some form of off by one issue in the overall logic
-                                // Active interval comes out as the next episode when the playhead is at the end of the video
-                                secondsOffsetFromLastEpisode += 0.1
-                            } else {
-                                secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
-                            }
+                            secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                             updateData()
                         }
                         
@@ -420,20 +415,6 @@ struct EpisodePlaylistView: View {
                     }
                 }
                 VStack {
-//                    HStack(spacing: 0) {
-//                        ForEach(thumbnailImages, id: \.self) { image in
-//                            if image != nil {
-//                                Image(image!, scale: 1.0, label: Text(""))
-//                                    .resizable()
-//                                    .frame(width: 300, height: 170)
-//                            } else {
-//                                Rectangle()
-//                                    .fill(.white)
-//                                    .frame(width: 300, height: 170)
-//                            }
-//                        }
-//                    }
-//                    .frame(height: 170)
                     ZStack {
                         chart
                         ZStack {
@@ -445,7 +426,7 @@ struct EpisodePlaylistView: View {
                                 GeometryReader { metrics in
                                     HStack {
                                         if interval.bundleId.count > 0 {
-                                            Image(nsImage: getIcon(bundleID: interval.bundleId))
+                                            Image(nsImage: bundleCache.getIcon(bundleID: interval.bundleId))
                                                 .resizable()
                                                 .frame(width: timelineSize * 2, height: timelineSize * 2)
                                         }

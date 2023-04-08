@@ -11,6 +11,7 @@ import XCGLogger
 @main
 struct CyteApp: App {
     let persistenceController = PersistenceController.shared
+    let bundleCache = BundleCache()
 
     @NSApplicationDelegateAdaptor private var appDelegate: AppDelegate
     @AppStorage("showMenuBarExtra") private var showMenuBarExtra = true
@@ -51,6 +52,7 @@ struct CyteApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environmentObject(bundleCache)
                 .onAppear {
                     self.setup()
                 }
