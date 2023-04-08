@@ -131,7 +131,7 @@ struct ContentView: View {
                 
             }
         } else {
-            let potentials: [CyteInterval] = Memory.shared.search(term: self.filter, expanding: 2)
+            let potentials: [CyteInterval] = Memory.shared.search(term: self.filter)
             withAnimation(.easeInOut(duration: 0.3)) {
                 intervals = potentials.filter { (interval: CyteInterval) in
                     if showFaves && interval.episode.save != true {
@@ -358,7 +358,7 @@ struct ContentView: View {
                             ForEach(intervals.filter { (interval: CyteInterval) in
                                 return (interval.episode.title ?? "").count > 0
                             }) { (interval : CyteInterval) in
-                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: false)
+                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: interval.snippet ?? filter, intervals: appIntervals, selected: false)
                                     .id(interval.from)
                             }
                         }

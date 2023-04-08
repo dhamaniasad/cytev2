@@ -25,12 +25,14 @@ class CyteInterval: ObservableObject, Identifiable, Equatable {
     @Published var to: Date
     @Published var episode: Episode
     @Published var document: String
+    @Published var snippet: String?
     
-    init(from: Date, to: Date, episode: Episode, document: String) {
+    init(from: Date, to: Date, episode: Episode, document: String, snippet: String? = nil) {
         self.from = from
         self.to = to
         self.episode = episode
         self.document = document
+        self.snippet = snippet
     }
     
     var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
@@ -80,6 +82,7 @@ struct IntervalExpression {
     public static let to = Expression<Double>("to")
     public static let episodeStart = Expression<Double>("episode_start")
     public static let document = Expression<String>("document")
+    public static let snippet = Expression<String>(literal: "snippet(Interval, -1, '', '', '', 5)")
 }
 
 ///
@@ -507,15 +510,26 @@ class Memory {
     }
     
     ///
-    /// Peforms a full text search using FTSv4, with a hard limit of 100 most recent results
-    /// If expanding is non-zero, nouns and verbs in the search query will be transparently replaced with
-    /// an FTS query for it and simmilar words
+    /// Peforms a full text search using FTSv4, with a hard limit of 64 most recent results
+    /// If expanding is non-zero, nouns and verbs in the search query will be replaced with
+    /// an FTS query for it and similar words per embedding distance
     ///
-    func search(term: String, expanding: Int = 0) -> [CyteInterval] {
+    func search(term: String, expand_by: Int = 0) -> [CyteInterval] {
         var result: [CyteInterval] = []
         do {
             var finalTerm = term
+            var expanding = 0
+            for char in term {
+                if char == ">" {
+                    expanding += 1
+                } else {
+                    break
+                }
+            }
+            finalTerm = String(finalTerm.dropFirst(expanding))
+            expanding = expand_by > expanding ? expand_by : expanding
             if expanding > 0 {
+                log.info("Expanding by \(expanding)")
                 let tagger = NLTagger(tagSchemes: [.lexicalClass])
                 tagger.string = finalTerm
                 let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
@@ -525,8 +539,10 @@ class Memory {
                         // if verb or noun
                         if tag.rawValue == "Noun" || tag.rawValue == "Verb" {
                             let concept = String(finalTerm[tokenRange])
+                            log.info("Try to expand \(concept)")
                             var replacement = ""
                             embedding!.enumerateNeighbors(for: concept, maximumCount: expanding) { neighbor, distance in
+                                log.info("Expand with \(neighbor)")
                                 replacement += " OR \(neighbor)"
                                 return true
                             }
@@ -545,7 +561,10 @@ class Memory {
                 }
                 finalTerm = "NEAR(\(finalTerm), 100)"
             }
-            let stmt = finalTerm.count > 0 ? try intervalDb!.prepare("SELECT * FROM Interval WHERE Interval MATCH '\(finalTerm)' ORDER BY bm25(Interval) LIMIT 64") : try intervalDb!.prepare("SELECT * FROM Interval LIMIT 64")
+            print(finalTerm)
+            let stmt = finalTerm.count > 0 ?
+            try intervalDb!.prepare("SELECT *, snippet(Interval, -1, '', '', '', 1) FROM Interval WHERE Interval MATCH '\(finalTerm)' ORDER BY bm25(Interval) LIMIT 64") :
+            try intervalDb!.prepare("SELECT *, snippet(Interval, -1, '', '', '', 1) FROM Interval LIMIT 64")
         
             for interval in stmt {
                 let epStart: Date = Date(timeIntervalSinceReferenceDate: interval[2] as! Double)
@@ -564,7 +583,7 @@ class Memory {
                 }
                 
                 if ep != nil {
-                    let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[0] as! Double), to: Date(timeIntervalSinceReferenceDate:interval[1] as! Double), episode: ep!, document: interval[3] as! String)
+                    let inter = CyteInterval(from: Date(timeIntervalSinceReferenceDate:interval[0] as! Double), to: Date(timeIntervalSinceReferenceDate:interval[1] as! Double), episode: ep!, document: interval[3] as! String, snippet: interval[4] as? String)
                     result.append(inter)
                 } else {
                     log.error("Found an interval without base episode - dangling ref?")
