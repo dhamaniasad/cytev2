@@ -358,7 +358,7 @@ struct ContentView: View {
                             ForEach(intervals.filter { (interval: CyteInterval) in
                                 return (interval.episode.title ?? "").count > 0
                             }) { (interval : CyteInterval) in
-                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: filter, intervals: appIntervals, selected: false)
+                                StaticEpisodeView(asset: AVAsset(url: urlForEpisode(start: interval.episode.start, title: interval.episode.title)), episode: interval.episode, result: interval, filter: interval.snippet ?? filter, intervals: appIntervals, selected: false)
                                     .id(interval.from)
                             }
                         }
