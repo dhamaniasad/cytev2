@@ -32,14 +32,22 @@ func getColor(bundleID: String) -> NSColor? {
     return getIcon(bundleID: bundleID).averageColor
 }
 
+var bundleImageCache: [String: NSImage] = [:]
 func getIcon(bundleID: String) -> NSImage {
     guard let path = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)?.path(percentEncoded: false)
     else {
-        do {
-            return NSImage(data: try Data(contentsOf: FavIcon(bundleID)[.m])) ?? NSImage()
-        } catch {
-            return NSImage()
+        if bundleImageCache[bundleID] != nil {
+            return bundleImageCache[bundleID]!
+        } else {
+            URLSession.shared.dataTask(with: FavIcon(bundleID)[.m]) { (data, response, error) in
+              guard let imageData = data else { return }
+
+              DispatchQueue.main.async {
+                  bundleImageCache[bundleID] = NSImage(data: imageData)
+              }
+            }.resume()
         }
+        return NSImage()
     }
     
     guard FileManager.default.fileExists(atPath: path)
