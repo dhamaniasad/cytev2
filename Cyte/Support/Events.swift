@@ -39,7 +39,6 @@ class BundleCache: ObservableObject {
         }
         return NSColor.gray
     }
-
     
     func getIcon(bundleID: String) -> NSImage {
         if bundleImageCache[bundleID] != nil {
@@ -62,8 +61,10 @@ class BundleCache: ObservableObject {
         else { return NSImage() }
         
         let icon = NSWorkspace.shared.icon(forFile: path)
-        bundleImageCache[bundleID] = icon
-        bundleColorCache[bundleID] = icon.averageColor
+        DispatchQueue.main.async { [self] in
+            bundleImageCache[bundleID] = icon
+            bundleColorCache[bundleID] = icon.averageColor
+        }
         return icon
     }
 }

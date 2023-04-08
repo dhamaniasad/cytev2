@@ -259,7 +259,7 @@ struct EpisodePlaylistView: View {
     
     func windowOffsetToCenter(of: AppInterval) -> Double {
         // I know this is really poorly written. I'm tired. I'll fix it when I see it again.
-        let interval_center = (startTimeForEpisode(interval: of) + endTimeForEpisode(interval: of)) / 2
+        let interval_center = (startTimeForEpisode(interval: of) + endTimeForEpisode(interval: of)) / 2.0
         let window_length = Double(EpisodePlaylistView.windowLengthInSeconds)
         let portion = interval_center / window_length
         return portion
@@ -389,14 +389,10 @@ struct EpisodePlaylistView: View {
                                 offset_sum = next_offset
                                 return is_within
                             }
-                            let url = urlForEpisode(start: active_interval?.start, title: active_interval?.title)
                             secondsOffsetFromLastEpisode = ((Double(active_interval!.offset) + Double(active_interval!.length)) - (player!.currentTime().seconds))
                             updateData()
                         }
-                        
-                        
                     }
-                    //                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .contextMenu {
                     Button {
@@ -414,33 +410,27 @@ struct EpisodePlaylistView: View {
                         Label("Reveal in Finder", systemImage: "questionmark.folder")
                     }
                 }
-                VStack {
-                    ZStack {
+                
+                ZStack {
+                    GeometryReader { metrics in
                         chart
-                        ZStack {
+                        Group {
                             ForEach(intervals.filter { interval in
                                 return startTimeForEpisode(interval: interval) <= Double(EpisodePlaylistView.windowLengthInSeconds) &&
                                 endTimeForEpisode(interval: interval) >= 0
                             }) { interval in
-                                
-                                GeometryReader { metrics in
-                                    HStack {
-                                        if interval.bundleId.count > 0 {
-                                            Image(nsImage: bundleCache.getIcon(bundleID: interval.bundleId))
-                                                .resizable()
-                                                .frame(width: timelineSize * 2, height: timelineSize * 2)
-                                        }
-                                    }
-                                    .offset(CGSize(width: (windowOffsetToCenter(of:interval) * metrics.size.width) - timelineSize, height: timelineSize))
-                                }
+                                Image(nsImage: bundleCache.getIcon(bundleID: interval.bundleId))
+                                    .frame(width: timelineSize * 2, height: timelineSize * 2)
+                                    .id(interval.start)
+                                    .offset(CGSize(width: (windowOffsetToCenter(of:interval) * metrics.size.width) - timelineSize, height: 0))
                             }
                         }
                         .frame(height: timelineSize * 4)
                         .allowsHitTesting(false)
                     }
-                    
                 }
-                HStack(alignment: .top) {
+                Spacer().frame(height: 10)
+                HStack(alignment: .center) {
                     Text(activeTime())
                     Text(humanReadableOffset())
                         .frame(maxWidth: .infinity, alignment: .trailing)

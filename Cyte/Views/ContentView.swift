@@ -154,8 +154,8 @@ struct ContentView: View {
         
         episodesLengthSum = 0.0
         appIntervals = _episodes.enumerated().map { (index, episode) in
-            episodesLengthSum += (episode.end ?? Date()).timeIntervalSinceReferenceDate - (episode.start ?? Date()).timeIntervalSinceReferenceDate
-            return AppInterval(start: episode.start ?? Date(), end: episode.end ?? Date(), bundleId: episode.bundle ?? "", title: episode.title ?? "" )
+            episodesLengthSum += (episode.end!).timeIntervalSinceReferenceDate - (episode.start!).timeIntervalSinceReferenceDate
+            return AppInterval(start: episode.start!, end: episode.end!, bundleId: episode.bundle!, title: episode.title! )
         }
         
         withAnimation(.easeInOut(duration: 0.3)) {
@@ -580,6 +580,11 @@ struct ContentView: View {
         .background(
             Rectangle().foregroundColor(Color(red: 240.0 / 255.0, green: 240.0 / 255.0, blue: 240.0 / 255.0 ))
         )
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+               DispatchQueue.main.async {
+                   self.refreshData()
+               }
+           }
     }
 }
 
