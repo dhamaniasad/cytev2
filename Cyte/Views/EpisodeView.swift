@@ -21,21 +21,23 @@ extension CGRect: Hashable {
     }
 }
 
-extension View {
-    func cutout<S: Shape>(_ shape: S) -> some View {
-        self.clipShape(StackedShape(bottom: Rectangle(), top: shape), style: FillStyle(eoFill: true))
+struct StackedShape: Shape {
+    let shapes: [AnyShape]
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.addRect(rect)
+        for shape in shapes {
+            path.addPath(shape.path(in: rect))
+        }
+        return path
     }
 }
 
-struct StackedShape<Bottom: Shape, Top: Shape>: Shape {
-    var bottom: Bottom
-    var top: Top
-    
-    func path(in rect: CGRect) -> Path {
-        return Path { path in
-            path.addPath(bottom.path(in: rect))
-            path.addPath(top.path(in: rect))
-        }
+extension View {
+    func cutout<S: Shape>(_ shapes: [S]) -> some View {
+        let anyShapes = shapes.map(AnyShape.init)
+        return self.clipShape(StackedShape(shapes: anyShapes), style: FillStyle(eoFill: true))
     }
 }
 
@@ -128,6 +130,7 @@ struct EpisodeView: View {
                             }
                         })
                     Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier!)) )
+                        .frame(width: 32, height: 32)
                 }
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }

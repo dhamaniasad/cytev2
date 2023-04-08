@@ -116,7 +116,7 @@ struct EpisodePlaylistView: View {
                 }
             }
         }
-        if thumbnailImages.last! != nil {
+        if thumbnailImages.last! != nil && filter.count > 0 {
             // Run through vision and store results
             let requestHandler = VNImageRequestHandler(cgImage: thumbnailImages.last!!, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)
@@ -358,21 +358,16 @@ struct EpisodePlaylistView: View {
                         let width = (metrics.size.height - 100.0) / 9.0 * 16.0
                         let height = metrics.size.height - 100.0
                         VideoPlayer(player: player, videoOverlay: {
-                            if highlight.count > 0 {
-                                Color.black
-                                    .opacity(0.5)
-                                    .cutout(
+                            Rectangle()
+                                .fill(Color.black.opacity(0.5))
+                                .cutout(
+                                    highlight.map { high in
                                         RoundedRectangle(cornerRadius: 4)
-                                            .scale(x: highlight.first!.width * 1.2, y: highlight.first!.height * 1.2)
-                                            .offset(x:-(width/2) + (highlight.first!.midX * width), y:(height/2) - (highlight.first!.midY * height))
-                                        
-                                    )
-                            } else {
-                                Color.black
-                                    .opacity(0.0)
-                            }
-                            
-                            
+                                            .scale(x: high.width * 1.2, y: high.height * 1.2)
+                                            .offset(x:-(width/2) + (high.midX * width), y:(height/2) - (high.midY * height))
+                                    }
+
+                                )
                         })
                         .frame(width: width, height: height)
                         .onReceive(NotificationCenter.default.publisher(for: AVPlayerItem.timeJumpedNotification)) { _ in

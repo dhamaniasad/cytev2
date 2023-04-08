@@ -39,7 +39,6 @@ Happy to accept PRs related to any of the following
 - Build process fails on Github (Needs signing cert installed to sign embedded content?)
 - Should not [perform video analysis](https://developer.apple.com/documentation/avkit/avplayerview/3986556-allowsvideoframeanalysis) on feed
 - Sometimes app icons do not show on timeline view
-- Only the top result is highlighted in timeline view
 - Some results from searching fail to highlight the result snippet
 
 ### Refactor

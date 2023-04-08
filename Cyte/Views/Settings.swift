@@ -51,6 +51,7 @@ struct BundleView: View {
                 print($0)
             })
             Image(nsImage: getIcon(bundleID: bundle.bundle!))
+                .frame(width: 32, height: 32)
             Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!) ?? bundle.bundle!)
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)

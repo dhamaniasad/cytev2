@@ -266,6 +266,7 @@ struct ContentView: View {
                     ForEach(Set(episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
                         HStack {
                             Image(nsImage: getIcon(bundleID: bundle))
+                                .frame(width: 32, height: 32)
                             Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
                                 .foregroundColor(.black)
                         }
@@ -295,7 +296,7 @@ struct ContentView: View {
                 LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
                     ForEach(documentsForBundle) { doc in
                         HStack {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.dropFirst(7))))
+                            Image(nsImage: NSWorkspace.shared.icon(forFile: String(doc.path!.absoluteString.starts(with: "http") ? doc.path!.absoluteString : String(doc.path!.absoluteString.dropFirst(7)))))
                             Text(doc.path!.lastPathComponent)
                                 .foregroundColor(.black)
                         }
@@ -308,7 +309,7 @@ struct ContentView: View {
                             }
                         })
                         .onTapGesture { gesture in
-                            // @todo should really open with currently highlighted bundle
+                            // @todo should maybe open with currently highlighted bundle?
                             NSWorkspace.shared.open(doc.path!)
                         }
                     }

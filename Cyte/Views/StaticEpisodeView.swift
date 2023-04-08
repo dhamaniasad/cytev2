@@ -120,13 +120,12 @@ struct StaticEpisodeView: View {
                 
                 GeometryReader { metrics in
                     if highlight.count > selection {
-                        Color.black
-                            .opacity(0.5)
+                        Rectangle()
+                            .fill(Color.black.opacity(0.5))
                             .cutout(
-                                RoundedRectangle(cornerRadius: 4)
+                                [RoundedRectangle(cornerRadius: 4)
                                     .scale(x: highlight[selection].width * 1.2, y: highlight[selection].height * 1.2)
-                                    .offset(x:-180 + (highlight[selection].midX * 360), y:102 - (highlight[selection].midY * 203))
-                                    
+                                    .offset(x:-180 + (highlight[selection].midX * 360), y:102 - (highlight[selection].midY * 203))]
                             )
                     } else {
                         Color.black
@@ -214,6 +213,7 @@ struct StaticEpisodeView: View {
                             }
                         })
                     Image(nsImage: getIcon(bundleID: (episode.bundle ?? Bundle.main.bundleIdentifier)!))
+                        .frame(width: 32, height: 32)
                 }
                 .padding(EdgeInsets(top: 10.0, leading: 0.0, bottom: 10.0, trailing: 0.0))
             }
