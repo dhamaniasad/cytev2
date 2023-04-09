@@ -7,6 +7,7 @@
 
 import SwiftUI
 import XCGLogger
+import AXSwift
 
 @main
 struct CyteApp: App {
@@ -105,6 +106,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var mainApp: CyteApp?
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        if UserDefaults.standard.bool(forKey: "CYTE_BROWSER") {
+            checkIsProcessTrusted(prompt: true)
+        }
+        
         let logUrl: URL = homeDirectory().appendingPathComponent("Log").appendingPathComponent("Cyte.log")
         do {
             try FileManager.default.createDirectory(at: logUrl.deletingLastPathComponent(), withIntermediateDirectories: true, attributes: nil)

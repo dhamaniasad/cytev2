@@ -6,6 +6,90 @@
 //
 
 import CoreData
+import SQLite
+import AppKit
+
+///
+/// Bunch of data representing the current application context
+///
+struct CyteAppContext {
+    let front:NSRunningApplication
+    var title: String
+    var context: String
+    let isPrivate: Bool
+}
+
+///
+/// CoreData style wrapper for Intervals so it is observable in the UI
+///
+class CyteInterval: ObservableObject, Identifiable, Equatable {
+    static func == (lhs: CyteInterval, rhs: CyteInterval) -> Bool {
+        return (lhs.from == rhs.from) && (lhs.to == rhs.to)
+    }
+    
+    @Published var from: Date
+    @Published var to: Date
+    @Published var episode: Episode
+    @Published var document: String
+    @Published var snippet: String?
+    
+    init(from: Date, to: Date, episode: Episode, document: String, snippet: String? = nil) {
+        self.from = from
+        self.to = to
+        self.episode = episode
+        self.document = document
+        self.snippet = snippet
+    }
+    
+    var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
+}
+
+///
+/// All stored data will be rooted to this location. It defaults to application support for the bundle,
+/// and defers to a user preference if set
+///
+func homeDirectory() -> URL {
+    let defaults = UserDefaults.standard
+    let home = defaults.string(forKey: "CYTE_HOME")
+    if home != nil && FileManager.default.fileExists(atPath: home!) {
+        return URL(filePath: home!)
+    }
+    let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
+    return url
+}
+
+///
+/// Format the title for an episode given its start time and unformatted title
+///
+func urlForEpisode(start: Date?, title: String?) -> URL {
+    var url: URL = homeDirectory()
+    let components = Calendar.current.dateComponents([.year, .month, .day], from: start ?? Date())
+    url = url.appendingPathComponent("\(components.year ?? 0)")
+    url = url.appendingPathComponent("\(components.month ?? 0)")
+    url = url.appendingPathComponent("\(components.day ?? 0)")
+    url = url.appendingPathComponent("\(title ?? "").mov")
+    return url
+}
+
+///
+/// Helper function to open finder pinned to the supplied episode
+///
+func revealEpisode(episode: Episode) {
+    let url = urlForEpisode(start: episode.start, title: episode.title)
+    NSWorkspace.shared.activateFileViewerSelecting([url])
+}
+
+///
+/// Helper struct for accessing Interval fields from result sets
+///
+struct IntervalExpression {
+    public static let id = Expression<Int64>("id")
+    public static let from = Expression<Double>("from")
+    public static let to = Expression<Double>("to")
+    public static let episodeStart = Expression<Double>("episode_start")
+    public static let document = Expression<String>("document")
+    public static let snippet = Expression<String>(literal: "snippet(Interval, -1, '', '', '', 5)")
+}
 
 struct PersistenceController {
     static let shared = PersistenceController()

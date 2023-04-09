@@ -14,78 +14,6 @@ import NaturalLanguage
 import AXSwift
 
 ///
-/// CoreData style wrapper for Intervals so it is observable in the UI
-///
-class CyteInterval: ObservableObject, Identifiable, Equatable {
-    static func == (lhs: CyteInterval, rhs: CyteInterval) -> Bool {
-        return (lhs.from == rhs.from) && (lhs.to == rhs.to)
-    }
-    
-    @Published var from: Date
-    @Published var to: Date
-    @Published var episode: Episode
-    @Published var document: String
-    @Published var snippet: String?
-    
-    init(from: Date, to: Date, episode: Episode, document: String, snippet: String? = nil) {
-        self.from = from
-        self.to = to
-        self.episode = episode
-        self.document = document
-        self.snippet = snippet
-    }
-    
-    var id: String { "\(self.from.timeIntervalSinceReferenceDate)" }
-}
-
-///
-/// All stored data will be rooted to this location. It defaults to application support for the bundle,
-/// and defers to a user preference if set
-///
-func homeDirectory() -> URL {
-    let defaults = UserDefaults.standard
-    let home = defaults.string(forKey: "CYTE_HOME")
-    if home != nil && FileManager.default.fileExists(atPath: home!) {
-        return URL(filePath: home!)
-    }
-    let url: URL = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Cyte"))!
-    return url
-}
-
-///
-/// Format the title for an episode given its start time and unformatted title
-///
-func urlForEpisode(start: Date?, title: String?) -> URL {
-    var url: URL = homeDirectory()
-    let components = Calendar.current.dateComponents([.year, .month, .day], from: start ?? Date())
-    url = url.appendingPathComponent("\(components.year ?? 0)")
-    url = url.appendingPathComponent("\(components.month ?? 0)")
-    url = url.appendingPathComponent("\(components.day ?? 0)")
-    url = url.appendingPathComponent("\(title ?? "").mov")
-    return url
-}
-
-///
-/// Helper function to open finder pinned to the supplied episode
-///
-func revealEpisode(episode: Episode) {
-    let url = urlForEpisode(start: episode.start, title: episode.title)
-    NSWorkspace.shared.activateFileViewerSelecting([url])
-}
-
-///
-/// Helper struct for accessing Interval fields from result sets
-///
-struct IntervalExpression {
-    public static let id = Expression<Int64>("id")
-    public static let from = Expression<Double>("from")
-    public static let to = Expression<Double>("to")
-    public static let episodeStart = Expression<Double>("episode_start")
-    public static let document = Expression<String>("document")
-    public static let snippet = Expression<String>(literal: "snippet(Interval, -1, '', '', '', 5)")
-}
-
-///
 ///  Tracks active application context (driven by external caller)
 ///  Opens, encodes and closes the video stream, triggers analysis on frames
 ///  and indexes the resultant information for search
@@ -233,16 +161,12 @@ class Memory {
     }
     
     ///
-    /// Check the currently active app, if different since last check
-    /// then close the current episode and start a new one
-    /// Ignores the main bundle (Cyte) - creates sometimes undiscernable
-    /// memories with many layers of picture in picture
+    /// Wraps the provided context and updates with browser awareness
     ///
-    @MainActor
-    func updateActiveContext(windowTitles: Dictionary<String, String>) {
-        guard let front = NSWorkspace.shared.frontmostApplication else { return }
+    func browserAwareContext(front: NSRunningApplication, window_title: String) -> CyteAppContext {
+        var title = window_title
         var context = front.bundleIdentifier ?? ""
-        var title: String = windowTitles[front.bundleIdentifier ?? ""] ?? ""
+        
         var url: URL? = nil
         if context.count > 0 {
             let url_and_title = getAddressBarContent(context: context)
@@ -274,16 +198,30 @@ class Memory {
         if !isPrivate && currentContextIsPrivate {
             skipNextNFrames = 1
         }
+        return CyteAppContext(front: front, title: title, context: context, isPrivate: isPrivate)
+    }
+    
+    ///
+    /// Check the currently active app, if different since last check
+    /// then close the current episode and start a new one
+    /// Ignores the main bundle (Cyte) - creates sometimes undiscernable
+    /// memories with many layers of picture in picture
+    ///
+    @MainActor
+    func updateActiveContext(windowTitles: Dictionary<String, String>) {
+        guard let front = NSWorkspace.shared.frontmostApplication else { return }
+        var title: String = windowTitles[front.bundleIdentifier ?? ""] ?? ""
+        let ctx = browserAwareContext(front: front, window_title:title)
         
-        if front.isActive && (currentContext != context || currentContextIsPrivate != isPrivate) {
+        if ctx.front.isActive && (currentContext != ctx.context || currentContextIsPrivate != ctx.isPrivate) {
             if assetWriter != nil && assetWriterInput!.isReadyForMoreMediaData {
                 closeEpisode()
             }
-            currentContext = context
-            currentContextIsPrivate = isPrivate
+            currentContext = ctx.context
+            currentContextIsPrivate = ctx.isPrivate
             let exclusion = Memory.shared.getOrCreateBundleExclusion(name: currentContext)
             if assetWriter == nil && currentContext != Bundle.main.bundleIdentifier && exclusion.excluded == false && !currentContextIsPrivate {
-                
+                var title = ctx.title
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).count == 0 {
                     title = front.localizedName ?? currentContext
                 }
@@ -321,7 +259,7 @@ class Memory {
         //add the input to the asset writer
         assetWriter!.add(assetWriterInput!)
         //begin the session
-        assetWriter!.startWriting()
+        assetWriter!.startWriting() // Doesn't matter this is on the main thread since the UI isn't open when it's called
         assetWriter!.startSession(atSourceTime: CMTime.zero)
         
         episode = Episode(context: PersistenceController.shared.container.viewContext)
@@ -510,57 +448,65 @@ class Memory {
     }
     
     ///
-    /// Peforms a full text search using FTSv4, with a hard limit of 64 most recent results
     /// If expanding is non-zero, nouns and verbs in the search query will be replaced with
     /// an FTS query for it and similar words per embedding distance
+    ///
+    private func expand(term: String, expand_by: Int) -> String {
+        var finalTerm = term
+        var expanding = 0
+        for char in term {
+            if char == ">" {
+                expanding += 1
+            } else {
+                break
+            }
+        }
+        finalTerm = String(finalTerm.dropFirst(expanding))
+        expanding = expand_by > expanding ? expand_by : expanding
+        if expanding > 0 {
+            log.info("Expanding by \(expanding)")
+            let tagger = NLTagger(tagSchemes: [.lexicalClass])
+            tagger.string = finalTerm
+            let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
+            var replacements: [(String, String)] = []
+            tagger.enumerateTags(in: finalTerm.startIndex..<finalTerm.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
+                if let tag = tag {
+                    // if verb or noun
+                    if tag.rawValue == "Noun" || tag.rawValue == "Verb" {
+                        let concept = String(finalTerm[tokenRange])
+                        log.info("Try to expand \(concept)")
+                        var replacement = ""
+                        embedding!.enumerateNeighbors(for: concept, maximumCount: expanding) { neighbor, distance in
+                            log.info("Expand with \(neighbor)")
+                            replacement += " OR \(neighbor)"
+                            return true
+                        }
+                        if replacement.count > 0 {
+                            replacement = "(\(concept)\(replacement))"
+                        } else {
+                            replacement = concept
+                        }
+                        replacements.append((concept, replacement))
+                    }
+                }
+                return true
+            }
+            for replacement in replacements {
+                finalTerm = finalTerm.replacing(replacement.0, with: "\"\(replacement.1)\"")
+            }
+            finalTerm = "NEAR(\(finalTerm), 100)"
+        }
+        return finalTerm
+    }
+    
+    ///
+    /// Peforms a full text search using FTSv4, with a hard limit of 64 most recent results
     ///
     func search(term: String, expand_by: Int = 0) -> [CyteInterval] {
         var result: [CyteInterval] = []
         do {
-            var finalTerm = term
-            var expanding = 0
-            for char in term {
-                if char == ">" {
-                    expanding += 1
-                } else {
-                    break
-                }
-            }
-            finalTerm = String(finalTerm.dropFirst(expanding))
-            expanding = expand_by > expanding ? expand_by : expanding
-            if expanding > 0 {
-                log.info("Expanding by \(expanding)")
-                let tagger = NLTagger(tagSchemes: [.lexicalClass])
-                tagger.string = finalTerm
-                let options: NLTagger.Options = [.omitPunctuation, .omitWhitespace]
-                var replacements: [(String, String)] = []
-                tagger.enumerateTags(in: finalTerm.startIndex..<finalTerm.endIndex, unit: .word, scheme: .lexicalClass, options: options) { tag, tokenRange in
-                    if let tag = tag {
-                        // if verb or noun
-                        if tag.rawValue == "Noun" || tag.rawValue == "Verb" {
-                            let concept = String(finalTerm[tokenRange])
-                            log.info("Try to expand \(concept)")
-                            var replacement = ""
-                            embedding!.enumerateNeighbors(for: concept, maximumCount: expanding) { neighbor, distance in
-                                log.info("Expand with \(neighbor)")
-                                replacement += " OR \(neighbor)"
-                                return true
-                            }
-                            if replacement.count > 0 {
-                                replacement = "(\(concept)\(replacement))"
-                            } else {
-                                replacement = concept
-                            }
-                            replacements.append((concept, replacement))
-                        }
-                    }
-                    return true
-                }
-                for replacement in replacements {
-                    finalTerm = finalTerm.replacing(replacement.0, with: "\"\(replacement.1)\"")
-                }
-                finalTerm = "NEAR(\(finalTerm), 100)"
-            }
+            var finalTerm = expand(term: term, expand_by: expand_by)
+            
             log.debug(finalTerm)
             let stmt = finalTerm.count > 0 ?
             try intervalDb!.prepare("SELECT *, snippet(Interval, -1, '', '', '', 1) FROM Interval WHERE Interval MATCH '\(finalTerm)' ORDER BY bm25(Interval) LIMIT 64") :
@@ -606,6 +552,10 @@ class Memory {
         }
     }
     
+    ///
+    /// Returns the BundleExclusion associated with the given bundle name
+    /// If unknown, it is created with default values
+    ///
     func getOrCreateBundleExclusion(name: String, excluded: Bool = false) -> BundleExclusion {
         let bundleFetch : NSFetchRequest<BundleExclusion> = BundleExclusion.fetchRequest()
         bundleFetch.predicate = NSPredicate(format: "bundle == %@", name)
