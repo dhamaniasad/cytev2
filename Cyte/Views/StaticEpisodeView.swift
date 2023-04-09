@@ -15,6 +15,7 @@ import Vision
 struct StaticEpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject var bundleCache: BundleCache
+    @EnvironmentObject var episodeModel: EpisodeModel
     
     @State var asset: AVAsset
     @ObservedObject var episode: Episode
@@ -24,9 +25,6 @@ struct StaticEpisodeView: View {
     @State var filter: String
     @State var highlight: [CGRect] = []
     @State var thumbnail: CGImage?
-    
-    // @todo Ideally accept a subview so we don't need this data
-    @State var intervals: [AppInterval]
     
     @State private var isHoveringSave: Bool = false
     @State private var isHoveringExpand: Bool = false
@@ -62,33 +60,12 @@ struct StaticEpisodeView: View {
     }
     
     func recognizeTextHandler(request: VNRequest, error: Error?) {
-        guard let observations =
-                request.results as? [VNRecognizedTextObservation] else {
-            return
-        }
         highlight.removeAll()
-        // @todo replace map with loop if observations remain unused
-        let _: [(String, CGRect)] = observations.compactMap { observation in
-            // Find the top observation.
-            guard let candidate = observation.topCandidates(1).first else { return ("", .zero) }
-            
-            // Find the bounding-box observation for the string range.
-            let stringRange = candidate.string.startIndex..<candidate.string.endIndex
-            let boxObservation = try? candidate.boundingBox(for: stringRange)
-            
-            // Get the normalized CGRect value.
-            let boundingBox = boxObservation?.boundingBox ?? .zero
-            
-            if candidate.string.lowercased().contains((filter.lowercased())) {
-                withAnimation(.easeIn(duration: 0.3)) {
-                    highlight.append(boundingBox)
-                }
+        let recognizedStringsAndRects = procVisionResult(request: request, error: error)
+        recognizedStringsAndRects.forEach { data in
+            if data.0.lowercased().contains((filter.lowercased())) {
+                highlight.append(data.1)
             }
-            
-            // Convert the rectangle from normalized coordinates to image coordinates.
-            return (candidate.string, VNImageRectForNormalizedRect(boundingBox,
-                                                Int(1920),
-                                                Int(1080)))
         }
     }
     
@@ -101,9 +78,9 @@ struct StaticEpisodeView: View {
     
     func offsetForEpisode(episode: Episode) -> Double {
         var offset_sum = 0.0
-        let active_interval: AppInterval? = intervals.first { interval in
-            offset_sum = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-            return episode.start == interval.start
+        let active_interval: AppInterval? = episodeModel.appIntervals.first { interval in
+            offset_sum = offset_sum + (interval.episode.end!.timeIntervalSinceReferenceDate - interval.episode.start!.timeIntervalSinceReferenceDate)
+            return episode.start == interval.episode.start!
         }
         return offset_sum + (active_interval?.length ?? 0.0)
     }
@@ -179,7 +156,7 @@ struct StaticEpisodeView: View {
                     }
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - ((result.from.timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), filter: filter
+                            EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - ((result.from.timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), filter: filter
                             )
                         }
                     } label: {

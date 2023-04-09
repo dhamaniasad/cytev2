@@ -44,27 +44,7 @@ class Analysis {
     // Callback from vision OCR. Next run NLP and index keywords (nouns)
     //
     func recognizeTextHandler(request: VNRequest, error: Error?) {
-        guard let observations =
-                request.results as? [VNRecognizedTextObservation] else {
-            return
-        }
-        let recognizedStringsAndRects: [(String, CGRect)] = observations.compactMap { observation in
-            // Find the top observation.
-            guard let candidate = observation.topCandidates(1).first else { return ("", .zero) }
-            if observation.confidence < 0.45 { return ("", .zero) }
-            
-            // Find the bounding-box observation for the string range.
-            let stringRange = candidate.string.startIndex..<candidate.string.endIndex
-            let boxObservation = try? candidate.boundingBox(for: stringRange)
-            
-            // Get the normalized CGRect value.
-            let boundingBox = boxObservation?.boundingBox ?? .zero
-            
-            // Convert the rectangle from normalized coordinates to image coordinates.
-            return (candidate.string, VNImageRectForNormalizedRect(boundingBox,
-                                                Int(1920),
-                                                Int(1080)))
-        }
+        let recognizedStringsAndRects = procVisionResult(request: request, error: error)
         let text = recognizedStringsAndRects.reduce("") { (result, adding) in
             return "\(result) \(adding.0)"
         }

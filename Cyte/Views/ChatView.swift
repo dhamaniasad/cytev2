@@ -13,7 +13,6 @@ import AVKit
 struct ChatView: View {
     @EnvironmentObject var bundleCache: BundleCache
     @StateObject private var agent = Agent.shared
-    @State var intervals: [AppInterval]
     
     @State private var isHoveringReturn: Bool = false
     

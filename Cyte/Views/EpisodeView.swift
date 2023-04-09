@@ -12,45 +12,13 @@ import AVKit
 import Combine
 import Vision
 
-extension CGRect: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(minX)
-        hasher.combine(minY)
-        hasher.combine(maxX)
-        hasher.combine(maxY)
-    }
-}
-
-struct StackedShape: Shape {
-    let shapes: [AnyShape]
-    
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.addRect(rect)
-        for shape in shapes {
-            path.addPath(shape.path(in: rect))
-        }
-        return path
-    }
-}
-
-extension View {
-    func cutout<S: Shape>(_ shapes: [S]) -> some View {
-        let anyShapes = shapes.map(AnyShape.init)
-        return self.clipShape(StackedShape(shapes: anyShapes), style: FillStyle(eoFill: true))
-    }
-}
-
 struct EpisodeView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject var bundleCache: BundleCache
+    @EnvironmentObject var episodeModel: EpisodeModel
     
     @State var player: AVPlayer
     @ObservedObject var episode: Episode
-    
-    
-    // @todo Ideally accept a subview so we don't need this data
-    @State var intervals: [AppInterval]
     
     @State private var isHoveringSave: Bool = false
     @State private var isHoveringExpand: Bool = false
@@ -59,9 +27,9 @@ struct EpisodeView: View {
     
     func offsetForEpisode(episode: Episode) -> Double {
         var offset_sum = 0.0
-        let active_interval: AppInterval? = intervals.first { interval in
-            offset_sum = offset_sum + (interval.end.timeIntervalSinceReferenceDate - interval.start.timeIntervalSinceReferenceDate)
-            return episode.start == interval.start
+        let active_interval: AppInterval? = episodeModel.appIntervals.first { interval in
+            offset_sum = offset_sum + (interval.episode.end!.timeIntervalSinceReferenceDate - interval.episode.start!.timeIntervalSinceReferenceDate)
+            return episode.start == interval.episode.start
         }
         return offset_sum + (active_interval?.length ?? 0.0)
     }
@@ -96,7 +64,7 @@ struct EpisodeView: View {
                 HStack {
                     NavigationLink {
                         ZStack {
-                            EpisodePlaylistView(player: player, intervals: intervals, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - player.currentTime().seconds, filter: filter
+                            EpisodePlaylistView(player: player, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - player.currentTime().seconds, filter: filter
                             )
                         }
                     } label: {
