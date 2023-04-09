@@ -348,7 +348,7 @@ struct EpisodePlaylistView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     if documents.count > 0 {
-                        Button("Open \(documents.first!.path!.lastPathComponent)") {
+                        Button("Open") {
                             // Handle button tap here
                             NSWorkspace.shared.open(documents.first!.path!)
                         }
@@ -356,5 +356,6 @@ struct EpisodePlaylistView: View {
                 }
             }
         }
+        .id(episodeModel.dataID)
     }
 }

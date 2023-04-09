@@ -170,6 +170,7 @@ class Memory {
         var url: URL? = nil
         if context.count > 0 {
             let url_and_title = getAddressBarContent(context: context)
+            log.info(url_and_title)
             if url_and_title.1 != nil {
                 url = URL(string: url_and_title.1!)
                 context = url!.host ?? context
@@ -185,6 +186,7 @@ class Memory {
             let doc = Document(context: PersistenceController.shared.container.viewContext)
             doc.path = currentUrlContext
             doc.episode = episode
+            log.info("Saving doc for url \(currentUrlContext)")
             do {
                 try PersistenceController.shared.container.viewContext.save()
             } catch {
@@ -225,6 +227,8 @@ class Memory {
                 if title.trimmingCharacters(in: .whitespacesAndNewlines).count == 0 {
                     title = front.localizedName ?? currentContext
                 }
+                // hack always skip 1 frame for sync issue between tracking and record
+                skipNextNFrames = 1
                 openEpisode(title: title)
             } else {
                 log.info("Bypass exclusion context \(currentContext)")
