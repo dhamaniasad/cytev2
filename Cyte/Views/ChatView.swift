@@ -109,6 +109,7 @@ struct ChatView: View {
                         messages
                     }
                     .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 245))
+                    .accessibilityLabel("A conversational view of questions asked and responses from LLM")
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

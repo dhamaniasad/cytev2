@@ -102,6 +102,7 @@ struct Settings: View {
                         }
                     })
                 }
+                .accessibilityLabel("Path currently used to store memories and a button to update it")
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
                 Text("Save recordings for (will use approximately 1GB for every four hours: this can vary greatly depending on amount of context switching)").font(.title2)
@@ -191,6 +192,7 @@ struct Settings: View {
                     Toggle(isOn: binding) {
                         
                     }
+                    .accessibilityLabel("Checkbox to enable browser awareness")
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
@@ -210,6 +212,7 @@ struct Settings: View {
                         .cornerRadius(10.0)
                         .foregroundColor(.gray)
                     }
+                    .accessibilityLabel("Tap to add an app that should not be recorded")
                     .padding()
                     .buttonStyle(.plain)
                     .background(.white)
@@ -241,6 +244,7 @@ struct Settings: View {
                     .scrollContentBackground(.hidden)
                     .frame(width: 400)
                 }
+                .accessibilityLabel("Grid of known applications and if they are to be recorded")
                 .frame(height: ceil(CGFloat(bundles.count) / 2.0) * 42.0)
             }
         }

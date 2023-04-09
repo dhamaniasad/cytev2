@@ -303,6 +303,7 @@ struct EpisodePlaylistView: View {
                         Label("Reveal in Finder", systemImage: "questionmark.folder")
                     }
                 }
+                .accessibilityLabel("A large video preview pinned to the current slider time")
                 
                 ZStack {
                     GeometryReader { metrics in
@@ -322,6 +323,7 @@ struct EpisodePlaylistView: View {
                         .allowsHitTesting(false)
                     }
                 }
+                .accessibilityLabel("A slider visually displaying segments for each application/website used, using a colored bar with icon overlay. Drag to move in time.")
                 Spacer().frame(height: 10)
                 HStack(alignment: .center) {
                     Text(activeTime())
