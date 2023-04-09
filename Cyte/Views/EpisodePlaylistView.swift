@@ -77,7 +77,6 @@ struct EpisodePlaylistView: View {
         thumbnailImages.removeAll()
         for time in times {
             // get the AppInterval at this time, load the asset and find offset
-            // @todo getting active interval code is duplicated in this file. Extract to function
             let active_interval = episodeModel.activeInterval(at: time)
             if active_interval.0 == nil || active_interval.0!.episode.title!.count == 0 {
                 // placeholder thumb
@@ -207,7 +206,6 @@ struct EpisodePlaylistView: View {
     }
     
     ///
-    /// @todo handle singlular/plural
     /// Calculates the delta between now and the active playhead location, then formats
     /// the result for display
     ///

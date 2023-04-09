@@ -8,11 +8,11 @@
 - You should see a dialog saying Cyte wants to record your screen, and ask you to grant permission. If it doesn't appear, open System Settings -> Privacy and Security -> Screen Recording, press the plus icon and select Cyte from the Applications folder
 - At this point, if you'd like to review your settings, click the cog icon
 - - Cyte can use a lot of disk space, depending on your screen resolution and other factors. You can choose how long to keep recordings around for, and where to store them incase you want to use another drive. As a rule of thumb, Cyte will take around 1GB per hour recorded on an average setup
-- - You can also enter your OpenAI API key or llama.cpp model, please read the section on chat for more info about this
+- - You can also enter your OpenAI API key or llama.cpp model, please read the section on chat for more info about this. When you next start Cyte, you will be asked to grant permission for Cyte to access this key from Apple's keychain
 - - If you enable browser awareness (see below for more detail), you should see a dialog appear asking for access to Accessability services. If it doesn't appear, open System Settings -> Privacy and Security -> Accessability, press the plus icon and select Cyte from the Applications folder
 - - Cyte will already have detected the applications currently running, and displayed them in a grid. Tick boxes for any applications you don't want Cyte to record. If your application isn't showing, press the add application button and select it there
 - Once happy with your setup, press the back icon at the top of the window.
-- Minimize Cyte, and use your computer as normal
+- Minimize Cyte, and use your computer as normal. Fairly soon you will get up to 3 permission requests for access to your Download, Documents and User folders (used to track files worked on)
 - When you need help remembering something, select the Cyte application in your dock or press CMD + Period
 - Type anything you do remember vaguely related to what you're looking for, and press return
 - Look through the results and refresh your memory

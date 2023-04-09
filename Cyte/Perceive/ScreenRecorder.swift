@@ -94,7 +94,6 @@ class ScreenRecorder: ObservableObject {
         await self.refreshAvailableContent()
         Timer.publish(every: 3, on: .main, in: .common).autoconnect().sink { [weak self] _ in
             guard let self = self else { return }
-            // @todo understand why this runs on main thread and fix.
             // Memory is marked as MainActor and I suspect that enforces some global context
             Task {
                 if Memory.shared.currentContext != Bundle.main.bundleIdentifier {
@@ -190,7 +189,7 @@ class ScreenRecorder: ObservableObject {
             // Create a content filter with excluded apps.
             filter = SCContentFilter(display: display,
                                      excludingApplications: excludedApps,
-                                     exceptingWindows: [])//@todo detect and add any "private" windows to this list e.g. incognito
+                                     exceptingWindows: [])
         case .window:
             guard let window = selectedWindow else { fatalError("No window selected.") }
             
