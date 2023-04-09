@@ -289,8 +289,10 @@ struct EpisodePlaylistView: View {
                                 return
                             }
                             let active_interval = episodeModel.activeInterval(at: secondsOffsetFromLastEpisode)
-                            secondsOffsetFromLastEpisode = ((Double(active_interval.0!.offset) + Double(active_interval.0!.length)) - (player!.currentTime().seconds))
-                            updateData()
+                            if active_interval.0 != nil {
+                                secondsOffsetFromLastEpisode = ((Double(active_interval.0!.offset) + Double(active_interval.0!.length)) - (player!.currentTime().seconds))
+                                updateData()
+                            }
                         }
                     }
                 }

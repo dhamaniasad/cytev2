@@ -210,7 +210,7 @@ class Memory {
     @MainActor
     func updateActiveContext(windowTitles: Dictionary<String, String>) {
         guard let front = NSWorkspace.shared.frontmostApplication else { return }
-        var title: String = windowTitles[front.bundleIdentifier ?? ""] ?? ""
+        let title: String = windowTitles[front.bundleIdentifier ?? ""] ?? ""
         let ctx = browserAwareContext(front: front, window_title:title)
         
         if ctx.front.isActive && (currentContext != ctx.context || currentContextIsPrivate != ctx.isPrivate) {
@@ -505,7 +505,7 @@ class Memory {
     func search(term: String, expand_by: Int = 0) -> [CyteInterval] {
         var result: [CyteInterval] = []
         do {
-            var finalTerm = expand(term: term, expand_by: expand_by)
+            let finalTerm = expand(term: term, expand_by: expand_by)
             
             log.debug(finalTerm)
             let stmt = finalTerm.count > 0 ?
