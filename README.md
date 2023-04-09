@@ -54,4 +54,3 @@ Thanks to these great open source projects:
 - [XCGLogger](https://github.com/DaveWoodCom/XCGLogger): Used to save debug logs to disk
 - [llama.cpp](https://github.com/ggerganov/llama.cpp): Used to load and run LLMs for chat when a local model is provided
 - [MacPaw OpenAI](https://github.com/MacPaw/OpenAI): Used to run LLMs for chat when OpenAI API enabled
-- 

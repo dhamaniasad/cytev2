@@ -2,7 +2,7 @@
 
 ## Quickstart
 
-- To get started, [download Cyte](cyte.io/download) or follow the instructions below to build it locally.
+- To get started, [download Cyte](https://cyte.io/) or follow the instructions below to build it locally.
 - Unzip the app and move it into your Applications folder. This isn't necessary but it does make it less likely you'll run into any issues.
 - Open Cyte.app from your applications folder. You'll see a search bar, some buttons, and a big empty area where your recordings will show.
 - You should see a dialog saying Cyte wants to record your screen, and ask you to grant permission. If it doesn't appear, open System Settings -> Privacy and Security -> Screen Recording, press the plus icon and select Cyte from the Applications folder
