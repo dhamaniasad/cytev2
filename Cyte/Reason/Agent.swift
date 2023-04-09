@@ -166,7 +166,6 @@ class Agent : ObservableObject, EventSourceDelegate {
                 }
                 var token = llama_sample_top_p_top_k(llama, bufferPointer.baseAddress, Int32(tokens.count), topK, topP, temperature, 1)
                 if token == llama_token_eos() {
-                    print("[end of text]")
                     break
                 }
                 let thisResult = String(cString: llama_token_to_str(llama, token))
@@ -257,7 +256,7 @@ class Agent : ObservableObject, EventSourceDelegate {
                 }
             }
             let prompt = Agent.promptTemplate.replacing("{current}", with: Date().formatted()).replacing("{context}", with: context).replacing("{question}", with: request)
-            log.info(prompt)
+            log.debug(prompt)
             await query(input: prompt)
         } else {
             var history: String = ""
@@ -268,7 +267,7 @@ class Agent : ObservableObject, EventSourceDelegate {
                 """
             }
             let prompt = Agent.chatPromptTemplate.replacing("{history}", with: history).replacing("{question}", with: cleanRequest)
-            log.info(prompt)
+            log.debug(prompt)
             await query(input: prompt)
         }
     }

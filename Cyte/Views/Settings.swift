@@ -49,7 +49,6 @@ struct BundleView: View {
                     }
                 }
                 isExcluded = bundle.excluded
-                print($0)
             })
             Image(nsImage: bundleCache.getIcon(bundleID: bundle.bundle!))
                 .frame(width: 32, height: 32)
@@ -99,7 +98,7 @@ struct Settings: View {
                             defaults.set(Fileurl.path(percentEncoded: false), forKey: "CYTE_HOME")
                             break
                         case .failure(let error):
-                            print(error)
+                            log.error(error)
                         }
                     })
                 }
@@ -220,7 +219,7 @@ struct Settings: View {
                             let _ = Memory.shared.getOrCreateBundleExclusion(name: (Bundle(url: Fileurl)?.bundleIdentifier)!, excluded: true)
                             break
                         case .failure(let error):
-                            print(error)
+                            log.error(error)
                         }
                     })
                 }

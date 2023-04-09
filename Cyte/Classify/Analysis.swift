@@ -20,7 +20,7 @@ class Analysis {
     func runOnFrame(frame: CapturedFrame) {
         if pendingRequest {
             dropouts += 1
-            print("Drop frame due to overrun in process: \(dropouts)")
+            log.warning("Drop frame due to overrun in process: \(dropouts)")
             return
         }
         pendingRequest = true
@@ -36,7 +36,7 @@ class Analysis {
             // Perform the text-recognition request.
             try requestHandler.perform([request])
         } catch {
-            print("Unable to perform the requests: \(error).")
+            log.warning("Unable to perform the requests: \(error).")
         }
     }
     

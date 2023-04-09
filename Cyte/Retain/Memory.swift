@@ -224,7 +224,7 @@ class Memory {
                     }
                 }
             } catch {
-                print("Error reading attributes for file at \(fileURL.path): \(error.localizedDescription)")
+                log.error("Error reading attributes for file at \(fileURL.path): \(error.localizedDescription)")
             }
         }
         
@@ -289,7 +289,7 @@ class Memory {
                 }
                 openEpisode(title: title)
             } else {
-                print("Bypass exclusion context \(currentContext)")
+                log.info("Bypass exclusion context \(currentContext)")
             }
         }
     }
@@ -298,7 +298,7 @@ class Memory {
     /// Sets up an MPEG4 stream to disk, HD resolution
     ///
     func openEpisode(title: String) {
-        print("Open \(title)")
+        log.info("Open \(title)")
         
         currentStart = Date()
         let full_title = "\(title.replacingOccurrences(of: ":", with: ".")) \(currentStart.formatted(date: .abbreviated, time: .standard).replacingOccurrences(of: ":", with: "."))"
@@ -391,7 +391,7 @@ class Memory {
                 if (self.frameCount * Memory.secondsBetweenFrames) > 60 {
                     self.trackFileChanges(ep:ep)
                 } else {
-                    print("Skip file tracking for small episode")
+                    log.info("Skip file tracking for small episode")
                 }
             }
             
@@ -561,7 +561,7 @@ class Memory {
                 }
                 finalTerm = "NEAR(\(finalTerm), 100)"
             }
-            print(finalTerm)
+            log.debug(finalTerm)
             let stmt = finalTerm.count > 0 ?
             try intervalDb!.prepare("SELECT *, snippet(Interval, -1, '', '', '', 1) FROM Interval WHERE Interval MATCH '\(finalTerm)' ORDER BY bm25(Interval) LIMIT 64") :
             try intervalDb!.prepare("SELECT *, snippet(Interval, -1, '', '', '', 1) FROM Interval LIMIT 64")

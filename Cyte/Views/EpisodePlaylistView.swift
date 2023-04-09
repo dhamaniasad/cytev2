@@ -93,7 +93,7 @@ struct EpisodePlaylistView: View {
                     let offset = active_interval.1 - secondsOffsetFromLastEpisode
                     try thumbnailImages.append( generator.copyCGImage(at: CMTime(seconds: offset, preferredTimescale: 1), actualTime: nil) )
                 } catch {
-                    print("Failed to generate thumbnail!")
+                    log.warning("Failed to generate thumbnail! \(error)")
                 }
             }
         }
@@ -109,7 +109,7 @@ struct EpisodePlaylistView: View {
                 // Perform the text-recognition request.
                 try requestHandler.perform([request])
             } catch {
-                print("Unable to perform the requests: \(error).")
+                log.warning("Unable to perform the requests: \(error).")
             }
         }
         loadDocuments()
@@ -138,7 +138,6 @@ struct EpisodePlaylistView: View {
         lastX = gesture.location.x
         let xScale = CGFloat(EpisodePlaylistView.windowLengthInSeconds * 15) / chartWidth
         let deltaSeconds = Double(deltaX) * xScale * 2
-//        print(deltaSeconds)
         
         let newStart = secondsOffsetFromLastEpisode + deltaSeconds
         if newStart > 0 && newStart < ((episodeModel.appIntervals.last!.offset + episodeModel.appIntervals.last!.length)) {
@@ -196,7 +195,6 @@ struct EpisodePlaylistView: View {
     
     func endTimeForEpisode(interval: AppInterval) -> Double {
         let end =  min(Double(EpisodePlaylistView.windowLengthInSeconds), Double(secondsOffsetFromLastEpisode) + Double(EpisodePlaylistView.windowLengthInSeconds) - Double(interval.offset))
-//        print("\(startTimeForEpisode(interval: interval)) --- \(end)")
         return end
     }
     

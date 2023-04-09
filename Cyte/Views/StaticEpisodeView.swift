@@ -51,11 +51,11 @@ struct StaticEpisodeView: View {
                     // Perform the text-recognition request.
                     try requestHandler.perform([request])
                 } catch {
-                    print("Unable to perform the requests: \(error).")
+                    log.warning("Unable to perform the vision requests: \(error).")
                 }
             }
         } catch {
-            print("Failed to generate thumbnail!")
+            log.warning("Failed to generate thumbnail! \(error)")
         }
     }
     

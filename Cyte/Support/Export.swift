@@ -61,12 +61,12 @@ func makeTimelapse(episodes: [Episode], timelapse_len_seconds: Int = 60, reveal:
     let _ = exporter?.exportAsynchronously() {
         DispatchQueue.main.async {
             if let error = exporter?.error {
-                print("failed \(error.localizedDescription)")
+                log.error("failed \(error.localizedDescription)")
             } else {
                 if reveal {
                     if FileManager.default.fileExists(atPath: outputMovieURL.path(percentEncoded: false)) {
                         NSWorkspace.shared.activateFileViewerSelecting([outputMovieURL])
-                        print("movie has been exported to \(outputMovieURL)")
+                        log.info("movie has been exported to \(outputMovieURL)")
                     }
                 }
             }

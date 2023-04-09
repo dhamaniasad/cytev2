@@ -1,5 +1,36 @@
 # User guide
 
+## Quickstart
+
+- To get started, [download Cyte](cyte.io/download) or follow the instructions below to build it locally.
+- Unzip the app and move it into your Applications folder. This isn't necessary but it does make it less likely you'll run into any issues.
+- Open Cyte.app from your applications folder. You'll see a search bar, some buttons, and a big empty area where your recordings will show.
+- You should see a dialog saying Cyte wants to record your screen, and ask you to grant permission. If it doesn't appear, open System Settings -> Privacy and Security -> Screen Recording, press the plus icon and select Cyte from the Applications folder
+- At this point, if you'd like to review your settings, click the cog icon
+- - Cyte can use a lot of disk space, depending on your screen resolution and other factors. You can choose how long to keep recordings around for, and where to store them incase you want to use another drive. As a rule of thumb, Cyte will take around 1GB per hour recorded on an average setup
+- - You can also enter your OpenAI API key or llama.cpp model, please read the section on chat for more info about this
+- - If you enable browser awareness (see below for more detail), you should see a dialog appear asking for access to Accessability services. If it doesn't appear, open System Settings -> Privacy and Security -> Accessability, press the plus icon and select Cyte from the Applications folder
+- - Cyte will already have detected the applications currently running, and displayed them in a grid. Tick boxes for any applications you don't want Cyte to record. If your application isn't showing, press the add application button and select it there
+- Once happy with your setup, press the back icon at the top of the window.
+- Minimize Cyte, and use your computer as normal
+- When you need help remembering something, select the Cyte application in your dock or press CMD + Period
+- Type anything you do remember vaguely related to what you're looking for, and press return
+- Look through the results and refresh your memory
+- Press expand on any memory to view in more detail
+- Press the button at the top right of the window to open the file related to the recording if it could be found (see below for more detail), otherwise there may be a blank space where the button would appear
+- Press the back icon at the top of the window to return to the feed
+- If you enabled chat features, you can type a question to get a quick answer related to the currently shown results (include a question mark, see below for more info) then press return or press the plane icon
+
+### Building from source
+
+- Download and install [xcode](https://developer.apple.com/xcode/)
+- Download and unzip or clone the [cytev2 repository](https://github.com/shaunnarayan/cytev2)
+- Double click to open Cyte.xcodeproj inside the directory
+- Go to Project Settings -> Signing & Capabilities, and select your [development team](https://developer.apple.com/programs/) - you can sign up for free
+- Update the signing certificate (you can use sign to run locally if you don't have a Apple developer membership)
+- Press CMD + B to build, once complete, locate Cyte.app under 'Products' in the sidebar, right click and select Show in Finder
+- You can now use the Cyte.app as per the Quickstart instructions above
+
 ## Feed
 
 - When no search terms or filters are applied, shows the last 30 days of recordings, from latest to oldest

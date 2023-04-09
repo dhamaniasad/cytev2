@@ -122,9 +122,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 
     @objc private func sleepListener(_ aNotification: Notification) {
-        print("listening to sleep")
+        log.info("listening to sleep")
         if aNotification.name == NSWorkspace.willSleepNotification {
-            print("Going to sleep")
+            log.info("Going to sleep")
             if mainApp != nil {
                 Task {
                     if await mainApp!.screenRecorder.isRunning {
@@ -133,7 +133,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         } else if aNotification.name == NSWorkspace.didWakeNotification {
-            print("Woke up")
+            log.info("Woke up")
             if mainApp != nil {
                 Task {
                     if await mainApp!.screenRecorder.canRecord {

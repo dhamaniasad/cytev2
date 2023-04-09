@@ -100,10 +100,9 @@ class ScreenRecorder: ObservableObject {
                 if Memory.shared.currentContext != Bundle.main.bundleIdentifier {
                     await self.refreshAvailableContent()
                     if let screenNumber = NSScreen.main!.deviceDescription[NSDeviceDescriptionKey(rawValue: "NSScreenNumber")] as? CGDirectDisplayID {
-                            print("Screen # on context refresh \(screenNumber)")
                             for screen in self.availableDisplays {
                                 if screen.displayID == screenNumber && self.selectedDisplay != screen {
-                                    print("Matched display, updating...")
+                                    log.info("Matched display \(screenNumber), updating...")
                                     self.selectedDisplay = screen
                                 }
                             }
