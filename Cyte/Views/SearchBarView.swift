@@ -125,32 +125,13 @@ struct SearchBarView: View {
                                 }
                             })
                             
-                            if episodeModel.episodesLengthSum < (60 * 60 * 40) && (currentExport == nil || currentExport!.progress >= 1.0) {
-                                Button(action: {
-                                    Task {
-                                        currentExport = await makeTimelapse(episodes: episodeModel.episodes.reversed())
-                                    }
-                                }) {
-                                    Image(systemName: "timelapse")
-                                }
-                                .buttonStyle(.plain)
-                                .onHover(perform: { hovering in
-                                    self.isHovering = hovering
-                                    if hovering {
-                                        NSCursor.pointingHand.set()
-                                    } else {
-                                        NSCursor.arrow.set()
-                                    }
-                                })
-                            }
-                            
                             NavigationLink {
                                 Settings()
                             } label: {
                                 Image(systemName: "gearshape")
                             }
                             .accessibilityLabel("Opens the settings pane")
-                            .padding()
+                            .padding(EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 0))
                             .opacity(isHoveringSettings ? 0.8 : 1.0)
                             .buttonStyle(.plain)
                             .onHover(perform: { hovering in
@@ -180,6 +161,26 @@ struct SearchBarView: View {
                                     NSCursor.arrow.set()
                                 }
                             })
+                            
+                            if episodeModel.episodesLengthSum < (60 * 60 * 40) && (currentExport == nil || currentExport!.progress >= 1.0) {
+                                Button(action: {
+                                    Task {
+                                        currentExport = await makeTimelapse(episodes: episodeModel.episodes.reversed())
+                                    }
+                                }) {
+                                    Image(systemName: "timelapse")
+                                }
+                                .buttonStyle(.plain)
+                                .padding(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                                .onHover(perform: { hovering in
+                                    self.isHovering = hovering
+                                    if hovering {
+                                        NSCursor.pointingHand.set()
+                                    } else {
+                                        NSCursor.arrow.set()
+                                    }
+                                })
+                            }
                             
                             Spacer()
                             if currentExport != nil && currentExport!.progress < 1.0 {

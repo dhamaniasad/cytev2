@@ -104,9 +104,11 @@ struct ContentView: View {
             Rectangle().foregroundColor(Color(red: 240.0 / 255.0, green: 240.0 / 255.0, blue: 240.0 / 255.0 ))
         )
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-               DispatchQueue.main.async {
-                   self.episodeModel.refreshData()
-               }
-           }
+            if !Thread.isMainThread {
+                DispatchQueue.main.async {
+                    self.episodeModel.refreshData()
+                }
+            }
+        }
     }
 }
