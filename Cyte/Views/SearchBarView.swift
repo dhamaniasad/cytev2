@@ -125,9 +125,7 @@ struct SearchBarView: View {
                                 }
                             })
                             
-                            NavigationLink {
-                                Settings()
-                            } label: {
+                            NavigationLink(value: 1) {
                                 Image(systemName: "gearshape")
                             }
                             .accessibilityLabel("Opens the settings pane")

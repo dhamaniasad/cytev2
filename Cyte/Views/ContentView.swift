@@ -34,6 +34,16 @@ struct ContentView: View {
         GridItem(.fixed(360), spacing: 50),
         GridItem(.fixed(360), spacing: 50)
     ]
+
+    func offsetForEpisode(episode: Episode) -> Double {
+        var offset_sum = 0.0
+        let active_interval: AppInterval? = episodeModel.appIntervals.first { interval in
+            if interval.episode.start == nil || interval.episode.end == nil { return false }
+            offset_sum = offset_sum + (interval.episode.end!.timeIntervalSinceReferenceDate - interval.episode.start!.timeIntervalSinceReferenceDate)
+            return episode.start == interval.episode.start
+        }
+        return offset_sum + (active_interval?.length ?? 0.0)
+    }
     
     var feed: some View {
         GeometryReader { metrics in
@@ -81,21 +91,35 @@ struct ContentView: View {
         }
     }
     
+    var home: some View {
+        Group {
+            if agent.chatLog.count > 0 {
+                GeometryReader { metrics in
+                    ChatView(displaySize: metrics.size)
+                }
+            }
+            SearchBarView()
+            
+            if agent.chatLog.count == 0 {
+                feed
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             VStack {
-                if agent.chatLog.count > 0 {
-                    GeometryReader { metrics in
-                        ChatView(displaySize: metrics.size)
-                    }
-                }
-                SearchBarView()
-                
-                if agent.chatLog.count == 0 {
-                    feed
-                }
+                home
+            }
+            .navigationDestination(for: Episode.self) { episode in
+                EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode), filter: episodeModel.filter
+                )
+            }
+            .navigationDestination(for: Int.self) { path in
+                Settings()
             }
         }
+        
         .onAppear {
             self.episodeModel.refreshData()
         }

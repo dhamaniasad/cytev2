@@ -154,12 +154,7 @@ struct StaticEpisodeView: View {
                                 .foregroundColor(Color(red: 210.0 / 255.0, green: 210.0 / 255.0, blue: 210.0 / 255.0))
                         )
                     }
-                    NavigationLink {
-                        ZStack {
-                            EpisodePlaylistView(player: AVPlayer(url:  urlForEpisode(start: episode.start, title: episode.title)), secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - ((result.from.timeIntervalSinceReferenceDate) - (episode.start ?? Date()).timeIntervalSinceReferenceDate), filter: filter
-                            )
-                        }
-                    } label: {
+                    NavigationLink(value: episode) {
                         Image(systemName: "arrow.up.left.and.arrow.down.right")
                     }
                     .buttonStyle(.plain)

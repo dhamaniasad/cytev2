@@ -15,6 +15,7 @@ import Vision
 struct EpisodePlaylistView: View {
     @EnvironmentObject var bundleCache: BundleCache
     @EnvironmentObject var episodeModel: EpisodeModel
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
     @State var player: AVPlayer?
     @State private var thumbnailImages: [CGImage?] = []
@@ -352,7 +353,10 @@ struct EpisodePlaylistView: View {
                             // Handle button tap here
                             NSWorkspace.shared.open(documents.first!.path!)
                         }
+                        .frame(width:100)
                     }
+                    Button("Back", action: { self.presentationMode.wrappedValue.dismiss() })
+                        .frame(width:100)
                 }
             }
         }

@@ -25,16 +25,6 @@ struct EpisodeView: View {
     @State var filter: String
     @State var selected: Bool
     
-    func offsetForEpisode(episode: Episode) -> Double {
-        var offset_sum = 0.0
-        let active_interval: AppInterval? = episodeModel.appIntervals.first { interval in
-            if interval.episode.start == nil || interval.episode.end == nil { return false }
-            offset_sum = offset_sum + (interval.episode.end!.timeIntervalSinceReferenceDate - interval.episode.start!.timeIntervalSinceReferenceDate)
-            return episode.start == interval.episode.start
-        }
-        return offset_sum + (active_interval?.length ?? 0.0)
-    }
-    
     var playerView: some View {
         VStack {
             ZStack {
@@ -63,12 +53,7 @@ struct EpisodeView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 HStack {
-                    NavigationLink {
-                        ZStack {
-                            EpisodePlaylistView(player: player, secondsOffsetFromLastEpisode: offsetForEpisode(episode: episode) - player.currentTime().seconds, filter: filter
-                            )
-                        }
-                    } label: {
+                    NavigationLink(value: episode) {
                         Image(systemName: "arrow.up.left.and.arrow.down.right")
                     }
                     .buttonStyle(.plain)

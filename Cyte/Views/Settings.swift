@@ -76,6 +76,8 @@ struct Settings: View {
     @State var currentRetention: Int = 0
     @State var browserAware: Bool = false
     
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    
     var body: some View {
         ScrollView {
             VStack(alignment: .leading) {
@@ -246,6 +248,12 @@ struct Settings: View {
                 }
                 .accessibilityLabel("Grid of known applications and if they are to be recorded")
                 .frame(height: ceil(CGFloat(bundles.count) / 2.0) * 42.0)
+            }
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button("Back", action: { self.presentationMode.wrappedValue.dismiss() })
+                    .frame(width:100)
             }
         }
     }
