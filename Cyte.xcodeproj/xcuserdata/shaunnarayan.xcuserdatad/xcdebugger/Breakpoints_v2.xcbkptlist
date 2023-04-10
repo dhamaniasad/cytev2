@@ -3,4 +3,54 @@
    uuid = "322B598F-1A77-49A9-9D7E-98550DB2B2BB"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F1AF14B2-EE7E-4414-9D03-53D02DB99776"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Cyte/CyteApp.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "36"
+            endingLineNumber = "36"
+            landmarkName = "setup()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "F1AF14B2-EE7E-4414-9D03-53D02DB99776 - 5404ab96a577c460"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(3) suspend resume partial function for closure #1 @Sendable () async -&gt; () in Cyte.CyteApp.setup() -&gt; ()"
+                  moduleName = "Cyte"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37"
+                  offsetFromSymbolStart = "132">
+               </Location>
+               <Location
+                  uuid = "F1AF14B2-EE7E-4414-9D03-53D02DB99776 - 12c5544e1ed60462"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(5) suspend resume partial function for closure #1 @Sendable () async -&gt; () in Cyte.CyteApp.setup() -&gt; ()"
+                  moduleName = "Cyte"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/shaunnarayan/dev/cytev2/Cyte/Cyte/CyteApp.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "37"
+                  endingLineNumber = "37"
+                  offsetFromSymbolStart = "36">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

@@ -349,14 +349,14 @@ struct EpisodePlaylistView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     if documents.count > 0 {
-                        Button("Open") {
+                        Button("Resume") {
                             // Handle button tap here
                             NSWorkspace.shared.open(documents.first!.path!)
                         }
-                        .frame(width:100)
+                        .frame(width:100, height: 50)
                     }
                     Button("Back", action: { self.presentationMode.wrappedValue.dismiss() })
-                        .frame(width:100)
+                        .frame(width:100, height: 50)
                 }
             }
         }

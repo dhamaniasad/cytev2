@@ -89,6 +89,6 @@
 - To enable chat your data, You can either;
 - - paste your OpenAI API key if you want to enable GPT4 as your LLM. Your key is stored in Apples keychain and taken out of application memory once you press return or tap the tick icon
 - - Paste the full path to a llama.cpp model file on your hard drive
-- Enabling browser awareness for Chrome and Safari will prevent incognito and Private browsing windows from being recorded
+- Enabling browser awareness for Chrome and Safari will prevent incognito and Private browsing windows from being recorded. This will also require making a network request to google for the favicon for sites visited
 - Browser awareness will also attempt to track websites and divide your recordings by domain (e.g. all Twitter activity gets grouped under twitter.com)
 - Tick any application/website in the disable recording section to prevent it being recorded, and also automatically delete any existing data stored for it

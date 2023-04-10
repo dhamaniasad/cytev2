@@ -253,7 +253,7 @@ struct Settings: View {
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Button("Back", action: { self.presentationMode.wrappedValue.dismiss() })
-                    .frame(width:100)
+                    .frame(width:100, height: 50)
             }
         }
     }

@@ -98,7 +98,6 @@ extension NSImage {
     /// This is used as a background color for contexts related to an app, like chart axis etc
     ///
     var averageColor: NSColor? {
-//        return .gray
         if self.tiffRepresentation == nil { return nil }
         guard let inputImage = CIImage(data: self.tiffRepresentation!) else { return nil }
         let extentVector = CIVector(x: inputImage.extent.origin.x, y: inputImage.extent.origin.y, z: inputImage.extent.size.width, w: inputImage.extent.size.height)
@@ -130,6 +129,9 @@ class BundleCache: ObservableObject {
                 self.bundleImageCache[bundleID] = image
                 self.bundleColorCache[bundleID] = self.bundleImageCache[bundleID]!.averageColor
             }
+        } else {
+            self.bundleImageCache[bundleID] = image
+            self.bundleColorCache[bundleID] = self.bundleImageCache[bundleID]!.averageColor
         }
     }
     

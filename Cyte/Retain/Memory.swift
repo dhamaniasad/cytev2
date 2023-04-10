@@ -181,7 +181,7 @@ class Memory {
         } else {
             context = "Unnamed"
         }
-        if currentUrlContext != nil && url == nil && episode != nil {
+        if currentUrlContext != nil && url != currentUrlContext && episode != nil {
             // create document
             let doc = Document(context: PersistenceController.shared.container.viewContext)
             doc.path = currentUrlContext
@@ -193,7 +193,6 @@ class Memory {
                 let nsError = error as NSError
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
-            skipNextNFrames = 1
         }
         currentUrlContext = url
         let isPrivate = isPrivateContext(context:context)
