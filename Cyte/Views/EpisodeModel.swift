@@ -37,6 +37,7 @@ class EpisodeModel: ObservableObject {
     func activeInterval(at: Double) -> (AppInterval?, Double) {
         var offset_sum = 0.0
         let active_interval: AppInterval? = appIntervals.first { interval in
+            if interval.episode.start == nil || interval.episode.end == nil { return false }
             let window_center = at
             let next_offset = offset_sum + (interval.episode.end!.timeIntervalSinceReferenceDate - interval.episode.start!.timeIntervalSinceReferenceDate)
             let is_within = offset_sum <= window_center && next_offset >= window_center

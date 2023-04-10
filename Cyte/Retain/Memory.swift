@@ -74,7 +74,7 @@ class Memory {
             
             let fetched = try PersistenceController.shared.container.viewContext.fetch(unclosedFetch)
             for unclosed in fetched {
-                PersistenceController.shared.container.viewContext.delete(unclosed)
+                delete(delete_episode: unclosed)
             }
             
             // Run migrations
