@@ -96,7 +96,7 @@ struct EpisodePlaylistView: View {
                 }
             }
         }
-        if thumbnailImages.last! != nil && filter.count > 0 {
+        if thumbnailImages.count > 0 && thumbnailImages.last! != nil && filter.count > 0 {
             // Run through vision and store results
             let requestHandler = VNImageRequestHandler(cgImage: thumbnailImages.last!!, orientation: .up)
             let request = VNRecognizeTextRequest(completionHandler: recognizeTextHandler)

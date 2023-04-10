@@ -125,24 +125,6 @@ struct SearchBarView: View {
                                 }
                             })
                             
-                            NavigationLink {
-                                Settings()
-                            } label: {
-                                Image(systemName: "gearshape")
-                            }
-                            .accessibilityLabel("Opens the settings pane")
-                            .padding()
-                            .opacity(isHoveringSettings ? 0.8 : 1.0)
-                            .buttonStyle(.plain)
-                            .onHover(perform: { hovering in
-                                self.isHoveringSettings = hovering
-                                if hovering {
-                                    NSCursor.pointingHand.set()
-                                } else {
-                                    NSCursor.arrow.set()
-                                }
-                            })
-                            
                             if episodeModel.episodesLengthSum < (60 * 60 * 40) && (currentExport == nil || currentExport!.progress >= 1.0) {
                                 Button(action: {
                                     Task {
@@ -161,6 +143,24 @@ struct SearchBarView: View {
                                     }
                                 })
                             }
+                            
+                            NavigationLink {
+                                Settings()
+                            } label: {
+                                Image(systemName: "gearshape")
+                            }
+                            .accessibilityLabel("Opens the settings pane")
+                            .padding()
+                            .opacity(isHoveringSettings ? 0.8 : 1.0)
+                            .buttonStyle(.plain)
+                            .onHover(perform: { hovering in
+                                self.isHoveringSettings = hovering
+                                if hovering {
+                                    NSCursor.pointingHand.set()
+                                } else {
+                                    NSCursor.arrow.set()
+                                }
+                            })
                             
                             Button(action: {
                                 episodeModel.resetFilters()
