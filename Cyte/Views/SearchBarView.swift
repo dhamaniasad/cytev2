@@ -11,6 +11,7 @@ import AVKit
 
 struct SearchBarView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var bundleCache: BundleCache
     @EnvironmentObject var episodeModel: EpisodeModel
     
@@ -50,7 +51,7 @@ struct SearchBarView: View {
                         .cornerRadius(5)
                         .padding(EdgeInsets(top: 7, leading: 10, bottom: 7, trailing: 10))
                         .textFieldStyle(.plain)
-                        .background(.white)
+                        .background(colorScheme == .dark ? .black : .white)
                         .cornerRadius(10.0)
                         .font(Font.title)
                         .foregroundColor(Color(red: 107.0 / 255.0, green: 107.0 / 255.0, blue: 107.0 / 255.0))

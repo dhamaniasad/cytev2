@@ -14,6 +14,7 @@ import Foundation
 import AVKit
 
 struct ContentView: View {
+    @Environment(\.colorScheme) var colorScheme
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject var episodeModel: EpisodeModel
     @StateObject private var agent = Agent.shared
@@ -125,7 +126,11 @@ struct ContentView: View {
         }
         .padding(EdgeInsets(top: 0.0, leading: 30.0, bottom: 0.0, trailing: 30.0))
         .background(
-            Rectangle().foregroundColor(Color(red: 240.0 / 255.0, green: 240.0 / 255.0, blue: 240.0 / 255.0 ))
+            Rectangle().foregroundColor(
+                colorScheme == .dark ?
+                Color(red: 15.0 / 255.0, green: 15.0 / 255.0, blue: 15.0 / 255.0 ) :
+                Color(red: 240.0 / 255.0, green: 240.0 / 255.0, blue: 240.0 / 255.0 )
+            )
         )
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             if !Thread.isMainThread {

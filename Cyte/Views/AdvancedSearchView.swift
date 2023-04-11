@@ -77,14 +77,13 @@ struct AdvancedSearchView: View {
                 }
             }
             
-            HStack {
+            ScrollView {
                 LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
                     ForEach(Set(episodeModel.episodes.map { $0.bundle ?? Bundle.main.bundleIdentifier! }).sorted(by: <), id: \.self) { bundle in
                         HStack {
                             Image(nsImage: bundleCache.getIcon(bundleID: bundle))
                                 .frame(width: 32, height: 32)
                             Text(getApplicationNameFromBundleID(bundleID: bundle) ?? "")
-                                .foregroundColor(.black)
                         }
                         .contentShape(Rectangle())
                         .onHover(perform: { hovering in
@@ -108,6 +107,7 @@ struct AdvancedSearchView: View {
                     }
                 }
             }
+            .frame(height: 50)
             HStack {
                 LazyVGrid(columns: documentsColumnLayout, spacing: 20) {
                     ForEach(episodeModel.documentsForBundle) { doc in

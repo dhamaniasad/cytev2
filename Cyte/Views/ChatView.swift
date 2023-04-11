@@ -11,6 +11,7 @@ import Highlightr
 import AVKit
 
 struct ChatView: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var bundleCache: BundleCache
     @StateObject private var agent = Agent.shared
     
@@ -68,6 +69,7 @@ struct ChatView: View {
             .padding(20)
             .frame(maxWidth: .infinity, alignment: Alignment.leading)
             .animation(.easeInOut(duration: 0.3))
+            .foregroundColor(colorScheme == .dark ? .gray : .black)
             .background(
                 RoundedRectangle(cornerRadius: String(chat.0) == "bot" ? 0 : 17)
                     .foregroundColor(String(chat.0) == "bot" ? .clear : Color(red: 255.0/255.0, green: 255.0/255.0, blue: 255.0/255.0)))

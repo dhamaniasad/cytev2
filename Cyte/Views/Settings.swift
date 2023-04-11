@@ -53,7 +53,6 @@ struct BundleView: View {
             Image(nsImage: bundleCache.getIcon(bundleID: bundle.bundle!))
                 .frame(width: 32, height: 32)
             Text(getApplicationNameFromBundleID(bundleID: bundle.bundle!) ?? bundle.bundle!)
-                .foregroundColor(.black)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Toggle(isOn: binding) {
                 
@@ -190,7 +189,6 @@ struct Settings: View {
                         checkIsProcessTrusted(prompt: $0)
                     })
                     Text("Browser awareness (Ignore Incognito and Private Browsing windows, episodes track domains)")
-                        .foregroundColor(.black)
                         .font(.title2)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .onAppear {
