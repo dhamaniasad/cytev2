@@ -10,6 +10,26 @@ import SQLite
 import AppKit
 
 ///
+/// This handles removing dangling refs that may have occurd due to a bug in delete_episode
+///
+class ModelMigration1to2: NSEntityMigrationPolicy {
+    override func begin(_ mapping: NSEntityMapping, with manager: NSMigrationManager) throws {
+        let request = NSFetchRequest<NSManagedObject>(entityName: "Document")
+        let context = manager.sourceContext
+        let results = try context.fetch(request)
+        for res in results {
+            let ep = res.value(forKey: "episode") as! NSManagedObject
+            let start = ep.value(forKey:"start")
+            if start == nil {
+                log.info("Culling episode \(res.value(forKey: "path"))")
+                context.delete(res)
+            }
+        }
+        try super.begin(mapping, with: manager)
+    }
+}
+
+///
 /// Bunch of data representing the current application context
 ///
 struct CyteAppContext {
