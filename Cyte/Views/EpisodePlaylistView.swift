@@ -41,10 +41,13 @@ struct EpisodePlaylistView: View {
         let active_interval = episodeModel.activeInterval(at: secondsOffsetFromLastEpisode)
         if active_interval.0 == nil { return }
         let docFetch : NSFetchRequest<Document> = Document.fetchRequest()
-        docFetch.predicate = NSPredicate(format: "episode.start == %@", active_interval.0!.episode.start! as CVarArg)
+        let offset = active_interval.1 - secondsOffsetFromLastEpisode
+        let pin = active_interval.0!.episode.start!.addingTimeInterval(offset)
+        docFetch.predicate = NSPredicate(format: "start <= %@ AND end >= %@", pin as CVarArg, pin as CVarArg)
         do {
             let docs = try PersistenceController.shared.container.viewContext.fetch(docFetch)
             var paths = Set<URL>()
+            // @todo sort and pick closest doc by [(pin-end) < 0][0]
             for doc in docs {
                 if !paths.contains(doc.path!) {
                     documents.append(doc)
@@ -52,7 +55,7 @@ struct EpisodePlaylistView: View {
                 }
             }
         } catch {
-            
+            print(error)
         }
     }
     

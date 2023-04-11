@@ -49,7 +49,7 @@ func getAddressBarContent(context: String) -> (String?, String?) {
                     if (main ?? false) && frame != nil {
                         let elem = try! app.elementAtPosition(Float(frame!.minX + offset.0), Float(frame!.minY + offset.1))
                         var url = (try! elem?.attribute(.value) as String?)
-                        if url != nil && !url!.starts(with: "http") {
+                        if url != nil && url!.count > 0 && !url!.starts(with: "http")  {
                             url = "https://\(url ?? "")"
                         }
                         return (title, url)

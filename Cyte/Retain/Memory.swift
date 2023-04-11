@@ -43,6 +43,7 @@ class Memory {
     var currentContext : String = "Startup"
     var currentContextIsPrivate: Bool = false
     var currentUrlContext : URL? = nil
+    var currentUrlTime : Date? = nil
     private var skipNextNFrames: Int = 0
     // List of migrations:
     // 0 -> 1 = FST4 to FST5
@@ -142,12 +143,7 @@ class Memory {
                 let resourceValues = try fileURL.resourceValues(forKeys: Set(properties))
                 if let modificationDate = resourceValues.contentModificationDate {
                     if !fileURL.hasDirectoryPath &&
-                        (modificationDate > earliest) &&
-                        !(
-                            fileURL.pathComponents.contains("Movies") &&
-                            fileURL.pathComponents.contains(Bundle.main.bundleIdentifier!) &&
-                            fileURL.pathExtension != "html"
-                        ) {
+                        (modificationDate > earliest) {
                         recentFiles.append((fileURL, modificationDate))
                     }
                 }
@@ -170,10 +166,13 @@ class Memory {
         var url: URL? = nil
         if context.count > 0 {
             let url_and_title = getAddressBarContent(context: context)
-            log.info(url_and_title)
             if url_and_title.1 != nil {
                 url = URL(string: url_and_title.1!)
-                context = url!.host ?? context
+                if url != nil {
+                    context = url!.host ?? context
+                } else {
+                    log.error("Failed to parse url \(url_and_title.1!)")
+                }
             }
             if url_and_title.0 != nil {
                 title = url_and_title.0!
@@ -186,6 +185,8 @@ class Memory {
             let doc = Document(context: PersistenceController.shared.container.viewContext)
             doc.path = currentUrlContext
             doc.episode = episode
+            doc.start = currentUrlTime
+            doc.end = Date()
             log.info("Saving doc for url \(currentUrlContext)")
             do {
                 try PersistenceController.shared.container.viewContext.save()
@@ -195,6 +196,7 @@ class Memory {
             }
         }
         currentUrlContext = url
+        currentUrlTime = Date()
         let isPrivate = isPrivateContext(context:context)
         if !isPrivate && currentContextIsPrivate {
             skipNextNFrames = 1
@@ -290,6 +292,8 @@ class Memory {
                 let doc = Document(context: PersistenceController.shared.container.viewContext)
                 doc.path = fileAndModified.0
                 doc.episode = ep
+                doc.start = ep.start
+                doc.end = fileAndModified.1
                 do {
                     try PersistenceController.shared.container.viewContext.save()
                 } catch {
@@ -439,6 +443,13 @@ class Memory {
         if delete_episode.save {
             log.info("Saved episode from deletion")
             return
+        }
+        let docFetch : NSFetchRequest<Document> = Document.fetchRequest()
+        docFetch.predicate = NSPredicate(format: "episode == %@", delete_episode)
+        if let result = try? PersistenceController.shared.container.viewContext.fetch(docFetch) {
+            for object in result {
+                PersistenceController.shared.container.viewContext.delete(object)
+            }
         }
         let intervals = intervalTable.filter(IntervalExpression.episodeStart == delete_episode.start!.timeIntervalSinceReferenceDate)
         PersistenceController.shared.container.viewContext.delete(delete_episode)

@@ -136,8 +136,14 @@ struct Settings: View {
                 }
                 .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
-                Text("To enable Knowledge base features enter your GPT4 API key, or a path to a llama.cpp compatible model file").font(.title2)
-                    .padding()
+                VStack(alignment: .leading) {
+                    Text("To enable Knowledge base features enter your GPT4 API key, or a path to a llama.cpp compatible model file").font(.title2)
+                        .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                    Text("Privacy note: This feature will make requests to the OpenAI servers if you supply an API key")
+                        .font(.caption)
+                        .padding(EdgeInsets(top: 5.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                }
+                
                 HStack {
                     if Agent.shared.isSetup {
                         Text("Knowledge base enabled")
@@ -196,7 +202,11 @@ struct Settings: View {
                     }
                     .accessibilityLabel("Checkbox to enable browser awareness")
                 }
-                .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
+                .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 0.0, trailing: 0.0))
+                
+                Text("Privacy note: This feature will request icons for visited domains from https://www.google.com/s2/favicons on startup")
+                    .font(.caption)
+                    .padding(EdgeInsets(top: 0.0, leading: 15.0, bottom: 5.0, trailing: 0.0))
                 
                 VStack(alignment: .leading) {
                     HStack {
